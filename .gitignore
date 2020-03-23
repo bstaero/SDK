@@ -1,0 +1,11 @@
+*.o
+*.a
+*.so
+*.pyc
+test/test
+test/replay_log_file
+mhp/c/test
+gazebo_test/test
+examples/gazebo/test
+examples/payload/test
+.idea/
