@@ -25,9 +25,6 @@ CC=gcc
 CXX=g++
 
 VPATH     = ../../src \
-            ../../src/bst_protocol \
-            ../../src/bst_protocol/modules \
-            ../../src/bst_core \
 
 INCLUDES += -I. \
 					  -I../../include \
@@ -40,8 +37,7 @@ INCLUDES += -I. \
 
 FLAGS=-g -DVERBOSE -DVEHICLE_MULTIROTOR -lm
 
-OBJ=comm_protocol.o comm_interface.o bst_module_basic.o bst_module_flight_plan.o debug.o vector.o helper_functions.o flight_plan.o
-OBJ+=bst_protocol.o bst_packet.o bst_module.o
+OBJ= main.o test.o test_handler.o
 
 ifneq ($(HOST_OS), Darwin)
 FLAGS+=-lrt
@@ -53,18 +49,21 @@ endif
 %.o: %.c
 	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES)
  
-default: libnetuas test
+default: bstsdklibs test
 
-test: $(OBJ) main.o test.o test_handler.o
-	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lrt
+test: $(OBJ)
+	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lbstmr_lib -lrt
 
 clean:
 	cd ../../lib && $(MAKE) clean
 	rm -f *.o
 	rm -f test
 
-libnetuas: ../../lib/libnetuas_lib.a
+bstsdklibs: ../../lib/libnetuas_lib.a ../../lib/libbstmr_lib.a
 
 ../../lib/libnetuas_lib.a:
+	cd ../../lib && $(MAKE)
+
+../../lib/libbstmr_lib.a:
 	cd ../../lib && $(MAKE)
 
