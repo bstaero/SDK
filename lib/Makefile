@@ -1,6 +1,9 @@
 CC=gcc
 CXX=g++
-CFLAGS= -fPIC -DVEHICLE_MULTIROTOR
+CFLAGS= -fPIC
+
+libbstfw_FLAGS= -DVEHICLE_MULTIROTOR
+libbstmr_FLAGS= -DVEHICLE_FIXEDWING
 
 LDFLAGS=-lrt
 
@@ -38,31 +41,49 @@ BST_OBJ= simulated_can.o \
 			   bst_module_flight_plan.o \
 			   bst_module_basic.o \
 
-default: libnetuas_lib.a libbstmr_lib.a
+.PHONY: default libnetuas libbstfw libbstmr
+default:
+	BIN_DIR=bin/netuas make libnetuas
+	BIN_DIR=bin/libbstfw make libbstfw
+	BIN_DIR=bin/libbstmr make libbstmr
 
-libnetuas_lib.a: $(NETUAS_OBJ)
+libnetuas: ${BIN_DIR} libnetuas_lib.a
+
+libnetuas_lib.a: $(addprefix ${BIN_DIR}/, $(NETUAS_OBJ))
 	ar rcs $@ $^
 
-libbstmr_lib.a: $(BST_OBJ)
+libbstfw: FLAGS+= -DVEHICLE_FIXEDWING
+libbstfw: ${BIN_DIR} libbstfw_lib.a
+
+libbstfw_lib.a: $(addprefix ${BIN_DIR}/, $(BST_OBJ))
 	ar rcs $@ $^
 
-%.o:%.cpp
+libbstmr: FLAGS+= -DVEHICLE_MULTIROTOR
+libbstmr: ${BIN_DIR} libbstmr_lib.a
+
+libbstmr_lib.a: $(addprefix ${BIN_DIR}/, $(BST_OBJ))
+	ar rcs $@ $^
+
+
+${BIN_DIR}:
+	@mkdir -p ${BIN_DIR}
+
+${BIN_DIR}/%.o:%.cpp
 	$(CXX) $(FLAGS) -c -o $@ $^ $(INCLUDES) $(DEFINES)
  
-%.o: %.c
+${BIN_DIR}/%.o: %.c
 	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
 
-%.o:%.cpp %.h
+${BIN_DIR}/%.o:%.cpp %.h
 	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
  
-%.o: %.c %.h
+${BIN_DIR}/%.o: %.c %.h
 	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
 
 allclean: clean
 	rmdir netuas
 
 clean:
-	rm -f *.o
-	rm -f netuas/*.o
+	rm -rf bin
 	rm -f *.a
 	rm -f *.so
