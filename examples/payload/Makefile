@@ -53,11 +53,18 @@ endif
 %.o: %.c
 	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES)
  
-default: test
+default: bstsdklibs test
 
 test: $(OBJ) main.o test.o test_handler.o
 	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lrt
 
 clean:
-	rm *.o
-	rm test
+	cd ../../lib && $(MAKE) clean
+	rm -f *.o
+	rm -f test
+
+bstsdklibs: ../../lib/libnetuas_lib.a
+
+../../lib/libnetuas_lib.a:
+	cd ../../lib && $(MAKE)
+
