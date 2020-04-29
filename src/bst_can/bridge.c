@@ -38,9 +38,11 @@ using namespace bst::comms::canpackets;
 
 #include "debug.h"
 
-#if defined ARCH_stm32f4 || defined ARCH_stm32f1
+#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx
   #include "can.h"
-  #include "led.h" // DEBUG
+  #ifndef STM32F413xx
+    #include "led.h" // DEBUG
+  #endif
 
   #if defined ARCH_stm32f1
     uint8_t checkFletcher16(uint8_t * data, uint8_t size);

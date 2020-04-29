@@ -152,6 +152,9 @@ typedef enum {
 	SENSORS_GNSS_ORIENTATION=12,
 	SENSORS_MHP=13,
 	SENSORS_GNSS_RTCM=14,
+	SENSORS_MHP_SENSORS=15,
+	SENSORS_MHP_GNSS=30,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MHP_TIMING=31,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 
 	/* STATE */
 	STATE_STATE=16,  // ONLY USED INTERNALLY
@@ -246,7 +249,7 @@ typedef enum {
 
 /*--------[ Configuration ]--------*/
 
-#define COMMS_VERSION 3140
+#define COMMS_VERSION 3150
 
 #define MAX_ALTITUDE 20000
 
@@ -545,27 +548,47 @@ typedef struct _AxisMapping_t {
 } __attribute__ ((packed)) AxisMapping_t;
 
 typedef struct _MHP_t {
-	uint8_t error_code;
 	float system_time;  // [s]
+	float alpha;  // [rad]
+	float beta;  // [rad]
+	float q;  // [m/s]
+	float ias;  // [m/s]
+	float tas;  // [m/s]
+	float wind[3];  // [m/s]
+
+#ifdef __cplusplus
+	_MHP_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		alpha = 0.0;
+		beta = 0.0;
+		q = 0.0;
+		ias = 0.0;
+		tas = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			wind[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHP_t;
+
+typedef struct _MHPSensors_t {
+	float system_time;  // [s]
+	uint8_t error_code;
 	float static_pressure;  // [Pa]
 	float dynamic_pressure[5];  // [Pa]
 	float air_temperature;  // [deg C]
 	float humidity;  // [%]
 	float gyroscope[3];  // [rad/s]
 	float accelerometer[3];  // [g]
-	float magnetometer[3];  // [uT]
-	float alpha;  // [rad]
-	float beta;  // [rad]
-	float q;  // [m/s]
-	float ias;  // [m/s]
-	float tas;  // [m/s]
 
 #ifdef __cplusplus
-	_MHP_t() {
+	_MHPSensors_t() {
 		uint8_t _i;
 
-		error_code = 0;
 		system_time = 0.0;
+		error_code = 0;
 		static_pressure = 0.0;
 
 		for (_i = 0; _i < 5; ++_i)
@@ -579,18 +602,76 @@ typedef struct _MHP_t {
 
 		for (_i = 0; _i < 3; ++_i)
 			accelerometer[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHPSensors_t;
+
+typedef struct _MHPSensorsGNSS_t {
+	float system_time;  // [s]
+	float magnetometer[3];  // [uT]
+	uint16_t week;
+	uint8_t hour;
+	uint8_t minute;
+	float seconds;
+	double latitude;  // [deg]
+	double longitude;  // [deg]
+	float altitude;  // [m]
+	float velocity[3];  // [m/s]
+	float pdop;
+
+#ifdef __cplusplus
+	_MHPSensorsGNSS_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
 
 		for (_i = 0; _i < 3; ++_i)
 			magnetometer[_i] = 0.0;
 
-		alpha = 0.0;
-		beta = 0.0;
-		q = 0.0;
-		ias = 0.0;
-		tas = 0.0;
+		week = 0;
+		hour = 0;
+		minute = 0;
+		seconds = 0.0;
+		latitude = 0.0;
+		longitude = 0.0;
+		altitude = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			velocity[_i] = 0.0;
+
+		pdop = 0.0;
 	}
 #endif
-} __attribute__ ((packed)) MHP_t;
+} __attribute__ ((packed)) MHPSensorsGNSS_t;
+
+typedef struct _MHPTiming_t {
+	float system_time;  // [s]
+	float static_pressure_time;  // [s]
+	float dynamic_pressure_time[5];  // [s]
+	float air_temperature_time;  // [s]
+	float humidity_time;  // [s]
+	float imu_time;  // [s]
+	float magnetometer_time;  // [s]
+	float gps_time;  // [s]
+
+#ifdef __cplusplus
+	_MHPTiming_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		static_pressure_time = 0.0;
+
+		for (_i = 0; _i < 5; ++_i)
+			dynamic_pressure_time[_i] = 0.0;
+
+		air_temperature_time = 0.0;
+		humidity_time = 0.0;
+		imu_time = 0.0;
+		magnetometer_time = 0.0;
+		gps_time = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHPTiming_t;
 
 typedef struct _Pressure_t {
 	float system_time;
