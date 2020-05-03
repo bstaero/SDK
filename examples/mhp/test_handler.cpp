@@ -30,6 +30,11 @@
 Packet rx_packet;
 Packet tx_packet;
 
+MHP_t            mhp_data;
+MHPSensors_t     mhp_sensors;
+MHPSensorsGNSS_t mhp_sensors_gnss;
+MHPTiming_t      mhp_timing;
+
 volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
 /*<-End Global Variables-->*/
 
@@ -51,7 +56,7 @@ void updateCommunications(void) {
 void handlePacket(uint8_t type, const void * data) 
 {
 	//printf("handlePacket: type=%u\n", type);
-	MHP_Time_t * mhp_data;
+
 	PowerOn_t * power_on_data;
 	CalibrateSensor_t * calibration_data;
 
@@ -65,46 +70,71 @@ void handlePacket(uint8_t type, const void * data)
 			break;
 
 		case SENSORS_MHP:
-			mhp_data = (MHP_Time_t *)data;
+			memcpy(&mhp_data,data,sizeof(MHP_t));;
 
 			if(display_telemetry)
-				printf("%+0.01f m %+05.01f %+05.01f %+05.01f a %+0.02f %+0.02f %+0.02f g %+0.02f %+0.02f %+0.02f d %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+0.01f %0.01f a %+05.01f b %+05.01f q %+07.01f i %+05.01f t %+05.01f\n\r",
-						mhp_data->static_pressure,
-						mhp_data->magnetometer[0],
-						mhp_data->magnetometer[1],
-						mhp_data->magnetometer[2],
-						mhp_data->accelerometer[0],
-						mhp_data->accelerometer[1],
-						mhp_data->accelerometer[2],
-						mhp_data->gyroscope[0],
-						mhp_data->gyroscope[1],
-						mhp_data->gyroscope[2],
-						mhp_data->dynamic_pressure[0],
-						mhp_data->dynamic_pressure[1],
-						mhp_data->dynamic_pressure[2],
-						mhp_data->dynamic_pressure[3],
-						mhp_data->dynamic_pressure[4],
-						mhp_data->air_temperature,
-						mhp_data->humidity,
-						mhp_data->alpha*180.0/M_PI,
-						mhp_data->beta*180.0/M_PI,
-						mhp_data->q,
-						mhp_data->ias,
-						mhp_data->tas
-						);
+				printf("%+0.01f m %+05.01f %+05.01f %+05.01f a %+0.02f %+0.02f %+0.02f g %+0.02f %+0.02f %+0.02f d %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+05.01f %04.01f a %+05.01f b %+05.01f q %+07.01f i %+05.01f t %+05.01f %04u %02u:%02u:%4.01f lla %+06.02f %+07.02f %06.01f v %+05.01f %+05.01f %+05.01f p %04.01f\n\r",
+						mhp_sensors.static_pressure,
+						mhp_sensors_gnss.magnetometer[0],
+						mhp_sensors_gnss.magnetometer[1],
+						mhp_sensors_gnss.magnetometer[2],
+						mhp_sensors.accelerometer[0],
+						mhp_sensors.accelerometer[1],
+						mhp_sensors.accelerometer[2],
+						mhp_sensors.gyroscope[0],
+						mhp_sensors.gyroscope[1],
+						mhp_sensors.gyroscope[2],
+						mhp_sensors.dynamic_pressure[0],
+						mhp_sensors.dynamic_pressure[1],
+						mhp_sensors.dynamic_pressure[2],
+						mhp_sensors.dynamic_pressure[3],
+						mhp_sensors.dynamic_pressure[4],
+						mhp_sensors.air_temperature,
+						mhp_sensors.humidity,
+						mhp_data.alpha*180.0/M_PI,
+						mhp_data.beta*180.0/M_PI,
+						mhp_data.q,
+						mhp_data.ias,
+						mhp_data.tas,
+						mhp_sensors_gnss.week,
+						mhp_sensors_gnss.hour,
+						mhp_sensors_gnss.minute,
+						mhp_sensors_gnss.seconds,
+						mhp_sensors_gnss.latitude,
+						mhp_sensors_gnss.longitude,
+						mhp_sensors_gnss.altitude,
+						mhp_sensors_gnss.velocity[0],
+						mhp_sensors_gnss.velocity[1],
+						mhp_sensors_gnss.velocity[2],
+						mhp_sensors_gnss.pdop
+							);
+
+			break;
+
+		case SENSORS_MHP_SENSORS:
+			memcpy(&mhp_sensors,data,sizeof(MHPSensors_t));;
+			break;
+
+		case SENSORS_MHP_GNSS:
+			memcpy(&mhp_sensors_gnss,data,sizeof(MHPSensorsGNSS_t));;
+			break;
+
+		case SENSORS_MHP_TIMING:
+			memcpy(&mhp_timing,data,sizeof(MHPTiming_t));;
 
 			if(display_telemetry_timing)
-				printf("s %+0.02f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f \n\r",
-						mhp_data->static_pressure_time,  // [s]
-						mhp_data->dynamic_pressure_time[0],  // [s]
-						mhp_data->dynamic_pressure_time[1],  // [s]
-						mhp_data->dynamic_pressure_time[2],  // [s]
-						mhp_data->dynamic_pressure_time[3],  // [s]
-						mhp_data->dynamic_pressure_time[4],  // [s]
-						mhp_data->air_temperature_time,  // [s]
-						mhp_data->humidity_time,  // [s]
-						mhp_data->imu_time, // [s]
-						mhp_data->magnetometer_time // [s]
+				printf("s %+0.02f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
+						mhp_timing.static_pressure_time,  // [s]
+						mhp_timing.dynamic_pressure_time[0],  // [s]
+						mhp_timing.dynamic_pressure_time[1],  // [s]
+						mhp_timing.dynamic_pressure_time[2],  // [s]
+						mhp_timing.dynamic_pressure_time[3],  // [s]
+						mhp_timing.dynamic_pressure_time[4],  // [s]
+						mhp_timing.air_temperature_time,  // [s]
+						mhp_timing.humidity_time,  // [s]
+						mhp_timing.imu_time, // [s]
+						mhp_timing.magnetometer_time, // [s]
+						mhp_timing.gps_time // [s]
 						);
 			break;
 

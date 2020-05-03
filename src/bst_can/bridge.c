@@ -31,7 +31,7 @@
 using namespace bst::comms::canpackets;
 #endif
 
-#ifndef ARCH_stm32f1
+#if ! defined ARCH_stm32f1 && ! defined STM32F413xx
   #include "helper_functions.h"
   #include "simulated_can.h"
 #endif
@@ -39,12 +39,16 @@ using namespace bst::comms::canpackets;
 #include "debug.h"
 
 #if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx
-  #include "can.h"
   #ifndef STM32F413xx
+    #include "can.h"
     #include "led.h" // DEBUG
+  #else
+uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
+	return 0;
+}
   #endif
 
-  #if defined ARCH_stm32f1
+  #if defined ARCH_stm32f1 || defined STM32F413xx
     uint8_t checkFletcher16(uint8_t * data, uint8_t size);
     void setFletcher16 (uint8_t * data, uint8_t size);
   #endif
@@ -2320,7 +2324,7 @@ __inline uint32_t BRIDGE_GetPktDrop(void)
 	return BRIDGE_pktDrops;
 }
 
-#ifdef ARCH_stm32f1
+#if defined ARCH_stm32f1 || defined STM32F413xx
 uint8_t checkFletcher16(uint8_t * data, uint8_t size) {
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;

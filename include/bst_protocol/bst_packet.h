@@ -75,7 +75,7 @@
  */
 
 /*! \brief Maximum size for a packet */
-#define BST_MAX_PACKET_SIZE 164
+#define BST_MAX_PACKET_SIZE 128
 
 /*! \brief Location of the first packet header byte */
 #define PKT_HDR0   0
