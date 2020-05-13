@@ -83,6 +83,30 @@ typedef struct _CAN_GNSS_RTCM_t {
 #endif
 } __attribute__ ((packed)) CAN_GNSS_RTCM_t;
 
+typedef struct _CAN_GNSS_SVIN_t {
+	uint8_t startByte;
+
+	uint32_t time_elapsed;  // [s] - time since start of survey in was requested
+	uint32_t time_minimum;  // [s] - time required for survey in
+	float accuracy;  // [s] - current accuracy of survey in
+	float accuracy_minimum;  // [s] - minimum accuracy required for survey in
+	uint8_t flags;  // see GCSRTKFlags_t
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GNSS_SVIN_t() {
+		startByte = 0;
+		time_elapsed = 0;
+		time_minimum = 0;
+		accuracy = 0.0;
+		accuracy_minimum = 0.0;
+		flags = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GNSS_SVIN_t;
+
 typedef struct _CAN_GNSS_UTC_t {
 	uint8_t startByte;
 
@@ -148,6 +172,7 @@ typedef enum {
 	CAN_PKT_GNSS_UTC_W=53,
 	CAN_PKT_GNSS_RTCM=54,
 	CAN_PKT_GNSS_HEALTH_2=55,
+	CAN_PKT_GNSS_SVIN=56,
 	CAN_PKT_AGL=96,
 	CAN_PKT_PROXIMITY=112,
 
