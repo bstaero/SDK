@@ -26,6 +26,8 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(SENSORS_CALIBRATE, sizeof(CalibrateSensor_t), true, true);
 	registerDataType(SENSORS_BOARD_ORIENTATION, sizeof(AxisMapping_t), true, true);
 	registerDataType(SENSORS_GNSS_ORIENTATION, sizeof(AxisMapping_t), true, true);
+	registerDataType(SENSORS_MHP, sizeof(MHP_t), false, false);
+	registerDataType(SENSORS_GNSS_RTCM, sizeof(RTCM_t), false, false);
 
 	/* STATE */
 	registerDataType(STATE_STATE, sizeof(State_t), false, false); // FIXME
@@ -73,9 +75,10 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(TELEMETRY_PRESSURE, sizeof(TelemetryPressure_t), false, false);
 	registerDataType(TELEMETRY_CONTROL, sizeof(TelemetryControl_t), false, false);
 	registerDataType(TELEMETRY_SYSTEM, sizeof(TelemetrySystem_t), false, false);
+	registerDataType(TELEMETRY_GCS, sizeof(GCSStatus_t), false, false);
 	registerDataType(TELEMETRY_GCS_LOCATION, sizeof(TelemetryGCS_t), false, false);
 	registerDataType(TELEMETRY_PAYLOAD, sizeof(TelemetryPayload_t), false, false);
-	//registerDataType(TELEMETRY_GCS, sizeof(), false, false);
+	registerDataType(TELEMETRY_GCS_SVIN, sizeof(GCSSurveyIn_t), false, true);
 
 	/* HWIL */
 	//registerDataType(HWIL_SENSORS, sizeof(), false, false);
