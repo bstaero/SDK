@@ -22,6 +22,7 @@
 
 /* BST */
 #include "bst_packet.h"
+#include "helper_functions.h"
 
 /* NetUAS */
 #include "netuas_serial.h"
@@ -122,6 +123,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	setupTime();
+
 	// set interface
 	if(comm_type == COMM_SERIAL) {
 		comm_interface = new NetuasSerial;
@@ -169,4 +172,39 @@ bool readByte(uint8_t * data) {
 
 bool writeBytes(uint8_t * data, uint16_t num) {
 	return comm_interface->write(data, num) == num;
+}
+
+double start_time = 0.0;
+
+void setupTime() {
+#ifdef __APPLE__
+	uint64_t now = mach_absolute_time();
+	float conversion  = 0.0;
+	mach_timebase_info_data_t info;
+	kern_return_t err = mach_timebase_info( &info );
+	if( err == 0  )
+		conversion = 1e-9 * (float) info.numer / (float) info.denom;
+	start_time = conversion * (float) now;
+#else
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	start_time = (double)now.tv_sec + (double)now.tv_nsec / SEC_TO_NSEC;
+#endif
+}
+
+float getElapsedTime() {
+#ifdef __APPLE__
+	uint64_t now = mach_absolute_time();
+	float conversion  = 0.0;
+	mach_timebase_info_data_t info;
+	kern_return_t err = mach_timebase_info( &info );
+	if( err == 0  )
+		conversion = 1e-9 * (float) info.numer / (float) info.denom;
+	float current_time = conversion * (float) now;
+#else
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	double current_time = (double)now.tv_sec + (double)now.tv_nsec / SEC_TO_NSEC;
+#endif
+	return current_time - start_time;
 }

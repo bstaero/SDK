@@ -167,6 +167,8 @@ void sendCalibrate(SensorType_t sensor) {
 			break;
 		case DYNAMIC_PRESSURE:
 			break;
+		case MAGNETOMETER:
+			break;
 		default:
 			return;
 	}

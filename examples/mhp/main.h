@@ -29,4 +29,7 @@ bool writeBytes(uint8_t * data, uint16_t num);
 
 void printHelp();
 
+void setupTime();
+float getElapsedTime();
+
 #endif

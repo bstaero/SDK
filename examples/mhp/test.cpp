@@ -47,6 +47,7 @@ void printTestHelp() {
 	printf("  i   : Toggle telemetry timing display\n");
 	printf("  d   : Request dynamic pressure calibration\n");
 	printf("  g   : Request gyroscope calibration\n");
+	printf("  m   : Request magnetometer calibration\n");
 	printf("  s   : Request serial number and comms revision\n");
 	printf("  p   : Print this help\n");
 }
@@ -124,6 +125,13 @@ void updateTest() {
 						fflush(stdout);
 						break;
 
+					case 'm':
+						sendCalibrate(MAGNETOMETER);
+						waiting_on_calibrate = true;
+						printf("Magnetometer Calibration Requested.. ");
+						fflush(stdout);
+						break;
+
 					case 's':
 						requestPowerOn();
 						break;
@@ -152,19 +160,26 @@ void updateTest() {
 }
 
 void updateCalibration() {
-	static uint16_t counter = 0;
+	static float end_time = 0.0;
+	if(end_time == 0.0 && calibration_requested != UNKNOWN_SENSOR) {
+		switch(calibration_requested) {
+			case DYNAMIC_PRESSURE: end_time = getElapsedTime() + 2.0; break;
+			case GYROSCOPE:        end_time = getElapsedTime() + 2.0; break;
+			case MAGNETOMETER:     end_time = getElapsedTime() + 60.0; break;
+		}
+	}
 
-	if(calibration_requested != UNKNOWN_SENSOR && counter++ < 40000)
+	if(calibration_requested != UNKNOWN_SENSOR && getElapsedTime() < end_time)
 		return;
 
-	if(counter < 40001) {
+	if(getElapsedTime() < end_time) {
 		printf("SUCCESS\n");
 	} else {
 		calibration_requested = UNKNOWN_SENSOR;
 		printf("FAILED\n");
 	}
 
-	counter = 0;
+	end_time = 0.0;
 	waiting_on_calibrate = false;
 }
 
