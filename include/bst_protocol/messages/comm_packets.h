@@ -332,7 +332,7 @@ typedef struct _State_t {
 
 /*--------[ FlightPlan ]--------*/
 
-#define ERROR_WAYPOINT 99
+#define ERROR_WAYPOINT 118
 
 #define INVALID_WAYPOINT 255
 
@@ -342,7 +342,7 @@ typedef struct _State_t {
 
 #define LAUNCH_WAYPOINT 113
 
-#define LOST_COMM_WAYPOINT 98
+#define LOST_COMM_WAYPOINT 119
 
 #define MAX_USER_WAYPOINTS 100
 

@@ -110,14 +110,13 @@ class BSTPacket:
                 # print("Dropping byte")
                 i = i + 1
 
-    def setAddressing(self, on_off):
+    def set_addressing(self, on_off):
         if on_off:
             self.OVERHEAD = 16
             self.HAS_ADDRESS = True
         else:
             self.OVERHEAD = 8
             self.HAS_ADDRESS = False
-
 
     def serialize(self):
         buf = []
@@ -167,7 +166,7 @@ class BSTPacket:
 
         return ((sum2 << 8) | sum1) == 0
 
-    def setFletcher16(self, data=None, size=None):
+    def set_fletcher_16(self, data=None, size=None):
         sum1 = 0
         sum2 = 0
 

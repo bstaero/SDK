@@ -27,13 +27,14 @@ from comm_packets.payload import *
 from comm_packets.fixedwing import *
 from comm_packets.canpackets import *
 
-telemetry_control = TelemetryControl()
-telemetry_orientation = TelemetryOrientation()
-telemetry_position = TelemetryPosition()
-telemetry_pressure = TelemetryPressure()
-telemetry_system = TelemetrySystem()
-
-user_payload = UserPayload()
+packet_mapping = {
+    PacketTypes.TELEMETRY_CONTROL: TelemetryControl(),
+    PacketTypes.TELEMETRY_ORIENTATION: TelemetryOrientation(),
+    PacketTypes.TELEMETRY_POSITION: TelemetryPosition(),
+    PacketTypes.TELEMETRY_PRESSURE: TelemetryPressure(),
+    PacketTypes.TELEMETRY_SYSTEM: TelemetrySystem(),
+    PacketTypes.PAYLOAD_CHANNEL_0: UserPayload()
+}
 
 can_actuators = CAN_Actuator()
 
@@ -50,47 +51,18 @@ def simulated_can_handler(pkt):
 
 def standard_handler(pkt):
     if (pkt.FROM & 0xFF000000) == 0x41000000:
+        packet_data = None
 
-        # -----[ TELEMETRY ]-----%
-        if pkt.TYPE is PacketTypes.TELEMETRY_CONTROL:
-            try:
-                telemetry_control.parse(pkt.DATA)
-            except BufferError as ErrorMessage:
-                print(ErrorMessage)
+        if pkt.TYPE not in packet_mapping:
+            print('Packet type not yet set up for parsing')
+            return None
 
-        if pkt.TYPE is PacketTypes.TELEMETRY_ORIENTATION:
-            try:
-                telemetry_orientation.parse(pkt.DATA)
-            except BufferError as ErrorMessage:
-                print(ErrorMessage)
+        try:
+            if pkt.TYPE >= PacketTypes.PAYLOAD_CHANNEL_0:
+                packet_mapping[pkt.TYPE].buffer = [None] * 64
 
-        if pkt.TYPE is PacketTypes.TELEMETRY_POSITION:
-            try:
-                telemetry_position.parse(pkt.DATA)
-            except BufferError as ErrorMessage:
-                print(ErrorMessage)
+            packet_data = packet_mapping[pkt.TYPE].parse(pkt.DATA)
+        except BufferError as ErrorMessage:
+            print(ErrorMessage)
 
-        if pkt.TYPE is PacketTypes.TELEMETRY_PRESSURE:
-            try:
-                telemetry_pressure.parse(pkt.DATA)
-            except BufferError as ErrorMessage:
-                print(ErrorMessage)
-
-        if pkt.TYPE is PacketTypes.TELEMETRY_SYSTEM:
-            try:
-                telemetry_system.parse(pkt.DATA)
-            except BufferError as ErrorMessage:
-                print(ErrorMessage)
-
-        # -----[ PAYLOAD ]-----%
-        if pkt.TYPE is PacketTypes.PAYLOAD_CHANNEL_0:
-            try:
-                user_payload.buffer = [None] * 64
-                user_payload.parse(pkt.DATA)
-                # print "Got %i bytes from the payload: [%s]" % (
-                #        user_payload.size,
-                #        ''.join(chr(e) for e in user_payload.buffer))
-                print("Got bytes from the payload")
-
-            except BufferError as ErrorMessage:
-                print(ErrorMessage)
+        return packet_data
