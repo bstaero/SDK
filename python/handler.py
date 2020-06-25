@@ -22,10 +22,10 @@
 #                                                                              #
 # *#=+--+=#=+--                 --+=#=+--+=#=+--                 --+=#=+--+=#* #
 
-from .comm_packets.comm_packets import PacketTypes
-from .comm_packets.payload import *
-from .comm_packets.fixedwing import *
-from .comm_packets.canpackets import *
+from comm_packets.comm_packets import PacketTypes
+from comm_packets.payload import *
+from comm_packets.fixedwing import *
+from comm_packets.canpackets import *
 
 telemetry_control = TelemetryControl()
 telemetry_orientation = TelemetryOrientation()

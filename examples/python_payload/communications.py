@@ -24,11 +24,11 @@ import os.path
 import binascii
 import struct
 
-sys.path.append('../../python/bst_packets')
+sys.path.append('../../python')
 #sys.path.append('../../python/bst_packets/3.13.0')
-sys.path.append('../../python/bst_packets/3.14.0')
+sys.path.append('../../python/comm_packets')
 
-from standardhandler import *
+from handler import *
 from listener import *
 
 import socket
@@ -36,7 +36,7 @@ import serial
 
 import time, threading
 
-from plottingHandler import *
+from plotting_handler import *
 
 
 def initializeCommunications(host,port):
@@ -51,13 +51,13 @@ def communicationsThread(handler):
         time.sleep(0.01);
 
 def printValues():
-    print "lla: %+07.03f %+08.03f %06.01f | %08.01f Pa %+05.01f deg %04.01f %%" % (
+    print("lla: %+07.03f %+08.03f %06.01f | %08.01f Pa %+05.01f deg %04.01f %%" % (
           telemetry_position.latitude,
           telemetry_position.longitude,
           telemetry_position.altitude,
           telemetry_pressure.static_pressure,
           telemetry_pressure.air_temperature,
-          telemetry_pressure.humidity);
+          telemetry_pressure.humidity));
 
     threading.Timer(0.1, printingThread).start()
 
@@ -74,7 +74,7 @@ def readUserData(handler):
     data = s.recv(1024)
     #data = s.read(1024)
     if(len(data) > 0):
-        parseSocketStream(data, handler);
+        parseStream(data);
 
 def sendUserData(data,size):
     tx_payload = UserPayload();

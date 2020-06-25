@@ -8,4 +8,6 @@ mhp/c/test
 gazebo_test/test
 examples/gazebo/test
 examples/payload/test
+examples/mhp/test
 .idea/
+venv/

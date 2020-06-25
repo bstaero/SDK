@@ -24,7 +24,7 @@
 
 import struct
 
-from .comm_packets.comm_packets import PacketTypes
+from comm_packets.comm_packets import PacketTypes
 
 
 class BSTPacket:
@@ -150,7 +150,7 @@ class BSTPacket:
 
         return bytearray(buf)
 
-    def checkFletcher16(self):
+    def check_fletcher_16(self):
         sum1 = 0
         sum2 = 0
 
