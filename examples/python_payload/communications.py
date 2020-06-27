@@ -25,7 +25,6 @@ import binascii
 import struct
 
 sys.path.append('../../python')
-#sys.path.append('../../python/bst_packets/3.13.0')
 sys.path.append('../../python/comm_packets')
 
 from handler import *
@@ -36,7 +35,8 @@ import serial
 
 import time, threading
 
-from plotting_handler import *
+#import handler
+import plotting_handler
 
 
 def initializeCommunications(host,port):
@@ -74,7 +74,7 @@ def readUserData(handler):
     data = s.recv(1024)
     #data = s.read(1024)
     if(len(data) > 0):
-        parseStream(data);
+        pkt = parse_stream(data, handler);
 
 def sendUserData(data,size):
     tx_payload = UserPayload();
@@ -126,5 +126,5 @@ initializeCommunications(HOST,PORT);
 #
 #s = serial.Serial(DEVICE, BAUD);
 
-#communicationsThread(standardHandler);
-communicationsThread(plottingHandler);
+#communicationsThread(handler);
+communicationsThread(plotting_handler);

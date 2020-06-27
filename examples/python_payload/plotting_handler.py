@@ -41,7 +41,7 @@ user_payload = UserPayload();
 
 downstream = Downstream();
 
-def plottingHandler(pkt):
+def standard_handler(pkt):
 
     if((pkt.FROM & 0xFF000000) == 0x41000000):
 

@@ -22,18 +22,18 @@
 #                                                                              #
 # *#=+--+=#=+--                 --+=#=+--+=#=+--                 --+=#=+--+=#* #
 
-from comm_packets.comm_packets import PacketTypes
+from comm_packets.comm_packets import *
 from comm_packets.payload import *
 from comm_packets.fixedwing import *
 from comm_packets.canpackets import *
 
 packet_mapping = {
-    PacketTypes.TELEMETRY_CONTROL: TelemetryControl(),
-    PacketTypes.TELEMETRY_ORIENTATION: TelemetryOrientation(),
-    PacketTypes.TELEMETRY_POSITION: TelemetryPosition(),
-    PacketTypes.TELEMETRY_PRESSURE: TelemetryPressure(),
-    PacketTypes.TELEMETRY_SYSTEM: TelemetrySystem(),
-    PacketTypes.PAYLOAD_CHANNEL_0: UserPayload()
+    PacketTypes.TELEMETRY_CONTROL.value: TelemetryControl(),
+    PacketTypes.TELEMETRY_ORIENTATION.value: TelemetryOrientation(),
+    PacketTypes.TELEMETRY_POSITION.value: TelemetryPosition(),
+    PacketTypes.TELEMETRY_PRESSURE.value: TelemetryPressure(),
+    PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem(),
+    PacketTypes.PAYLOAD_CHANNEL_0.value: UserPayload()
 }
 
 can_actuators = CAN_Actuator()
@@ -53,15 +53,17 @@ def standard_handler(pkt):
     if (pkt.FROM & 0xFF000000) == 0x41000000:
         packet_data = None
 
-        if pkt.TYPE not in packet_mapping:
+        if pkt.TYPE.value not in packet_mapping:
             print('Packet type not yet set up for parsing')
             return None
 
         try:
-            if pkt.TYPE >= PacketTypes.PAYLOAD_CHANNEL_0:
-                packet_mapping[pkt.TYPE].buffer = [None] * 64
+            if pkt.TYPE.value >= PacketTypes.PAYLOAD_CHANNEL_0.value:
+                packet_mapping[pkt.TYPE.value].buffer = [None] * 64
 
-            packet_data = packet_mapping[pkt.TYPE].parse(pkt.DATA)
+            print(pkt.DATA)
+            packet_mapping[pkt.TYPE.value].parse(pkt.DATA)
+            packet_data = packet_mapping[pkt.TYPE.value]
         except BufferError as ErrorMessage:
             print(ErrorMessage)
 
