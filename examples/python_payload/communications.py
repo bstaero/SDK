@@ -80,7 +80,7 @@ def sendUserData(data,size):
     tx_payload = UserPayload();
 
     pkt = BSTPacket();
-    pkt.setAddressing(True);
+    pkt.set_addressing(True);
     pkt.TYPE=PacketTypes.PAYLOAD_CHANNEL_0;
     pkt.ACTION=0
     pkt.SIZE=tx_payload.SIZE;
@@ -102,7 +102,7 @@ def sendUserData(data,size):
             tx_payload.buffer[i] = 0;
 
         pkt.DATA = tx_payload.serialize();
-        pkt.setFletcher16();
+        pkt.set_fletcher_16();
 
         s.send(pkt.serialize(),pkt.SIZE);
 
