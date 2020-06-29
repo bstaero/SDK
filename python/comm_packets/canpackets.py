@@ -1,5 +1,5 @@
 #*=+--+=#=+--         SwiftCore Flight Management Software        --+=#=+--+=#*#
-#               Copyright (C) 2020 Black Swift Technologies LLC.               #
+#               Copyright (C) 2015 Black Swift Technologies LLC.               #
 #                             All Rights Reserved.                             #
 #                                                                              #
 #    NOTICE:  All information contained herein is, and remains the property    #
@@ -14,14 +14,14 @@
 #    strictly forbidden unless prior written permission is obtained from       #
 #    Black Swift Technologies LLC.                                             #
 #                                                                              #
-#                                 Jack Elston                                  #
-#                        Jack.Elston@blackswifttech.com                        #
+#                              Jack Elston                                     #
+#                      Jack.Elston@blackswifttech.com                          #
 #                                                                              #
-#                               Maciej Stachura                                #
-#                      Maciej.Stachura@blackswifttech.com                      #
+#                              Cory Dixon                                      #
+#                        Cory.Dixon@blackswifttech.com                         #
 #                                                                              #
-#                                  Ben Busby                                   #
-#                         ben.busby@blackswifttech.com                         #
+#                            Maciej Stachura                                   #
+#                   Maciej.Stachura@blackswifttech.com                         #
 #                                                                              #
 #*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*#
 
@@ -50,14 +50,19 @@ class CAN_GNSS_LLA:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.latitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset+struct.calcsize('<d')
 
 		self.longitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset+struct.calcsize('<d')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -94,8 +99,10 @@ class CAN_GNSS_RTCM:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.size = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.payload = [];
 
@@ -104,6 +111,7 @@ class CAN_GNSS_RTCM:
 			offset = offset+struct.calcsize('<B')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -138,14 +146,19 @@ class CAN_GNSS_UTC:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.hours = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.minutes = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.seconds = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -179,16 +192,22 @@ class CAN_GNSS_UTC_W:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.week = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 		self.hours = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.minutes = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.seconds = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -294,18 +313,25 @@ class CAN_NDVI:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.id = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.red = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.near_ir = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.ir_ambient = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.ir_object = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -342,14 +368,19 @@ class CAN_AGL:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.timestamp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.distance = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.velocity = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -383,16 +414,22 @@ class CAN_Accelerometer:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.ax = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.ay = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.az = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.temp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -427,16 +464,22 @@ class CAN_AirData:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.static_pressure = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.dynamic_pressure = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.air_temperature = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.humidity = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -484,38 +527,55 @@ class CAN_GNSS:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.week = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 		self.hours = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.minutes = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.seconds = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.latitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset+struct.calcsize('<d')
 
 		self.longitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset+struct.calcsize('<d')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.heading = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.speed = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.pdop = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.satellites = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.fix_type = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.vx = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.vy = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.vz = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -558,12 +618,16 @@ class CAN_GNSS_HEALTH:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.pdop = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.satellites = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -601,12 +665,16 @@ class CAN_GNSS_HEALTH_2:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.pdop = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.satellites = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.fix_type = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.buffer = [];
 
@@ -615,6 +683,7 @@ class CAN_GNSS_HEALTH_2:
 			offset = offset+struct.calcsize('<B')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -653,18 +722,25 @@ class CAN_GNSS_VEL:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.heading = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.speed = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.vx = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.vy = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.vz = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -700,16 +776,22 @@ class CAN_Gyroscope:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.gx = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.gy = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.gz = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.temp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -750,28 +832,40 @@ class CAN_IMU:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.ax = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.ay = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.az = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.gx = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.gy = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.gz = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.mx = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.my = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.mz = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.temp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -838,10 +932,13 @@ class CAN_MHP:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.system_time = struct.unpack_from('<I',buf,offset)[0]
+		offset = offset+struct.calcsize('<I')
 
 		self.static_pressure = struct.unpack_from('<I',buf,offset)[0]
+		offset = offset+struct.calcsize('<I')
 
 		self.dynamic_pressure = [];
 
@@ -850,8 +947,10 @@ class CAN_MHP:
 			offset = offset+struct.calcsize('<i')
 
 		self.air_temperature = struct.unpack_from('<h',buf,offset)[0]
+		offset = offset+struct.calcsize('<h')
 
 		self.humidity = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 		self.gyroscope = [];
 
@@ -872,10 +971,13 @@ class CAN_MHP:
 			offset = offset+struct.calcsize('<h')
 
 		self.alpha = struct.unpack_from('<h',buf,offset)[0]
+		offset = offset+struct.calcsize('<h')
 
 		self.beta = struct.unpack_from('<h',buf,offset)[0]
+		offset = offset+struct.calcsize('<h')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -925,14 +1027,19 @@ class CAN_Magnetometer:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.mx = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.my = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.mz = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -965,14 +1072,19 @@ class CAN_Pressure:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.pressureSta = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.pressureDyn = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.temp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -1005,14 +1117,19 @@ class CAN_Proximity:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.timestamp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.distance = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.velocity = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -1048,16 +1165,22 @@ class CAN_Supply:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.voltage = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.current = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.coulomb_count = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.temperature = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset+struct.calcsize('<f')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -1095,6 +1218,7 @@ class CAN_Actuator:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.usec = [];
 
@@ -1103,6 +1227,7 @@ class CAN_Actuator:
 			offset = offset+struct.calcsize('<H')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -1140,6 +1265,7 @@ class CAN_Receiver:
 		offset = 0
 
 		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset+struct.calcsize('<B')
 
 		self.usec = [];
 
@@ -1148,6 +1274,7 @@ class CAN_Receiver:
 			offset = offset+struct.calcsize('<H')
 
 		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset+struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE

@@ -41,7 +41,7 @@ user_payload = UserPayload();
 
 downstream = Downstream();
 
-def plottingHandler(pkt):
+def standard_handler(pkt):
 
     if((pkt.FROM & 0xFF000000) == 0x41000000):
 
@@ -49,32 +49,32 @@ def plottingHandler(pkt):
         if pkt.TYPE is PacketTypes.TELEMETRY_CONTROL:
             try:
                 telemetry_control.parse(pkt.DATA)
-            except BufferError, (ErrorMessage):
-                print ErrorMessage
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
 
         if pkt.TYPE is PacketTypes.TELEMETRY_ORIENTATION:
             try:
                 telemetry_orientation.parse(pkt.DATA)
-            except BufferError, (ErrorMessage):
-                print ErrorMessage
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
 
         if pkt.TYPE is PacketTypes.TELEMETRY_POSITION:
             try:
                 telemetry_position.parse(pkt.DATA)
-            except BufferError, (ErrorMessage):
-                print ErrorMessage
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
 
         if pkt.TYPE is PacketTypes.TELEMETRY_PRESSURE:
             try:
                 telemetry_pressure.parse(pkt.DATA)
-            except BufferError, (ErrorMessage):
-                print ErrorMessage
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
 
         if pkt.TYPE is PacketTypes.TELEMETRY_SYSTEM:
             try:
                 telemetry_system.parse(pkt.DATA)
-            except BufferError, (ErrorMessage):
-                print ErrorMessage
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
 
         #-----[ PAYLOAD ]-----%
         if pkt.TYPE is PacketTypes.PAYLOAD_CHANNEL_0:
@@ -85,11 +85,11 @@ def plottingHandler(pkt):
                 try:
                     downstream.parse(bytearray(user_payload.buffer))
                     updatePlots();
-                except BufferError, (ErrorMessage):
-                    print ErrorMessage
+                except BufferError as ErrorMessage:
+                    print(ErrorMessage)
 
-            except BufferError, (ErrorMessage):
-                print ErrorMessage
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
 
 plt.rcParams['toolbar'] = 'None'
 fig = plt.figure(num=None, figsize=(20, 10), dpi=80, facecolor='w', edgecolor='k')
@@ -177,7 +177,7 @@ def updatePlots():
     plt.draw()
     plt.pause(0.001)
 
-    
+
 def addData(array,data):
     array.append(data);
     array = array[-100:]
@@ -197,9 +197,9 @@ def plotData(time, data, plot, ylabel, ymin, ymax):
     else:
         text_num = data[-1]
     plot.text(0.99,0.95, text_num,
-        horizontalalignment='right',
-        verticalalignment='top',
-        transform=plot.transAxes)
+            horizontalalignment='right',
+            verticalalignment='top',
+            transform=plot.transAxes)
 
     plot.set_ylabel(ylabel)
     plot.set_xlabel('Time [s]')

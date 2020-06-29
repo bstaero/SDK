@@ -9,4 +9,6 @@ gazebo_test/test
 examples/mhp/test
 examples/gazebo/test
 examples/payload/test
+examples/mhp/test
 .idea/
+venv/
