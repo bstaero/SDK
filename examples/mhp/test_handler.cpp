@@ -147,6 +147,7 @@ void handlePacket(uint8_t type, const void * data)
 							"AIR_TEMPERATURE_TIME,"
 							"AIR_TEMPERATURE,"
 							"HUMIDITY_TIME,"
+							"HUMIDITY,"
 							"DATA_PRODUCT_TIME,"
 							"ALPHA,"
 							"BETA,"
