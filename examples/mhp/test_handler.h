@@ -26,6 +26,6 @@ extern volatile SensorType_t calibration_requested;
 
 void sendCalibrate(SensorType_t sensor);
 void requestPowerOn(void);
-void updateCommunications(void);
+bool updateCommunications(void);
 
 #endif

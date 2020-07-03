@@ -32,6 +32,7 @@
 volatile bool display_telemetry = false;
 volatile bool display_telemetry_timing = false;
 volatile bool waiting_on_calibrate = false;
+volatile bool write_file = false;
 
 // for command line (terminal) input
 struct termios initial_settings, new_settings;

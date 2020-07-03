@@ -42,15 +42,21 @@ volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
 void handlePacket(uint8_t type, const void * data);
 /*<-End Local Functions--->*/
 
-void updateCommunications(void) {
+bool updateCommunications(void) {
 
 	uint8_t data;
+	bool retval = false;
 	rx_packet.setAddressing(false);
 
 	while(readByte(&data)) {
-		if(rx_packet.isValid(data))
+		retval = true;
+		if(rx_packet.isValid(data)) {
 			handlePacket(rx_packet.getType(), rx_packet.getDataPtr());
+			break;
+		}
 	}
+
+	return retval;
 }
 
 void handlePacket(uint8_t type, const void * data) 
@@ -59,6 +65,9 @@ void handlePacket(uint8_t type, const void * data)
 
 	PowerOn_t * power_on_data;
 	CalibrateSensor_t * calibration_data;
+
+	static bool first_run = true;
+	char out[1024];
 
 	switch(type) {
 
@@ -108,6 +117,109 @@ void handlePacket(uint8_t type, const void * data)
 						mhp_sensors_gnss.velocity[2],
 						mhp_sensors_gnss.pdop
 							);
+
+			if(write_file) {
+				if(first_run) {
+					sprintf(out,"%%"
+							"STATIC_PRESSURE_TIME,"
+							"STATIC_PRESSURE,"
+							"MAGNETOMETER_TIME,"
+							"MAGNETOMETER_X,"
+							"MAGNETOMETER_Y,"
+							"MAGNETOMETER_Z,"
+							"IMU_TIME,"
+							"ACCELEROMETER_X,"
+							"ACCELEROMETER_Y,"
+							"ACCELEROMETER_Z,"
+							"GYROSCOPE_X,"
+							"GYROSCOPE_Y,"
+							"GYROSCOPE_Z,"
+							"DYNAMIC_PRESSURE_TIME_0,"
+							"DYNAMIC_PRESSURE_0,"
+							"DYNAMIC_PRESSURE_TIME_1,"
+							"DYNAMIC_PRESSURE_1,"
+							"DYNAMIC_PRESSURE_TIME_2,"
+							"DYNAMIC_PRESSURE_2,"
+							"DYNAMIC_PRESSURE_TIME_3,"
+							"DYNAMIC_PRESSURE_3,"
+							"DYNAMIC_PRESSURE_TIME_4,"
+							"DYNAMIC_PRESSURE_4,"
+							"AIR_TEMPERATURE_TIME,"
+							"AIR_TEMPERATURE,"
+							"HUMIDITY_TIME,"
+							"DATA_PRODUCT_TIME,"
+							"ALPHA,"
+							"BETA,"
+							"Q,"
+							"TAS,"
+							"IAS,"
+							"GPS_TIME,"
+							"GPS_WEEK,"
+							"HOUR,"
+							"MINUTE,"
+							"SECONDS,"
+							"LATTIUDE,"
+							"LONGITUDE,"
+							"ALTITUDE,"
+							"VELOCITY_N,"
+							"VELOCITY_E,"
+							"VELOCITY_D,"
+							"PDOP"
+							"\n");
+					writeBytes((uint8_t*)out,strlen(out));
+					first_run = 0;
+				}
+
+				sprintf(out,"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n", 
+						mhp_timing.static_pressure_time,  // [s]
+						mhp_sensors.static_pressure,
+						mhp_timing.magnetometer_time, // [s]
+						mhp_sensors_gnss.magnetometer[0],
+						mhp_sensors_gnss.magnetometer[1],
+						mhp_sensors_gnss.magnetometer[2],
+						mhp_timing.imu_time, // [s]
+						mhp_sensors.accelerometer[0],
+						mhp_sensors.accelerometer[1],
+						mhp_sensors.accelerometer[2],
+						mhp_sensors.gyroscope[0],
+						mhp_sensors.gyroscope[1],
+						mhp_sensors.gyroscope[2],
+						mhp_timing.dynamic_pressure_time[0],  // [s]
+						mhp_sensors.dynamic_pressure[0],
+						mhp_timing.dynamic_pressure_time[1],  // [s]
+						mhp_sensors.dynamic_pressure[1],
+						mhp_timing.dynamic_pressure_time[2],  // [s]
+						mhp_sensors.dynamic_pressure[2],
+						mhp_timing.dynamic_pressure_time[3],  // [s]
+						mhp_sensors.dynamic_pressure[3],
+						mhp_timing.dynamic_pressure_time[4],  // [s]
+						mhp_sensors.dynamic_pressure[4],
+						mhp_timing.air_temperature_time,  // [s]
+						mhp_sensors.air_temperature,
+						mhp_timing.humidity_time,  // [s]
+						mhp_sensors.humidity,
+						mhp_data.system_time,
+						mhp_data.alpha,
+						mhp_data.beta,
+						mhp_data.q,
+						mhp_data.ias,
+						mhp_data.tas,
+						mhp_timing.gps_time, // [s]
+						(double)mhp_sensors_gnss.week,
+						(double)mhp_sensors_gnss.hour,
+						(double)mhp_sensors_gnss.minute,
+						mhp_sensors_gnss.seconds,
+						mhp_sensors_gnss.latitude,
+						mhp_sensors_gnss.longitude,
+						mhp_sensors_gnss.altitude,
+						mhp_sensors_gnss.velocity[0],
+						mhp_sensors_gnss.velocity[1],
+						mhp_sensors_gnss.velocity[2],
+						(double)mhp_sensors_gnss.pdop
+							);
+
+				writeBytes((uint8_t*)out,strlen(out));
+			}
 
 			break;
 

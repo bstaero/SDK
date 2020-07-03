@@ -34,6 +34,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef __APPLE__
 #include <mach/mach_time.h> // system time
@@ -45,9 +48,12 @@
 
 /*<---Global Variables---->*/
 CommunicationsInterface * comm_interface;
+int in_fid = -1;
+int out_fid = -1;
 /*<-End Global Variables-->*/
 
-enum {COMM_SERIAL, COMM_SOCKET, COMM_UNKNOWN, COMM_INVALID};
+enum {COMM_SERIAL, COMM_SOCKET, COMM_FILE, COMM_UNKNOWN, COMM_INVALID};
+uint8_t comm_type = COMM_UNKNOWN;
 
 bool big_endian = false;
 bool running = true;
@@ -63,16 +69,20 @@ int main(int argc, char *argv[])
 	uint16_t temp = 0x0100;
 	big_endian = ((uint8_t *)&temp)[0];
 
-	uint8_t comm_type = COMM_UNKNOWN;
-
 	char param[3][32];
 	param[0][0] = 0;
 	param[1][0] = 0;
 	param[2][0] = 0;
 
+	char infile[132];
+	char outfile[132];
+
+	bzero(infile,132);
+	bzero(outfile,132);
+
 	char c;
 	int retval = -1;
-	while ((c = getopt(argc, argv, "b:d:i:p:t:x:h")) != retval) {
+	while ((c = getopt(argc, argv, "b:d:f:i:o:p:t:x:h")) != retval) {
 		switch(c) {
 			case 'b':
 				strcpy(&param[1][0],optarg);
@@ -92,6 +102,14 @@ int main(int argc, char *argv[])
 				comm_type != COMM_SERIAL ? comm_type = COMM_SOCKET : comm_type = COMM_INVALID;
 				strcpy(&param[2][0],"TCP:CLIENT");
 				break;
+			case 'f':
+				comm_type = COMM_FILE;
+				strcpy(infile,optarg);
+				break;
+			case 'o':
+				comm_type = COMM_FILE;
+				strcpy(outfile,optarg);
+				break;
 			default:
 				printHelp();
 				break;
@@ -110,6 +128,10 @@ int main(int argc, char *argv[])
 			if(!param[1][0]) strcpy(&param[1][0],"55555");
 			if(!param[2][0]) strcpy(&param[2][0],"TCP:CLIENT");
 			break;
+		case COMM_FILE:
+			comm_type = COMM_FILE;
+			if(!strlen(infile)) {printHelp(); exit(1);}
+			break;
 		case COMM_UNKNOWN:
 		default:
 			comm_type = COMM_SERIAL;
@@ -126,28 +148,65 @@ int main(int argc, char *argv[])
 	setupTime();
 
 	// set interface
-	if(comm_type == COMM_SERIAL) {
-		comm_interface = new NetuasSerial;
-	} else if(comm_type == COMM_SOCKET) {
-		comm_interface = new NetuasSocket;
+	if(comm_type == COMM_SERIAL || comm_type == COMM_SOCKET) {
+		if(comm_type == COMM_SERIAL) {
+			comm_interface = new NetuasSerial;
+		} else if(comm_type == COMM_SOCKET) {
+			comm_interface = new NetuasSocket;
+		}
+
+		comm_interface->initialize(param[0],param[1],param[2]);
+		comm_interface->open();
 	}
 
-	comm_interface->initialize(param[0],param[1],param[2]);
-	comm_interface->open();
+	if(comm_type == COMM_FILE) {
+		in_fid = open(infile, O_RDONLY);
+		if(in_fid < 0) {
+			printf("ERROR - unable to open file %s for reading.\n",infile);
+			exit(1);
+		}
+		if(strlen(outfile)) {
+			out_fid = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 644);
+			if(out_fid < 0) {
+				printf("ERROR - unable to open file %s for writing.\n",outfile);
+				close(in_fid);
+				exit(1);
+			}
+			write_file = true;
+		}
+	}
 
 	initializeTest();
 
-	while(comm_interface->isConnected() && running) {
-		// Update communications
-		updateCommunications();
+	if(comm_type == COMM_SERIAL || comm_type == COMM_SOCKET) {
+		while(comm_interface->isConnected() && running) {
+			// Update communications
+			updateCommunications();
 
-		// Perform user functions
-		updateTest();
+			// Perform user functions
+			updateTest();
 
-		usleep(100);
+			usleep(100);
+		}
 	}
 
-	comm_interface->close();
+	if(comm_type == COMM_FILE) {
+		while(updateCommunications() && running) {
+			// Perform user functions
+			updateTest();
+
+			if(out_fid < 0)
+				usleep(100);
+		}
+	}
+
+	if(comm_type == COMM_SERIAL || comm_type == COMM_SOCKET)
+		comm_interface->close();
+
+	if(comm_type == COMM_FILE) {
+		close(in_fid);
+		close(out_fid);
+	}
 
 	exitTest();
 	printf("Disconnected, exiting.\n\n");
@@ -161,17 +220,32 @@ void printHelp() {
 	printf("  Socket paramerters:\n");
 	printf("    -i <server ip number>   : default localhost\n");
 	printf("    -p <socket port number> : default 55555\n");
+	printf("  File paramerters:\n");
+	printf("    -f <input file> \n");
+	printf("    -o <output file> \n");
 	printf("\n");
 	printf("  -h        Print this help\n");
 	exit(0);
 }
 
 bool readByte(uint8_t * data) {
-	return comm_interface->read(data,1) > 0;
+	if(comm_type == COMM_SERIAL || comm_type == COMM_SOCKET)
+		return comm_interface->read(data,1) > 0;
+
+	if(comm_type == COMM_FILE)
+		return read(in_fid, data, 1);
+
+	return false;
 }
 
 bool writeBytes(uint8_t * data, uint16_t num) {
-	return comm_interface->write(data, num) == num;
+	if(comm_type == COMM_SERIAL || comm_type == COMM_SOCKET)
+		return comm_interface->write(data, num) == num;
+
+	if(comm_type == COMM_FILE)
+		return write(out_fid, data, num);
+
+	return false;
 }
 
 double start_time = 0.0;
