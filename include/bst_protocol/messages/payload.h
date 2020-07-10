@@ -40,6 +40,10 @@ namespace comms {
 namespace payload {
 #endif
 
+/*--------[ Actuators ]--------*/
+
+#define NUM_PAYLOAD_CHANNELS 16
+
 /*--------[ Controller ]--------*/
 
 typedef enum {
@@ -50,6 +54,34 @@ typedef enum {
 	/* Command Interface */
 	CMD_PAYLOAD_CONTROL=35,
 }  __attribute__ ((packed)) CommandID_t;
+
+/*--------[ Input ]--------*/
+
+typedef enum {
+	INTERFACE_UNKNOWN,
+	INTERFACE_BST_PROTOCOL,
+	INTERFACE_NMEA_GPS,
+	INTERFACE_MAVLINK_POS,
+	INTERFACE_PAYLOAD_PASSTHRU,
+}  __attribute__ ((packed)) PayloadInterface_t;
+
+typedef enum {
+	UNKNOWN_TYPE,
+	DISCRETE_IO,
+	PWM_50HZ,
+	PWM_300HZ,
+	FALLING_EDGE_TRIGGER,
+	RISING_EDGE_TRIGGER,
+	CONTINUOUS_TRIGGER,
+	CONTINUOUS_TRIGGER_LOW,
+}  __attribute__ ((packed)) PayloadSignal_t;
+
+typedef enum {
+	PAYLOAD_TYPE_CAMERA,
+	PAYLOAD_TYPE_DOOR,
+	PAYLOAD_TYPE_POWER,
+	PAYLOAD_TYPE_UNUSED,
+}  __attribute__ ((packed)) PayloadType_t;
 
 /*--------[ PAYLOAD ]--------*/
 
@@ -62,6 +94,13 @@ typedef enum {
 	PAYLOAD_CTRL_ERROR,
 	PAYLOAD_CTRL_INVALID,
 }  __attribute__ ((packed)) PayloadControl_t;
+
+typedef enum {
+	PAYLOAD_STATE_OPEN,
+	PAYLOAD_STATE_CLOSED,
+	PAYLOAD_STATE_AUTO,
+	PAYLOAD_STATE_UNKNOWN,
+}  __attribute__ ((packed)) PayloadState_t;
 
 /*--------[ Payload Sensors ]--------*/
 
@@ -288,22 +327,43 @@ typedef struct _NDVI_t {
 } __attribute__ ((packed)) NDVI_t;
 
 typedef struct _PayloadParam_t {
-	uint8_t channel;  // [0 or 1]
+	uint8_t channel;  // [0-15]
+	char channelName[32];
 	float deltaD;  // [m]
-	float deltaT;  // [s]
 	float pulse;  // [s]
-	float cruise_speed;  // [m/s] speed to execute mission
+	float powerUp;  // [s]
+	float powerDown;  // [s]
+	PayloadType_t payloadType;
+	PayloadSignal_t payloadSignal;
+	PayloadState_t payloadState;
 
 #ifdef __cplusplus
 	_PayloadParam_t() {
+		uint8_t _i;
+
 		channel = 0;
+
+		for (_i = 0; _i < 32; ++_i)
+			channelName[_i] = 0;
+
 		deltaD = 0.0;
-		deltaT = 0.0;
 		pulse = 0.0;
-		cruise_speed = 0.0;
+		powerUp = 0.0;
+		powerDown = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) PayloadParam_t;
+
+typedef struct _PayloadSerial_t {
+	float baudRate;
+	PayloadInterface_t payloadInterface;
+
+#ifdef __cplusplus
+	_PayloadSerial_t() {
+		baudRate = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) PayloadSerial_t;
 
 typedef struct _PayloadTrigger_t {
 	double latitude;  // [deg]

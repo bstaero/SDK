@@ -73,6 +73,18 @@ typedef enum {
 	ACT_PAYLOAD_2,
 	ACT_PAYLOAD_3,
 	ACT_PAYLOAD_4,
+	ACT_PAYLOAD_5,
+	ACT_PAYLOAD_6,
+	ACT_PAYLOAD_7,
+	ACT_PAYLOAD_8,
+	ACT_PAYLOAD_9,
+	ACT_PAYLOAD_10,
+	ACT_PAYLOAD_11,
+	ACT_PAYLOAD_12,
+	ACT_PAYLOAD_13,
+	ACT_PAYLOAD_14,
+	ACT_PAYLOAD_15,
+	ACT_PAYLOAD_16,
 	ACT_INVALID,
 }  __attribute__ ((packed)) ActuatorFunction_t;
 
@@ -100,6 +112,18 @@ typedef enum {
 	PAYLOAD_2,
 	PAYLOAD_3,
 	PAYLOAD_4,
+	PAYLOAD_5,
+	PAYLOAD_6,
+	PAYLOAD_7,
+	PAYLOAD_8,
+	PAYLOAD_9,
+	PAYLOAD_10,
+	PAYLOAD_11,
+	PAYLOAD_12,
+	PAYLOAD_13,
+	PAYLOAD_14,
+	PAYLOAD_15,
+	PAYLOAD_16,
 	INVALID_SURFACE,
 }  __attribute__ ((packed)) SurfaceCommand_t;
 
@@ -153,6 +177,7 @@ typedef enum {
 	SENSORS_MHP=13,
 	SENSORS_GNSS_RTCM=14,
 	SENSORS_MHP_SENSORS=15,
+	SENSORS_ADSB=29,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_MHP_GNSS=30,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_MHP_TIMING=31,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 
@@ -233,6 +258,7 @@ typedef enum {
 	PAYLOAD_CONTROL=228,
 	PAYLOAD_CAMERA_TAG=229,
 	PAYLOAD_STATUS=230,
+	PAYLOAD_SERIAL=231,
 
 	PAYLOAD_CHANNEL_0=232,
 	PAYLOAD_CHANNEL_1=233,
@@ -497,6 +523,56 @@ typedef enum {
 }  __attribute__ ((packed)) MissionInitialization_t;
 
 /*--------[ Sensors ]--------*/
+
+#define FLAGS_BARO_VALID 256
+
+#define FLAGS_SIMULATED 64
+
+#define FLAGS_SOURCE_UAT 32767
+
+#define FLAGS_VALID_ALTITUDE 2
+
+#define FLAGS_VALID_CALLSIGN 16
+
+#define FLAGS_VALID_COORDS 1
+
+#define FLAGS_VALID_HEADING 4
+
+#define FLAGS_VALID_SQUAWK 32
+
+#define FLAGS_VALID_VELOCITY 8
+
+#define FLAGS_VERTICAL_VELOCITY_VALID 128
+
+typedef enum {
+	/* Altitude reported from a Baro source using QNH reference */
+	ALTITUDE_TYPE_PRESSURE_QNH,
+	/* Altitude reported from a GNSS source */
+	ALTITUDE_TYPE_GEOMETRIC,
+}  __attribute__ ((packed)) ADSB_Altitude_t;
+
+typedef enum {
+	EMITTER_TYPE_NO_INFO,
+	EMITTER_TYPE_LIGHT,
+	EMITTER_TYPE_SMALL,
+	EMITTER_TYPE_LARGE,
+	EMITTER_TYPE_HIGH_VORTEX_LARGE,
+	EMITTER_TYPE_HEAVY,
+	EMITTER_TYPE_HIGHLY_MANUV,
+	EMITTER_TYPE_ROTOCRAFT,
+	EMITTER_TYPE_UNASSIGNED,
+	EMITTER_TYPE_GLIDER,
+	EMITTER_TYPE_LIGHTER_AIR,
+	EMITTER_TYPE_PARACHUTE,
+	EMITTER_TYPE_ULTRA_LIGHT,
+	EMITTER_TYPE_UNASSIGNED2,
+	EMITTER_TYPE_UAV,
+	EMITTER_TYPE_SPACE,
+	EMITTER_TYPE_UNASSGINED3,
+	EMITTER_TYPE_EMERGENCY_SURFACE,
+	EMITTER_TYPE_SERVICE_SURFACE,
+	EMITTER_TYPE_POINT_OBSTACLE,
+}  __attribute__ ((packed)) ADSB_Emitter_t;
 
 typedef enum {
 	CAL_UNKNOWN,
@@ -766,6 +842,45 @@ typedef struct _ThreeAxisSensor_t {
 	}
 #endif
 } __attribute__ ((packed)) ThreeAxisSensor_t;
+
+typedef struct _ADSB_t {
+	float system_time;
+	uint32_t icao_address;
+	double latitude;
+	double longitude;
+	ADSB_Altitude_t altitude_type;
+	float altitude;
+	float heading;
+	float horizontal_velocity;
+	float vertical_velocity;
+	char callsign[9];
+	ADSB_Emitter_t emitter_type;
+	uint8_t tslc;
+	uint16_t flags;
+	uint16_t squawk;
+
+#ifdef __cplusplus
+	_ADSB_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		icao_address = 0;
+		latitude = 0.0;
+		longitude = 0.0;
+		altitude = 0.0;
+		heading = 0.0;
+		horizontal_velocity = 0.0;
+		vertical_velocity = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			callsign[_i] = 0;
+
+		tslc = 0;
+		flags = 0;
+		squawk = 0;
+	}
+#endif
+} __attribute__ ((packed)) ADSB_t;
 
 typedef struct _CalibrateSensor_t {
 	SensorType_t sensor;
@@ -1118,6 +1233,18 @@ typedef enum {
 	HS_FUNC_PAYLOAD_2,
 	HS_FUNC_PAYLOAD_3,
 	HS_FUNC_PAYLOAD_4,
+	HS_FUNC_PAYLOAD_5,
+	HS_FUNC_PAYLOAD_6,
+	HS_FUNC_PAYLOAD_7,
+	HS_FUNC_PAYLOAD_8,
+	HS_FUNC_PAYLOAD_9,
+	HS_FUNC_PAYLOAD_10,
+	HS_FUNC_PAYLOAD_11,
+	HS_FUNC_PAYLOAD_12,
+	HS_FUNC_PAYLOAD_13,
+	HS_FUNC_PAYLOAD_14,
+	HS_FUNC_PAYLOAD_15,
+	HS_FUNC_PAYLOAD_16,
 
 	HS_FUNC_ROLL,
 	HS_FUNC_PITCH,
