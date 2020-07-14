@@ -25,6 +25,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.STATIC_PRESSURE_TIME(start_index:end),...
 			data.STATIC_PRESSURE(start_index:end));
 
@@ -33,6 +34,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.MAGNETOMETER_TIME(start_index:end),...
 			[data.MAGNETOMETER_X(start_index:end),...
 			 data.MAGNETOMETER_Y(start_index:end),...
@@ -44,6 +46,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.IMU_TIME(start_index:end),...
 			[data.ACCELEROMETER_X(start_index:end),...
 			 data.ACCELEROMETER_Y(start_index:end),...
@@ -55,6 +58,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.IMU_TIME(start_index:end),...
 			[data.GYROSCOPE_X(start_index:end).*180/pi,...
 			 data.GYROSCOPE_Y(start_index:end).*180/pi,...
@@ -66,6 +70,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.DYNAMIC_PRESSURE_TIME_0(start_index:end),...
 			data.DYNAMIC_PRESSURE_0(start_index:end).*180/pi);
 	hold on;
@@ -85,6 +90,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.AIR_TEMPERATURE_TIME(start_index:end),...
 			data.AIR_TEMPERATURE(start_index:end));
 
@@ -93,6 +99,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.HUMIDITY_TIME(start_index:end),...
 			data.HUMIDITY(start_index:end));
 
@@ -101,6 +108,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.DATA_PRODUCT_TIME(start_index:end),...
 			[data.ALPHA(start_index:end).*180/pi,...
 			 data.BETA(start_index:end).*180/pi,]);
@@ -111,6 +119,7 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
+	ax(fig_index) = subplot(1,1,1);
 	plot(data.DATA_PRODUCT_TIME(start_index:end),...
 			[data.IAS(start_index:end),...
 			 data.TAS(start_index:end),]);
@@ -118,3 +127,6 @@ function plot_data(data)
 	title('Speeds [m/s]');
 	legend('IAS','TAS');
 	xlabel('time [s]');
+
+
+	linkaxes(ax,'x');
