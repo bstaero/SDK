@@ -69,16 +69,16 @@ ${BIN_DIR}:
 	@mkdir -p ${BIN_DIR}
 
 ${BIN_DIR}/%.o:%.cpp
-	$(CXX) $(FLAGS) -c -o $@ $^ $(INCLUDES) $(DEFINES)
+	$(CXX) -c -o $@ $^ $(INCLUDES) $(DEFINES) $(FLAGS)
  
 ${BIN_DIR}/%.o: %.c
-	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
+	$(CXX) -c -o $@ $< $(INCLUDES) $(DEFINES) $(FLAGS)
 
 ${BIN_DIR}/%.o:%.cpp %.h
-	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
+	$(CXX) -c -o $@ $< $(INCLUDES) $(DEFINES) $(FLAGS)
  
 ${BIN_DIR}/%.o: %.c %.h
-	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
+	$(CXX) -c -o $@ $< $(INCLUDES) $(DEFINES) $(FLAGS)
 
 allclean: clean
 	rmdir netuas
