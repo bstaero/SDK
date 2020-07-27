@@ -60,7 +60,7 @@ all: default
 default: libnetuas test
 
 test: $(OBJ)
-	$(CXX) -o $@ $^ -L../../lib $(LDFLAGS) -lnetuas_lib
+	$(CXX) -o $@ $^ -L../../lib -lnetuas_lib $(LDFLAGS) 
 
 clean:
 	cd ../../lib && $(MAKE) clean
