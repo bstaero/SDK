@@ -940,6 +940,10 @@ speed_t getBaudSpeed( int baud )
 	} else if ( baud == 460800 ) {
 		speed = B460800;
 #endif
+#ifdef B500000
+	} else if ( baud == 500000 ) {
+		speed = B500000;
+#endif
 #ifdef B921600
 	} else if ( baud == 921600 ) {
 		speed = B921600;

@@ -12,7 +12,7 @@ function comm_port = initialize_connection(dev)
 	end
 
 	comm_port = serial(dev,'InputBufferSize', 1024*10,'OutputBufferSize', 1024*10);
-	comm_port.BaudRate = 115200;
+	comm_port.BaudRate = 500000;
 	comm_port.Terminator = '';
 	comm_port.Timeout = 1;
 

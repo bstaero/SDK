@@ -1,0 +1,35 @@
+function mhp = parse_mhp_sensors_packet(data)
+
+ptr = 1;
+
+mhp.time                = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.error_code          = data(ptr);
+ptr = ptr+1;
+mhp.static_pressure     = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.dynamic_pressure(1) = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.dynamic_pressure(2) = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.dynamic_pressure(3) = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.dynamic_pressure(4) = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.dynamic_pressure(5) = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.air_temperature     = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.humidity            = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.gyroscope(1)        = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.gyroscope(2)        = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.gyroscope(3)        = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.accelerometer(1)    = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.accelerometer(2)    = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.accelerometer(3)    = double(typecast(uint8(data(ptr:ptr+3)),'single'));

@@ -1,0 +1,33 @@
+function mhp = parse_mhp_gnss_packet(data)
+
+ptr = 1;
+
+mhp.time            = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.magnetometer(1) = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.magnetometer(2) = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.magnetometer(3) = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.week            = uint16(typecast(uint8(data(ptr:ptr+1)),'uint16'));
+ptr = ptr+2;
+mhp.hour            = data(ptr);
+ptr = ptr+1;
+mhp.minute          = data(ptr);
+ptr = ptr+1;
+mhp.seconds         = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.latitude        = double(typecast(uint8(data(ptr:ptr+7)),'double'));
+ptr = ptr+8;
+mhp.longitude       = double(typecast(uint8(data(ptr:ptr+7)),'double'));
+ptr = ptr+8;
+mhp.altitude        = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.velocity(1)     = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.velocity(2)     = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.velocity(3)     = double(typecast(uint8(data(ptr:ptr+3)),'single'));
+ptr = ptr+4;
+mhp.pdop            = double(typecast(uint8(data(ptr:ptr+3)),'single'));
