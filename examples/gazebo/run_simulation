@@ -12,8 +12,7 @@ pkill gcsDaemon
 pkill pro_core
 
 bin/gcsDaemon -n 55554 -S &
-bin/pro_core_swil_MULTIROTOR -i localhost &
-# -v6 &
+bin/pro_core_swil_MULTIROTOR -i localhost -v6 &
 
 gazebo worlds/multirotor.world
 
