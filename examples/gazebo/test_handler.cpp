@@ -309,8 +309,8 @@ uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * pa
 
 void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void * parameter)
 {
-	//printf("receiveReply: type=%u\n", type);
-	//ack? fprintf(stderr,"ACK\n"): fprintf(stderr,"NACK\n");
+    printf("receiveReply: type=%u\n", type);
+    ack ? fprintf(stderr,"--> ACK\n") : fprintf(stderr,"--> NACK\n");
 
 	Command_t * tmp_command = (Command_t *) data;
 

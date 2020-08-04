@@ -170,17 +170,17 @@ int main(int argc, char *argv[])
 
 void printHelp() {
 	printf("Usage: test [OPTIONS]\n");
-	printf("  Serial port paramerters:\n");
+	printf("  Serial port parameters:\n");
 	printf("    -d <serial device name> : default /dev/ttyUSB0\n");
 	printf("    -b <serial baud>        : default 9600\n");
-	printf("  Socket paramerters:\n");
+	printf("  Socket parameters:\n");
 	printf("    -i <server ip number>   : default localhost\n");
 	printf("    -p <socket port number> : default 55552\n");
-	printf("  Radio paramerters:\n");
+	printf("  Radio parameters:\n");
 	printf("    -t <xtend address>      : default 0xFFFF\n");
 	printf("    -x <xbee address>       : default 0xFFFF\n");
-	printf("  Replay paramerters:\n");
-	printf("    -f <log filen name>     : default LOG_O00.bin\n");
+	printf("  Replay parameters:\n");
+	printf("    -f <log file name>     : default LOG_000.bin\n");
 	exit(0);
 }
 
