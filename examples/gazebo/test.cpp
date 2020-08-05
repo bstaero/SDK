@@ -432,7 +432,7 @@ void updateTest() {
         if(update_pp)
         {
             /** Get State estimate for pitch/roll */
-            comm_handler->request(STATE_ESTIMATOR_PARAM, 0);
+            //comm_handler->request(STATE_ESTIMATOR_PARAM, 0);
         }
         if(!update_pp)
         {
@@ -476,13 +476,15 @@ bool setCommandValue(bst::comms::CommandID_t id, float value) {
         comm_handler->update();
     }
 
-    if (!received_reply)
+    if (!received_reply) {
         return false;
+    }
 
     received_reply = false;
 
-    if (!set_command_ack)
+    if (!set_command_ack) {
         return false;
+    }
 
     return true;
 }
