@@ -1,0 +1,8 @@
+#!/bin/bash
+
+WDIR=`pwd`
+
+export GAZEBO_PLUGIN_PATH=${WDIR}/plugins:${GAZEBO_PLUGIN_PATH}
+export GAZEBO_MODEL_PATH=${WDIR}/models:${GAZEBO_MODEL_PATH}
+
+gazebo --verbose worlds/multirotor.world
