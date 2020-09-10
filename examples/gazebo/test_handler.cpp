@@ -122,11 +122,6 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
             q1 = estimator_data->q[1];
             q2 = estimator_data->q[2];
             q3 = estimator_data->q[3];
-            //set_command.id = CMD_VRATE;
-            //set_command.value = (20 - estimator_data->agl) * 0.3;
-            //printf("Sending %f m/s, estimator agl: %f\n", set_command.value, estimator_data->agl);
-            //printf("q[0] = %f, q[1] = %f, q[2] = %f, q[3] = %f\n\n", estimator_data->q[0], estimator_data->q[1], estimator_data->q[2], estimator_data->q[3]);
-            //comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&set_command, sizeof(Command_t), NULL);
             break;
 
 			/* CONTROL */
@@ -163,9 +158,9 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case TELEMETRY_POSITION:
 			printf("TELEMETRY_POSITION\n");
 			memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
-			//printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
-			//printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
-			//printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);
+			printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
+			printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
+			printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);
 			break;
 
 		case TELEMETRY_ORIENTATION:
@@ -183,10 +178,10 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 			memcpy(&telemetry_system,data,sizeof(TelemetrySystem_t));
 			break;
 		case TELEMETRY_GCS:
-			//printf("TELEMETRY_GCS\n");
+			printf("TELEMETRY_GCS\n");
 			break;
 		case TELEMETRY_GCS_LOCATION:
-			//printf("TELEMETRY_GCS_LOCATION\n");
+			printf("TELEMETRY_GCS_LOCATION\n");
 			break;
 
 			/* ERRORS */
