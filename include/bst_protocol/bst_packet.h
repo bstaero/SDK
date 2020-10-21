@@ -2,16 +2,16 @@
 |               Copyright (C) 2015 Black Swift Technologies LLC.               |
 |                             All Rights Reserved.                             |
 
-     NOTICE:  All information contained herein is, and remains the property 
+     NOTICE:  All information contained herein is, and remains the property
      of Black Swift Technologies.
 
-     The intellectual and technical concepts contained herein are 
-     proprietary to Black Swift Technologies LLC and may be covered by U.S. 
-     and foreign patents, patents in process, and are protected by trade 
+     The intellectual and technical concepts contained herein are
+     proprietary to Black Swift Technologies LLC and may be covered by U.S.
+     and foreign patents, patents in process, and are protected by trade
      secret or copyright law.
 
-     Dissemination of this information or reproduction of this material is 
-     strictly forbidden unless prior written permission is obtained from 
+     Dissemination of this information or reproduction of this material is
+     strictly forbidden unless prior written permission is obtained from
      Black Swift Technologies LLC.
 |                                                                              |
 |                                                                              |
@@ -122,9 +122,25 @@ static const uint32_t UAV_ID      = 0x41000000;
 static const uint32_t GCS_ID      = 0x53000000;
 static const uint32_t TABLET_ID   = 0x54000000;
 
-uint16_t Packet_validateBuffer(const uint8_t * const data, uint16_t n);
-uint16_t Packet_packetSize(const uint8_t * const data);
-uint16_t Packet_dataSize(const uint8_t * const data);
+#ifdef __cplusplus
+#ifndef SWIG_GEN
+extern "C" {
+#endif
+#endif
+
+uint16_t Packet_validateBuffer(const uint8_t * const buff, uint16_t n, uint8_t uses_address);
+uint16_t Packet_packetSize(const uint8_t * const buff, uint8_t uses_address);
+uint16_t Packet_dataSize(const uint8_t * const buff);
+
+void Packet_create(uint8_t * buff, Packet_t type, PacketAction_t action, uint8_t * data, uint16_t size, uint8_t uses_address);
+
+#ifdef __cplusplus
+#ifndef SWIG_GEN
+}
+#endif
+#endif
+
+
 
 #ifdef __cplusplus
 

@@ -1,6 +1,8 @@
 #include "bst_protocol.h"
 //#include "uart.h"
 
+#include "debug.h"
+
 // FIXME -- remove #define
 #ifdef IMPLEMENTATION_firmware
 #include "firmware.h"
@@ -9,6 +11,7 @@
 extern SystemInitialize_t system_initialize;
 
 BSTProtocol::BSTProtocol() : CommunicationsProtocol() {
+	pmesg(VERBOSE_ALLOC, "BSTProtocol::BSTProtocol()\n");
 	uses_address = true;
 
 	for(uint8_t i=0u; i<COMM_PROTOCOL_MAX_MODULES; i++)
@@ -33,8 +36,6 @@ void BSTProtocol::parseData(uint8_t byte) {
 uint16_t BSTProtocol::update() {
 	uint16_t n = CommunicationsProtocol::update();
 
-	Packet temp_packet;
-
 	for(uint8_t i=0u; i<num_modules; i++) {
 		if( modules[i] ) {
 			modules[i]->update();
@@ -44,13 +45,8 @@ uint16_t BSTProtocol::update() {
 	if(rx_queue.size() > 0) {
 		temp_packet = rx_queue.front();
 		rx_queue.pop();
-
-		uint32_t address = temp_packet.getFromAddress();
-		if((address&0xFF000000) != 0x53000000) { // FIXME -- skipping info from GCS for now
-			for(uint8_t i =0; i< num_modules; i++) {
-				if(modules[i] && modules[i]->handles(temp_packet.getType())) {
-					modules[i]->parse(temp_packet.getType(), temp_packet.getAction(), (uint8_t *)temp_packet.getDataPtr(), temp_packet.getDataSize());
-				}
+		for(uint8_t i =0; i< num_modules; i++) { if(modules[i] && modules[i]->handles(temp_packet.getType())) {
+				modules[i]->parse(temp_packet.getType(), temp_packet.getAction(), (uint8_t *)temp_packet.getDataPtr(), temp_packet.getDataSize());
 			}
 		}
 	}

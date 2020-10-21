@@ -3,18 +3,18 @@
 #include "helper_functions.h"
 #include "debug.h"
 
-uint16_t Packet_validateBuffer(const uint8_t * const data, uint16_t n)
+uint16_t Packet_validateBuffer(const uint8_t * const buff, uint16_t n, uint8_t uses_address)
 {
 	// now make sure there are enough bytes to hold a minimal packet
 	if( n == 0 || n < OVERHEAD(true) )
 		return BUFF_NEED_MORE;
 
 	// check for packet start
-	if( data[0] != 'U' || data[1] != '$' )
+	if( buff[0] != 'U' || buff[1] != '$' )
 		return BUFF_INVALID;
 
 	// now get data and packet size from buffer
-	uint16_t p_size = Packet_packetSize(data);
+	uint16_t p_size = Packet_packetSize(buff,uses_address);
 
 	// check for valid sizes
 	if( p_size > BST_MAX_PACKET_SIZE )
@@ -24,23 +24,37 @@ uint16_t Packet_validateBuffer(const uint8_t * const data, uint16_t n)
 		return BUFF_NEED_MORE;
 
 	// now check checksum
-	if(checkFletcher16(data, p_size))
+	if(checkFletcher16(buff, p_size))
 		return p_size;
 
 	return BUFF_INVALID;
 }
 
-uint16_t Packet_packetSize(const uint8_t * const data)
+uint16_t Packet_packetSize(const uint8_t * const buff, uint8_t uses_address)
 {
-	return Packet_dataSize(data) + OVERHEAD(true);
+	return Packet_dataSize(buff) + OVERHEAD(uses_address);
 }
 
-uint16_t Packet_dataSize(const uint8_t * const data)
+uint16_t Packet_dataSize(const uint8_t * const buff)
 {
-	return (uint16_t)(data[PKT_SIZE+1] << 8) | (uint16_t)(data[PKT_SIZE]);
+	return (uint16_t)(buff[PKT_SIZE+1] << 8) | (uint16_t)(buff[PKT_SIZE]);
+}
+
+void Packet_create(uint8_t * buff, Packet_t type, PacketAction_t action, uint8_t * data, uint16_t size, uint8_t uses_address) {
+	buff[PKT_HDR0]   = 'U';
+	buff[PKT_HDR1]   = '$';
+	buff[PKT_TYPE]   = type;
+	buff[PKT_ACTION] = action;
+	buff[PKT_SIZE] = size%256;
+	buff[PKT_SIZE+1] = size/256;
+
+	memcpy(&buff[PKT_DATA(uses_address)],data,size);
+
+	setFletcher16(buff,Packet_packetSize(buff,uses_address));
 }
 
 Packet::Packet() {
+	pmesg(VERBOSE_ALLOC, "Packet::Packet()\n");
 	// do big_endian check
 	uint16_t temp = 0x0100;
 	big_endian = ((uint8_t *)&temp)[0];
@@ -53,6 +67,7 @@ Packet::Packet() {
 }
 
 Packet::Packet(Packet_t type) {
+	pmesg(VERBOSE_ALLOC, "Packet::Packet(Packet_t)\n");
 
 	// do big_endian check
 	uint16_t temp = 0x0100;
