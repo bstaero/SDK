@@ -260,14 +260,14 @@ typedef enum {
 	PAYLOAD_STATUS=230,
 	PAYLOAD_SERIAL=231,
 
-	PAYLOAD_CHANNEL_0=232,
-	PAYLOAD_CHANNEL_1=233,
-	PAYLOAD_CHANNEL_2=234,
-	PAYLOAD_CHANNEL_3=235,
-	PAYLOAD_CHANNEL_4=236,
-	PAYLOAD_CHANNEL_5=237,
-	PAYLOAD_CHANNEL_6=238,
-	PAYLOAD_CHANNEL_7=239,
+	PAYLOAD_DATA_CHANNEL_0=232,
+	PAYLOAD_DATA_CHANNEL_1=233,
+	PAYLOAD_DATA_CHANNEL_2=234,
+	PAYLOAD_DATA_CHANNEL_3=235,
+	PAYLOAD_DATA_CHANNEL_4=236,
+	PAYLOAD_DATA_CHANNEL_5=237,
+	PAYLOAD_DATA_CHANNEL_6=238,
+	PAYLOAD_DATA_CHANNEL_7=239,
 
 	/* ERRORS */
 	INVALID_PACKET=255,
@@ -333,6 +333,8 @@ typedef struct _State_t {
 	float vx;
 	float vy;
 	float agl;  // [m]
+	float tas;  // [m/s]
+	float wind[3];  // [m/s]
 
 #ifdef __cplusplus
 	_State_t() {
@@ -355,6 +357,10 @@ typedef struct _State_t {
 		vx = 0.0;
 		vy = 0.0;
 		agl = 0.0;
+		tas = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			wind[_i] = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) State_t;
@@ -1088,6 +1094,8 @@ typedef enum {
 	MULTI_COPTER,
 	GCS,
 	PAYLOAD_NODE,
+	TAIL_SITTER,
+	VTOL,
 }  __attribute__ ((packed)) VehicleType_t;
 
 typedef struct _HardwareError_t {
@@ -1377,7 +1385,9 @@ typedef enum {
 	FLIGHT_MODE_CALIBRATE,
 	FLIGHT_MODE_LAUNCH,
 	FLIGHT_MODE_CLIMBOUT,
+	FLIGHT_MODE_TRANSITION_TO_FORWARD,
 	FLIGHT_MODE_FLYING,
+	FLIGHT_MODE_TRANSITION_TO_HOVER,
 	FLIGHT_MODE_LANDING,
 	FLIGHT_MODE_LANDED,
 	FLIGHT_MODE_POSTFLIGHT,

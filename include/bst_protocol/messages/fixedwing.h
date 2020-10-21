@@ -212,8 +212,9 @@ typedef struct _LandingParameters_t {
 	float decision_time;  // [s] when to start checking for abort conditions
 	float commit_time;  // [s] time at which plane commits to landing
 	float flare_time;  // [s] when to initiate flare based on time-to-impact
+	float agl_offset;  // [m] agl sensor offset for landing gear-sensor location
 	/* -- */
-	uint8_t unused[16];  // place holder for future parameters
+	uint8_t unused[12];  // place holder for future parameters
 	/* need to adjust param.h if need more space */
 
 #ifdef __cplusplus
@@ -233,8 +234,9 @@ typedef struct _LandingParameters_t {
 		decision_time = 0.0;
 		commit_time = 0.0;
 		flare_time = 0.0;
+		agl_offset = 0.0;
 
-		for (_i = 0; _i < 16; ++_i)
+		for (_i = 0; _i < 12; ++_i)
 			unused[_i] = 0;
 	}
 #endif

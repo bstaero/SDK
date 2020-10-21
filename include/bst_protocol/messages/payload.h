@@ -42,7 +42,9 @@ namespace payload {
 
 /*--------[ Actuators ]--------*/
 
-#define NUM_PAYLOAD_CHANNELS 16
+#define NUM_PAYLOAD_CHANNELS 8
+
+#define NUM_PAYLOAD_DATA_CHANNELS 8
 
 /*--------[ Controller ]--------*/
 
@@ -60,8 +62,9 @@ typedef enum {
 typedef enum {
 	INTERFACE_UNKNOWN,
 	INTERFACE_BST_PROTOCOL,
+	INTERFACE_UBLOX_GPS,
 	INTERFACE_NMEA_GPS,
-	INTERFACE_MAVLINK_POS,
+	INTERFACE_MAVLINK,
 	INTERFACE_PAYLOAD_PASSTHRU,
 }  __attribute__ ((packed)) PayloadInterface_t;
 
@@ -292,18 +295,21 @@ typedef struct _TelemetryPayload_t {
 /*--------[ Payload ]--------*/
 
 typedef enum {
-	PAYLOAD_UNKNOWN,
-	PAYLOAD_QX1,
-	PAYLOAD_A6000,
-	PAYLOAD_FLIR_TAU2,
-	PAYLOAD_TETRACAM_ADC_LITE,
-	PAYLOAD_A5100,
-	PAYLOAD_MAPIR_KERNEL,
-	PAYLOAD_FLIR_VUE_PRO,
-	PAYLOAD_MICASENSE_REDEDGE,
-	PAYLOAD_PARTICLES_PLUS,
-	PAYLOAD_K30,
-	PAYLOAD_MINIGAS,
+	PAYLOAD_UNKNOWN=192,
+	PAYLOAD_QX1=193,
+	PAYLOAD_A6000=194,
+	PAYLOAD_FLIR_TAU2=195,
+	PAYLOAD_TETRACAM_ADC_LITE=196,
+	PAYLOAD_A5100=197,
+	PAYLOAD_MAPIR_KERNEL=198,
+	PAYLOAD_FLIR_VUE_PRO=199,
+	PAYLOAD_MICASENSE_REDEDGE=200,
+	PAYLOAD_PARTICLES_PLUS=201,
+	PAYLOAD_K30=202,
+	PAYLOAD_MINIGAS=203,
+	PAYLOAD_TRACE_GAS=204,
+	PAYLOAD_LICOR=205,
+	PAYLOAD_SPECTROMETER=206,
 }  __attribute__ ((packed)) PayloadID_t;
 
 typedef struct _NDVI_t {
@@ -355,12 +361,12 @@ typedef struct _PayloadParam_t {
 } __attribute__ ((packed)) PayloadParam_t;
 
 typedef struct _PayloadSerial_t {
-	float baudRate;
+	uint32_t baudRate;
 	PayloadInterface_t payloadInterface;
 
 #ifdef __cplusplus
 	_PayloadSerial_t() {
-		baudRate = 0.0;
+		baudRate = 0;
 	}
 #endif
 } __attribute__ ((packed)) PayloadSerial_t;
@@ -372,6 +378,7 @@ typedef struct _PayloadTrigger_t {
 	float q[4];
 	uint8_t percent;
 	uint16_t id;  // [#] trigger (photo) number
+	uint8_t channel;  // [#] payload channel
 
 #ifdef __cplusplus
 	_PayloadTrigger_t() {
@@ -386,6 +393,7 @@ typedef struct _PayloadTrigger_t {
 
 		percent = 0;
 		id = 0;
+		channel = 0;
 	}
 #endif
 } __attribute__ ((packed)) PayloadTrigger_t;
