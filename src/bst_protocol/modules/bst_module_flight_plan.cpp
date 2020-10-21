@@ -13,7 +13,9 @@
 #define WAYPOINT_RX_TIMEOUT   1.0  // [s]
 #define MAX_WAYPOINT_REQUEST  10
 
-float getElapsedTime(); // defined elsewhere
+extern "C" {
+  float getElapsedTime(); // defined elsewhere
+}
 
 BSTModuleFlightPlan::BSTModuleFlightPlan() : BSTCommunicationsModule () {
 
