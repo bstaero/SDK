@@ -22,10 +22,10 @@
 #                                                                              #
 # *#=+--+=#=+--                 --+=#=+--+=#=+--                 --+=#=+--+=#* #
 
-from bstpacket import BSTPacket
+from .bstpacket import BSTPacket
 
-from comm_packets.comm_packets import PacketTypes
-from comm_packets.canpackets import CAN_GNSS_LLA
+from .comm_packets.comm_packets import PacketTypes
+from .comm_packets.canpackets import CAN_GNSS_LLA
 
 def parse_stream(data, handler, addressing=True):
     pkt = BSTPacket()

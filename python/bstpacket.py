@@ -24,7 +24,7 @@
 
 import struct
 
-from comm_packets.comm_packets import PacketTypes
+from .comm_packets.comm_packets import PacketTypes
 
 
 class BSTPacket:
