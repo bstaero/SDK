@@ -45,7 +45,8 @@ class BSTModuleFlightPlan : public BSTCommunicationsModule {
 			SENDING_WAYPOINTS,
 			WAITING_FOR_FINAL_MAP,
 			WAITING_FOR_FINAL_MAP_RX,
-			WAITING_FOR_WAYPOINTS
+			WAITING_FOR_WAYPOINTS,
+            FINAL_ACK
 		} FPSendState_t;
 
 		Waypoint_t temp_wp;

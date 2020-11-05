@@ -523,7 +523,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 										receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
 
-										reset();
+										fp_send_state = FINAL_ACK;
 
 										break;
 
@@ -551,13 +551,13 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 										parent->write(type,PKT_ACTION_ACK,data,size,NULL);
 										break;
 
-									case WAITING_FOR_FINAL_MAP_RX:
-										break;
-
-									default:
+									case FINAL_ACK:
 										parent->write(type,PKT_ACTION_ACK,data,size,NULL);
 										receive_function(FLIGHT_PLAN,(uint8_t *)rx_temp_plan,num_waypoints*sizeof(Waypoint_t),&rx_fp_map);
 										break;
+
+                                    default:
+                                        break;
 								}
 
 								reset();
