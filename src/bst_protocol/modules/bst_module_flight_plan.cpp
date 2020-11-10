@@ -13,10 +13,14 @@
 #define WAYPOINT_RX_TIMEOUT   1.0  // [s]
 #define MAX_WAYPOINT_REQUEST  10
 
-// FIXME -- not the best way to include this prototype
-float getElapsedTime(void);
+extern "C" {
+	// FIXME -- not the best way to include this prototype
+	float getElapsedTime(void);
+}
 
 BSTModuleFlightPlan::BSTModuleFlightPlan() : BSTCommunicationsModule () {
+	pmesg(VERBOSE_ALLOC, "BSTModuleFlightPlan::BSTModuleFlightPlan()\n");
+
 	max_num_data_types = 3;
 	data_types = new DataType_t[3]; 
 
@@ -529,6 +533,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 									case WAITING_FOR_WAYPOINTS:
 									case WAITING_FOR_FINAL_MAP_RX:
+									case FINAL_ACK:
 										break;
 								}
 								break;
@@ -608,6 +613,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 										break;
 									case WAITING_FOR_WAYPOINTS:
 									case WAITING_FOR_FINAL_MAP_RX:
+									case FINAL_ACK:
 										break;
 								}
 								break;
