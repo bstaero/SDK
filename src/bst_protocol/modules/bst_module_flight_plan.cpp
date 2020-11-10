@@ -13,21 +13,16 @@
 #define WAYPOINT_RX_TIMEOUT   1.0  // [s]
 #define MAX_WAYPOINT_REQUEST  10
 
-extern "C" {
-  float getElapsedTime(); // defined elsewhere
-}
+// FIXME -- not the best way to include this prototype
+float getElapsedTime(void);
 
 BSTModuleFlightPlan::BSTModuleFlightPlan() : BSTCommunicationsModule () {
-
-	pmesg(VERBOSE_ALLOC, "BSTModuleFlightPlan::BSTModuleFlightPlan()\n");
-
 	max_num_data_types = 3;
 	data_types = new DataType_t[3]; 
 
 	registerDataType(FLIGHT_PLAN, 0, true, true);
 	registerDataType(FLIGHT_PLAN_MAP, sizeof(FlightPlanMap_t), true, true);
 	registerDataType(FLIGHT_PLAN_WAYPOINT, sizeof(Waypoint_t), true, true);
-	registerDataType(DUBIN_PATH, sizeof(DubinsPath_t), false, true);
 
 	reset();
 
@@ -36,17 +31,6 @@ BSTModuleFlightPlan::BSTModuleFlightPlan() : BSTCommunicationsModule () {
 
 void BSTModuleFlightPlan::update() {
 	float now = getElapsedTime();
-	/*static uint8_t run_once = 1;
-
-	if(now > 2.0 && run_once) {
-		run_once = 0;
-
-		printf("Sending bad packet\n");
-
-		rx_fp_map.mode = ADD;
-		//rx_fp_map.mode = FINISH;
-		parent->write(FLIGHT_PLAN_MAP,PKT_ACTION_ACK,(uint8_t *)&rx_fp_map,sizeof(FlightPlanMap_t),NULL);
-	}*/
 
 	// check sending state
 	if(fp_send_state != WAITING && fp_send_state != WAITING_FOR_WAYPOINTS && fp_send_state != WAITING_FOR_FINAL_MAP_RX)  {
@@ -63,19 +47,17 @@ void BSTModuleFlightPlan::update() {
 			sendTermination();
 		}
 
-		if(fp_send_state == WAITING_FOR_WAYPOINTS ) {
-			// see if we need to start sending missing waypoint requests
-			if( !requesting_missing_points && now - last_wpt_received >= WAYPOINT_RX_TIMEOUT ) {
-				requesting_missing_points = true;
-			}
+		// see if we need to start sending missing waypoint requests
+		if( !requesting_missing_points && now - last_wpt_received >= WAYPOINT_RX_TIMEOUT ) {
+			requesting_missing_points = true;
+		}
 
-			// if we need to request missing waypoints
-			if( requesting_missing_points ) {
-				// if we have waited for long enough, send another request
-				// otherwise if the last waypoint received was after the request
-				if( now - last_waypoint_req >= WAYPOINT_RX_TIMEOUT || (last_waypoint_req < last_wpt_received && now - last_wpt_received >= WAYPOINT_INTERVAL) ) {
-					requestMissingWaypoints();
-				}
+		// if we need to request missing waypoints
+		if( requesting_missing_points ) {
+			// if we have waited for long enough, send another request
+			// otherwise if the last waypoint received was after the request
+			if( now - last_waypoint_req >= WAYPOINT_RX_TIMEOUT || (last_waypoint_req < last_wpt_received && now - last_wpt_received >= WAYPOINT_INTERVAL) ) {
+				requestMissingWaypoints();
 			}
 		}
 
@@ -107,6 +89,10 @@ bool BSTModuleFlightPlan::haveAllWaypoints() {
 
 	return true;
 }
+
+
+//FIXME -- implement this better, shouldn't need the exta memory, just use rx_temp_plan more intelligently
+Waypoint_t temp_plan[MAX_WAYPOINTS];
 
 void BSTModuleFlightPlan::requestMissingWaypoints() {
 	//rx_temp_plan.getMissingWaypoints(&map);
@@ -184,7 +170,7 @@ void BSTModuleFlightPlan::validateReceivedPlan()
 	uint8_t counter = 0;
 	for(uint8_t i=0; i<MAX_WAYPOINTS; i++) {
 		if(rx_temp_plan[i].num != INVALID_WAYPOINT) {
-			memcpy(&rx_temp_plan[counter++],&rx_temp_plan[i],sizeof(Waypoint_t));
+			memcpy(&temp_plan[counter++],&rx_temp_plan[i],sizeof(Waypoint_t));
 		}
 	}
 
@@ -192,7 +178,7 @@ void BSTModuleFlightPlan::validateReceivedPlan()
 	rx_fp_map.mode = ADD;
 
 	if(getElapsedTime() - last_flight_plan_sent > WAYPOINT_RX_TIMEOUT) {
-		if(receiveCommand_function(FLIGHT_PLAN,(uint8_t *)rx_temp_plan,counter*sizeof(Waypoint_t),&rx_fp_map)) {
+		if(receiveCommand_function(FLIGHT_PLAN,(uint8_t *)temp_plan,counter*sizeof(Waypoint_t),&rx_fp_map)) {
 			pmesg(VERBOSE_FP, "Navigation accepted plan, sending ACK\n");
 			parent->write(FLIGHT_PLAN_MAP,PKT_ACTION_ACK,(uint8_t *)&rx_fp_map,sizeof(FlightPlanMap_t),NULL);
 		} else {
@@ -302,8 +288,7 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 					}
 #endif
 
-					// FIXME -- why is this an error?
-					//pmesg(VERBOSE_ERROR, "FLIGHT PLAN MAP SIZE ---- %u\n\n", sizeof(_FlightPlanMap_t));
+					pmesg(VERBOSE_ERROR, "FLIGHT PLAN MAP SIZE ---- %u\n\n", sizeof(_FlightPlanMap_t));
 					// send flight plan map
 					parent->write(FLIGHT_PLAN_MAP, send_action, (uint8_t *)&tx_fp_map, sizeof(FlightPlanMap_t), NULL);
 					last_flight_plan_sent = getElapsedTime();
@@ -538,7 +523,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 										receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
 
-										reset();
+										fp_send_state = FINAL_ACK;
 
 										break;
 
@@ -566,13 +551,13 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 										parent->write(type,PKT_ACTION_ACK,data,size,NULL);
 										break;
 
-									case WAITING_FOR_FINAL_MAP_RX:
-										break;
-
-									default:
+									case FINAL_ACK:
 										parent->write(type,PKT_ACTION_ACK,data,size,NULL);
 										receive_function(FLIGHT_PLAN,(uint8_t *)rx_temp_plan,num_waypoints*sizeof(Waypoint_t),&rx_fp_map);
 										break;
+
+                                    default:
+                                        break;
 								}
 
 								reset();
@@ -631,8 +616,6 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 					case PKT_ACTION_NACK:
 						// TODO
 						pmesg(VERBOSE_WARN,"FLIGHT_PLAN_MAP:PKT_ACTION_NACK - mode=%u\n", ((FlightPlanMap_t*)data)->mode);
-
-						reset();
 						break;
 
 					case PKT_ACTION_STATUS:
