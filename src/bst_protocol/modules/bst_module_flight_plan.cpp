@@ -292,7 +292,7 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 					}
 #endif
 
-					pmesg(VERBOSE_ERROR, "FLIGHT PLAN MAP SIZE ---- %u\n\n", sizeof(_FlightPlanMap_t));
+					pmesg(VERBOSE_FP, "FLIGHT PLAN MAP SIZE ---- %u\n\n", sizeof(_FlightPlanMap_t));
 					// send flight plan map
 					parent->write(FLIGHT_PLAN_MAP, send_action, (uint8_t *)&tx_fp_map, sizeof(FlightPlanMap_t), NULL);
 					last_flight_plan_sent = getElapsedTime();

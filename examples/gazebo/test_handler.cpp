@@ -152,36 +152,36 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 			/* TELEMETRY */
 		case TELEMETRY_HEARTBEAT:
-			printf("TELEMETRY_HEARTBEAT\n");
+			//printf("TELEMETRY_HEARTBEAT\n");
 			break;
 
 		case TELEMETRY_POSITION:
-			printf("TELEMETRY_POSITION\n");
+			//printf("TELEMETRY_POSITION\n");
 			memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
-			printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
+			/*printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
 			printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
-			printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);
+			printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);*/
 			break;
 
 		case TELEMETRY_ORIENTATION:
-			printf("TELEMETRY_ORIENTATION\n");
+			//printf("TELEMETRY_ORIENTATION\n");
 			break;
 		case TELEMETRY_PRESSURE:
-			printf("TELEMETRY_PRESSURE\n");
+			//printf("TELEMETRY_PRESSURE\n");
 			break;
 		case TELEMETRY_CONTROL:
-			printf("TELEMETRY_CONTROL\n");
+			//printf("TELEMETRY_CONTROL\n");
 			memcpy(&telemetry_control,data,sizeof(TelemetryControl_t));
 			break;
 		case TELEMETRY_SYSTEM:
-			printf("TELEMETRY_SYSTEM\n");
+			//printf("TELEMETRY_SYSTEM\n");
 			memcpy(&telemetry_system,data,sizeof(TelemetrySystem_t));
 			break;
 		case TELEMETRY_GCS:
-			printf("TELEMETRY_GCS\n");
+			//printf("TELEMETRY_GCS\n");
 			break;
 		case TELEMETRY_GCS_LOCATION:
-			printf("TELEMETRY_GCS_LOCATION\n");
+			//printf("TELEMETRY_GCS_LOCATION\n");
 			break;
 
 			/* ERRORS */
