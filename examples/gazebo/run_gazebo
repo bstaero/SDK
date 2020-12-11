@@ -2,7 +2,7 @@
 
 WDIR=`pwd`
 
-export GAZEBO_PLUGIN_PATH=${WDIR}/plugins:${GAZEBO_PLUGIN_PATH}
+export GAZEBO_PLUGIN_PATH=${WDIR}/plugins:${GAZEBO_PLUGIN_PATH}:/usr/lib/gazebo-10/plugins:/lib/gazebo-11/plugins:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins
 export GAZEBO_MODEL_PATH=${WDIR}/models:${GAZEBO_MODEL_PATH}
 
 gazebo --verbose worlds/multirotor.world

@@ -89,9 +89,6 @@ volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
 
 void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 {
-
-
-
 	switch(type) {
 		/* SENSORS */
 		case SENSORS_GPS:
@@ -102,67 +99,8 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case SENSORS_DYNAMIC_PRESSURE:
 		case SENSORS_STATIC_PRESSURE:
 		case SENSORS_AIR_TEMPERATURE:
+		case SENSORS_AGL:
             break;
-
-        case SENSORS_AGL:
-        {
-            agl_error_z1 = agl_error;
-            agl_data = (SingleValueSensor_t *) data;
-
-            float agl_raw = agl_data->value;
-            float pitch_val = asin( 2*(q0*q2 - q1*q3) );
-
-            float roll_val = atan2(
-                2*(q2*q3 + q0*q1),
-        		q0*q0 - q1*q1 - q2*q2 + q3*q3 );
-
-            float agl_corr = agl_raw * cos(roll_val) * cos(pitch_val + laser_pitch_offset);
-            if(agl_history_count < agl_history.size())
-            {
-                agl_history[agl_history_count] = agl_corr;
-                time_history[agl_history_count] = dt*(agl_history_count+1);
-                agl_history_count++;
-            }
-            else
-            {
-                for(int ii=0; ii < (agl_history.size() - 1); ii++)
-                {
-                    agl_history[ii] = agl_history[ii+1];
-                    time_history[ii] = time_history[ii+1];
-                }
-                agl_history[agl_history.size() - 1] = agl_corr;
-                time_history[agl_history.size() - 1] += dt;
-            }
-            float slope_val = slope(time_history, agl_history);
-
-            agl_error = agl_set_point - agl_corr;
-            agl_diff = (agl_error - agl_error_z1) / dt;
-            agl_int += agl_error * dt;
-
-            if(abs(agl_int) > agl_windup_limit)
-            {
-                agl_int = 0.0;
-            }
-            vel_command = Pgain * agl_error + Igain * agl_int + Dgain * agl_diff + Sgain*slope_val;
-            if( vel_command > max_vel)
-            {
-                vel_command = max_vel;
-            }
-            if( vel_command < min_vel)
-            {
-                vel_command = min_vel;
-            }
-            set_command.id = CMD_VRATE;
-            set_command.value = vel_command;
-            if(debug_count > debug_count_period)
-            {
-                printf("Sending %f m/s, raw agl: %f m, corr agl: %f m, slope: %f\n", vel_command, agl_raw, agl_corr, slope_val);
-                debug_count = 0;
-            }
-            comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&set_command, sizeof(Command_t), NULL);
-            ++debug_count;
-            break;
-        }
 
 		case SENSORS_CALIBRATE:
 			calibration_data = (CalibrateSensor_t *)data;
@@ -184,11 +122,6 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
             q1 = estimator_data->q[1];
             q2 = estimator_data->q[2];
             q3 = estimator_data->q[3];
-            //set_command.id = CMD_VRATE;
-            //set_command.value = (20 - estimator_data->agl) * 0.3;
-            //printf("Sending %f m/s, estimator agl: %f\n", set_command.value, estimator_data->agl);
-            //printf("q[0] = %f, q[1] = %f, q[2] = %f, q[3] = %f\n\n", estimator_data->q[0], estimator_data->q[1], estimator_data->q[2], estimator_data->q[3]);
-            //comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&set_command, sizeof(Command_t), NULL);
             break;
 
 			/* CONTROL */
@@ -219,15 +152,15 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 			/* TELEMETRY */
 		case TELEMETRY_HEARTBEAT:
-			printf("TELEMETRY_HEARTBEAT\n");
+			//printf("TELEMETRY_HEARTBEAT\n");
 			break;
 
 		case TELEMETRY_POSITION:
 			//printf("TELEMETRY_POSITION\n");
 			memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
-			//printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
-			//printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
-			//printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);
+			/*printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
+			printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
+			printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);*/
 			break;
 
 		case TELEMETRY_ORIENTATION:

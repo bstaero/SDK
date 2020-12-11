@@ -29,8 +29,14 @@ extern CommunicationsProtocol * comm_handler;
 
 void printHelp();
 
-
 void setupTime();
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 float getElapsedTime();
+#ifdef __cplusplus
+}
+#endif
 
 #endif
