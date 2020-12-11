@@ -310,8 +310,8 @@ void updateTest() {
                 // Add a waypoint to the plan
                 temp_waypoint.num = 80;
                 temp_waypoint.next = 80;
-                temp_waypoint.latitude = 40.028547;    // [deg]
-                temp_waypoint.longitude = -105.250425; // [deg]
+                temp_waypoint.latitude = 40.132700;    // [deg]
+                temp_waypoint.longitude = -105.069231; // [deg]
                 temp_waypoint.altitude = 1656.0;       // [m]
                 temp_waypoint.radius = 0.0;            // [m]
 
@@ -332,29 +332,29 @@ void updateTest() {
 
                 temp_waypoints[0].num = 80;
                 temp_waypoints[0].next = 81;
-                temp_waypoints[0].latitude = 40.029204;    // [deg]
-                temp_waypoints[0].longitude = -105.250908; // [deg]
+                temp_waypoints[0].latitude = 40.133057;    // [deg]
+                temp_waypoints[0].longitude = -105.069714; // [deg]
                 temp_waypoints[0].altitude = 1636.0;       // [m]
                 temp_waypoints[0].radius = 0.0;            // [m]
 
                 temp_waypoints[1].num = 81;
                 temp_waypoints[1].next = 82;
-                temp_waypoints[1].latitude = 40.029204;    // [deg]
-                temp_waypoints[1].longitude = -105.251562; // [deg]
+                temp_waypoints[1].latitude = 40.133057;    // [deg]
+                temp_waypoints[1].longitude = -105.070368; // [deg]
                 temp_waypoints[1].altitude = 1636.0;       // [m]
                 temp_waypoints[1].radius = 0.0;            // [m]
 
                 temp_waypoints[2].num = 82;
                 temp_waypoints[2].next = 83;
-                temp_waypoints[2].latitude = 40.028531;    // [deg]
-                temp_waypoints[2].longitude = -105.251562; // [deg]
+                temp_waypoints[2].latitude = 40.132384;    // [deg]
+                temp_waypoints[2].longitude = -105.070368; // [deg]
                 temp_waypoints[2].altitude = 1636.0;       // [m]
                 temp_waypoints[2].radius = 0.0;            // [m]
 
                 temp_waypoints[3].num = 83;
                 temp_waypoints[3].next = 80;
-                temp_waypoints[3].latitude = 40.028531;    // [deg]
-                temp_waypoints[3].longitude = -105.250908; // [deg]
+                temp_waypoints[3].latitude = 40.132384;    // [deg]
+                temp_waypoints[3].longitude = -105.069714; // [deg]
                 temp_waypoints[3].altitude = 1636.0;       // [m]
                 temp_waypoints[3].radius = 0.0;            // [m]
 
