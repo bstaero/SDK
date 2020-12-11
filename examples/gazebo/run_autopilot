@@ -3,10 +3,10 @@
 mkdir -p ~/.black_swift
 cp models/e2/param ~/.black_swift/param_mr_0x41000002.bst
 
-pkill gcsDaemon
-pkill gcsDaemon
-pkill pro_core
-pkill pro_core
+pkill -9 gcsDaemon
+pkill -9 gcsDaemon
+pkill -9 pro_core
+pkill -9 pro_core
 
 sleep 1
 
@@ -14,6 +14,6 @@ bin/gcsDaemon -n 55554 -S &
 bin/pro_core_swil_MULTIROTOR -i localhost -v6
 
 echo "Killing gcsDaemon ..."
-pkill gcsDaemon 
+pkill -9 gcsDaemon 
 echo "Killing autopilot SWIL ..."
-pkill pro_core
+pkill -9 pro_core
