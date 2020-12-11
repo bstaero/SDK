@@ -14,11 +14,11 @@
 #define MAX_WAYPOINT_REQUEST  10
 
 extern "C" {
-	// FIXME -- not the best way to include this prototype
-	float getElapsedTime(void);
+  float getElapsedTime(); // defined elsewhere
 }
 
 BSTModuleFlightPlan::BSTModuleFlightPlan() : BSTCommunicationsModule () {
+
 	pmesg(VERBOSE_ALLOC, "BSTModuleFlightPlan::BSTModuleFlightPlan()\n");
 
 	max_num_data_types = 3;
@@ -214,6 +214,7 @@ void BSTModuleFlightPlan::reset()
 
 	last_fpmap_tx = 0;
 	num_fpmap_tx = 0;
+	num_fpmap_term_tx = 0;
 
 	last_wpt_received = 0;
 	last_waypoint_req = 0;
@@ -230,7 +231,7 @@ void BSTModuleFlightPlan::reset()
 void BSTModuleFlightPlan::sendTermination() {
 
 	// check for failure
-	if( num_fpmap_tx >= MAX_WAYPOINT_REQUEST ) {
+	if( num_fpmap_term_tx >= MAX_WAYPOINT_REQUEST ) {
 		pmesg(VERBOSE_WARN, "FLIGHT_PLAN : Timed out on final FLIGHT_PLAN_MAP [TERM-ACK]\n");
 		reset();
 
@@ -241,7 +242,7 @@ void BSTModuleFlightPlan::sendTermination() {
 	rx_fp_map.mode = FINISH;
 	parent->write(FLIGHT_PLAN_MAP,PKT_ACTION_ACK,(uint8_t *)&rx_fp_map,sizeof(FlightPlanMap_t),NULL);
 
-	num_fpmap_tx++;
+	num_fpmap_term_tx++;
 	last_fpmap_tx = getElapsedTime();
 
 	pmesg(VERBOSE_FP, "<- FLIGHT_PLAN_MAP [TERM-ACK]\n");
@@ -333,6 +334,14 @@ void BSTModuleFlightPlan::finishSend(uint8_t type, uint8_t * data, uint16_t size
 			switch(fp_send_state) {
 
 				case SENT_FP_MAP:
+					// check for failure
+					if( num_fpmap_tx >= MAX_WAYPOINT_REQUEST ) {
+						pmesg(VERBOSE_WARN, "FLIGHT_PLAN : Timed out on send FLIGHT_PLAN_MAP\n");
+						reset();
+
+						return;
+					}
+
 					if(getElapsedTime() - last_flight_plan_sent > WAYPOINT_RX_TIMEOUT) {
 #ifdef VERBOSE
 						switch(tx_fp_map.mode) {
@@ -344,6 +353,8 @@ void BSTModuleFlightPlan::finishSend(uint8_t type, uint8_t * data, uint16_t size
 #endif
 						parent->write(FLIGHT_PLAN_MAP,send_action, (uint8_t *)&tx_fp_map, sizeof(FlightPlanMap_t), NULL);
 						last_flight_plan_sent = getElapsedTime();
+
+						num_fpmap_tx++;
 					}
 					break;
 
