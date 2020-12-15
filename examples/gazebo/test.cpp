@@ -40,6 +40,8 @@ SystemInitialize_t system_init;
 extern TelemetrySystem_t telemetry_system;
 extern TelemetryControl_t telemetry_control;
 
+volatile bool show_telemetry = false;
+
 volatile bool received_reply = false;
 
 // Payload state
@@ -59,7 +61,8 @@ struct termios initial_settings, new_settings;
 
 void printTestHelp() {
     printf("Keys:\n");
-    printf("  a   : Send automatic altitude mode\n");
+    printf("  T   : Show telmetry\n");
+    printf("\n");
     printf("  h   : Send payload heartbeat\n");
     printf("  r   : Send payload ready comannd \n");
     printf("  o   : Send payload off comannd \n");
@@ -120,7 +123,6 @@ void initializeTest() {
 #define CONTROL_INTERVAL 0.05f // [s]
 static float last_heartbeat = 0.0;
 static float last_ctrl = 0.0;
-bool update_pp = true;
 
 void updateTest() {
     char input;
@@ -139,14 +141,20 @@ void updateTest() {
 
         if (input > 0) {
             switch (input) {
-            case 'a':
-                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
+            case 'T':
+								if(show_telemetry)
+									show_telemetry = false;
+								else show_telemetry = true;
+								break;
+
+            case 'a':
                 printf("Setting automatic alt mode\n");
                 command.id = CMD_ALT_MODE;
                 command.value = ALT_MODE_AUTO;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
                 break;
+
             case 'h':
                 comm_handler->send(TELEMETRY_HEARTBEAT, NULL, 0, NULL);
                 break;
@@ -238,7 +246,6 @@ void updateTest() {
                 break;
 
             case 'i':
-                //FIXME (and all cases below)
                 sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
@@ -248,7 +255,6 @@ void updateTest() {
                 break;
 
             case 'k':
-                //FIXME (and all cases below)
                 sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
@@ -258,7 +264,6 @@ void updateTest() {
                 break;
 
             case 'j':
-                //FIXME (and all cases below)
                 sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
@@ -268,7 +273,6 @@ void updateTest() {
                 break;
 
             case 'l':
-                //FIXME (and all cases below)
                 sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
@@ -278,7 +282,7 @@ void updateTest() {
                 break;
 
             case 'u':
-                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
                 command.id = CMD_ALT_MODE;
                 command.value = ALT_MODE_RATE;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
@@ -290,7 +294,7 @@ void updateTest() {
                 break;
 
             case 'd':
-                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
                 command.id = CMD_ALT_MODE;
                 command.value = ALT_MODE_RATE;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
@@ -421,25 +425,22 @@ void updateTest() {
     // send heartbeat
 
     float now = getElapsedTime();
+
     /** Update heartbeat */
     if (now - last_heartbeat > HEARTBEAT_INTERVAL) {
         last_heartbeat = now;
         comm_handler->send(TELEMETRY_HEARTBEAT, NULL, 0, NULL);
     }
+
     /** Update control interval */
     if (now - last_ctrl > CONTROL_INTERVAL) {
         last_ctrl = now;
-        if(update_pp)
-        {
-            /** Get State estimate for pitch/roll */
-            //comm_handler->request(STATE_ESTIMATOR_PARAM, 0);
-        }
-        if(!update_pp)
-        {
-            /** Get agl value for raw control */
-            comm_handler->request(SENSORS_AGL, 0);
-        }
-        update_pp = !update_pp;
+
+				/** Get State estimate for pitch/roll */
+				//comm_handler->request(STATE_ESTIMATOR_PARAM, 0);
+
+				/** Get agl value for raw control */
+				comm_handler->request(SENSORS_AGL, 0);
     }
 
 }

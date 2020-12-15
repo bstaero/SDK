@@ -37,6 +37,8 @@ extern volatile bool received_reply;
 extern Command_t     set_command;
 extern volatile bool set_command_ack;
 
+extern volatile bool show_telemetry;
+
 extern PayloadControl_t    payload_current_state;
 
 TelemetryPosition_t telemetry_position;
@@ -45,47 +47,11 @@ TelemetryControl_t  telemetry_control;
 
 CalibrateSensor_t * calibration_data;
 
-State_t * estimator_data;
-SingleValueSensor_t * agl_data;
-
-/** Control parameters */
-float agl_set_point = 15.0;
-float Pgain = 0.125;
-float Igain = 0.0;
-float Dgain = 0.55;
-float Sgain = 0.0;
-float agl_error = 0.0;
-float agl_error_z1 = 0.0;
-float agl_diff;
-float agl_int;
-float agl_windup_limit = 100.0;
-float laser_pitch_offset = 0.0*M_PI/180.0; //radians
-float dt = 0.1; // s, update rate for agl laser estimate
-float vel_command;
-float q0 = 1.0;
-float q1 = 0.0;
-float q2 = 0.0;
-float q3 = 0.0;
-float max_vel = 3.0;
-float min_vel = -1.0;
-int debug_count = 0;
-int debug_count_period = 100;
-std::vector<float> agl_history(10, 0.0);
-std::vector<float> time_history(10, 0.0);
-unsigned long agl_history_count = 0;
-
-float slope(const std::vector<float>& x, const std::vector<float>& y) {
-    const auto n    = x.size();
-    const auto s_x  = std::accumulate(x.begin(), x.end(), 0.0);
-    const auto s_y  = std::accumulate(y.begin(), y.end(), 0.0);
-    const auto s_xx = std::inner_product(x.begin(), x.end(), x.begin(), 0.0);
-    const auto s_xy = std::inner_product(x.begin(), x.end(), y.begin(), 0.0);
-    const auto a    = (n * s_xy - s_x * s_y) / (n * s_xx - s_x * s_x);
-    return a;
-}
-
+State_t estimator_data;
+SingleValueSensor_t agl_data;
 
 volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
+
 
 void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 {
@@ -100,13 +66,18 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case SENSORS_STATIC_PRESSURE:
 		case SENSORS_AIR_TEMPERATURE:
 		case SENSORS_AGL:
-            break;
+			memcpy(&agl_data,data,sizeof(SingleValueSensor_t));
+			if(show_telemetry)
+				printf("\tLaser:\t:0.02f\n",agl_data.value);
+			break;
 
 		case SENSORS_CALIBRATE:
 			calibration_data = (CalibrateSensor_t *)data;
 			if(calibration_data->state == CALIBRATED)
-				if(calibration_data->sensor == calibration_requested)
+				if(calibration_data->sensor == calibration_requested) {
+					printf(" Success: Sensor calibrated\n");
 					calibration_requested = UNKNOWN_SENSOR;
+				}
 			break;
 
 #ifdef VEHICLE_FIXEDWING
@@ -116,13 +87,13 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 			/* STATE */
 		case STATE_STATE:
+			break;
+
 		case STATE_ESTIMATOR_PARAM:
-            estimator_data = (State_t *) data;
-            q0 = estimator_data->q[0];
-            q1 = estimator_data->q[1];
-            q2 = estimator_data->q[2];
-            q3 = estimator_data->q[3];
-            break;
+			if(show_telemetry)
+				printf("STATE_ESTIMATOR_PARAM\n");
+			memcpy(&estimator_data,data,sizeof(State_t));
+			break;
 
 			/* CONTROL */
 		case CONTROL_COMMAND:
@@ -152,36 +123,45 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 			/* TELEMETRY */
 		case TELEMETRY_HEARTBEAT:
-			//printf("TELEMETRY_HEARTBEAT\n");
+			if(show_telemetry)
+				printf("TELEMETRY_HEARTBEAT\n");
 			break;
 
 		case TELEMETRY_POSITION:
-			//printf("TELEMETRY_POSITION\n");
+			if(show_telemetry) {
+				printf("TELEMETRY_POSITION\n");
+				printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
+				printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
+				printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);
+			}
 			memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
-			/*printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
-			printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
-			printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);*/
 			break;
 
 		case TELEMETRY_ORIENTATION:
-			//printf("TELEMETRY_ORIENTATION\n");
+			if(show_telemetry)
+				printf("TELEMETRY_ORIENTATION\n");
 			break;
 		case TELEMETRY_PRESSURE:
-			//printf("TELEMETRY_PRESSURE\n");
+			if(show_telemetry)
+				printf("TELEMETRY_PRESSURE\n");
 			break;
 		case TELEMETRY_CONTROL:
-			//printf("TELEMETRY_CONTROL\n");
+			if(show_telemetry)
+				printf("TELEMETRY_CONTROL\n");
 			memcpy(&telemetry_control,data,sizeof(TelemetryControl_t));
 			break;
 		case TELEMETRY_SYSTEM:
-			//printf("TELEMETRY_SYSTEM\n");
+			if(show_telemetry)
+				printf("TELEMETRY_SYSTEM\n");
 			memcpy(&telemetry_system,data,sizeof(TelemetrySystem_t));
 			break;
 		case TELEMETRY_GCS:
-			//printf("TELEMETRY_GCS\n");
+			if(show_telemetry)
+				printf("TELEMETRY_GCS\n");
 			break;
 		case TELEMETRY_GCS_LOCATION:
-			//printf("TELEMETRY_GCS_LOCATION\n");
+			if(show_telemetry)
+				printf("TELEMETRY_GCS_LOCATION\n");
 			break;
 
 			/* ERRORS */
@@ -315,9 +295,9 @@ void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void
 					else printf(" failed (CMD_Y_VEL)\n");
 					break;
 				case CMD_VRATE:
-					//printf("Setting Z velocity to %f", tmp_command->value);
-					//if(ack) printf(" successful\n");
-					//else printf(" failed (CMD_VRATE)\n");
+					printf("Setting Z velocity to %f", tmp_command->value);
+					if(ack) printf(" successful\n");
+					else printf(" failed (CMD_VRATE)\n");
 					break;
 			}
 	}
@@ -331,7 +311,7 @@ void request(uint8_t type, uint8_t value)
 
 bool publish(uint8_t type, uint8_t param)
 {
-	printf("publish: type=%u\n", type);
+	//printf("publish: type=%u\n", type);
 
 	// do some with status request
 	switch(type) {
