@@ -23,9 +23,13 @@
 #include "bst_packet.h"
 
 extern volatile SensorType_t calibration_requested;
+extern volatile PacketTypes_t orientation_requested;
+extern volatile PacketAction_t orientation_action;
 
 void sendCalibrate(SensorType_t sensor);
 void requestPowerOn(void);
+void requestOrientation(PacketTypes_t type);
+void setOrientation(PacketTypes_t type, AxisMapping_t * axis_mapping);
 bool updateCommunications(void);
 
 #endif

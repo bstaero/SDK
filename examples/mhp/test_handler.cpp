@@ -36,10 +36,12 @@ MHPSensorsGNSS_t mhp_sensors_gnss;
 MHPTiming_t      mhp_timing;
 
 volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
+volatile PacketTypes_t orientation_requested = (PacketTypes_t)0;
+volatile PacketAction_t orientation_action = PKT_ACTION_NACK;
 /*<-End Global Variables-->*/
 
 /*<---Local Functions----->*/
-void handlePacket(uint8_t type, const void * data);
+void handlePacket(uint8_t type, uint8_t action, const void * data);
 /*<-End Local Functions--->*/
 
 bool updateCommunications(void) {
@@ -51,7 +53,7 @@ bool updateCommunications(void) {
 	while(readByte(&data)) {
 		retval = true;
 		if(rx_packet.isValid(data)) {
-			handlePacket(rx_packet.getType(), rx_packet.getDataPtr());
+			handlePacket(rx_packet.getType(), rx_packet.getAction(), rx_packet.getDataPtr());
 			break;
 		}
 	}
@@ -59,17 +61,65 @@ bool updateCommunications(void) {
 	return retval;
 }
 
-void handlePacket(uint8_t type, const void * data) 
+void handlePacket(uint8_t type, uint8_t action, const void * data) 
 {
 	//printf("handlePacket: type=%u\n", type);
 
 	PowerOn_t * power_on_data;
 	CalibrateSensor_t * calibration_data;
+	AxisMapping_t * axis_mapping;
 
 	static bool first_run = true;
 	char out[1024];
 
 	switch(type) {
+
+		case SENSORS_BOARD_ORIENTATION:
+			switch(action) {
+				case PKT_ACTION_STATUS:
+					axis_mapping = (AxisMapping_t *)data;
+					printf("IMU: x = [%i] y = [%i] z = [%i]\n",
+							axis_mapping->axis[0],
+							axis_mapping->axis[1],
+							axis_mapping->axis[2]);
+
+					break;
+
+				case PKT_ACTION_ACK:
+					orientation_action = PKT_ACTION_ACK;
+					orientation_requested = (PacketTypes_t)0;
+					break;
+
+				case PKT_ACTION_NACK:
+					orientation_action = PKT_ACTION_NACK;
+					orientation_requested = (PacketTypes_t)0;
+					break;
+			}
+
+			break;
+
+		case SENSORS_GNSS_ORIENTATION:
+			switch(action) {
+				case PKT_ACTION_STATUS:
+					axis_mapping = (AxisMapping_t *)data;
+					printf("GNSS: x = [%i] y = [%i] z = [%i]\n",
+							axis_mapping->axis[0],
+							axis_mapping->axis[1],
+							axis_mapping->axis[2]);
+					break;
+
+				case PKT_ACTION_ACK:
+					orientation_action = PKT_ACTION_ACK;
+					orientation_requested = (PacketTypes_t)0;
+					break;
+
+				case PKT_ACTION_NACK:
+					orientation_action = PKT_ACTION_NACK;
+					orientation_requested = (PacketTypes_t)0;
+					break;
+			}
+
+			break;
 
 		case SENSORS_CALIBRATE:
 			calibration_data = (CalibrateSensor_t *)data;
@@ -82,7 +132,7 @@ void handlePacket(uint8_t type, const void * data)
 			memcpy(&mhp_data,data,sizeof(MHP_t));;
 
 			if(display_telemetry)
-				printf("%+0.01f m %+05.01f %+05.01f %+05.01f a %+0.02f %+0.02f %+0.02f g %+0.02f %+0.02f %+0.02f d %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+05.01f %04.01f a %+05.01f b %+05.01f q %+07.01f i %+05.01f t %+05.01f %04u %02u:%02u:%4.01f lla %+06.02f %+07.02f %06.01f v %+05.01f %+05.01f %+05.01f p %04.01f\n\r",
+				printf("%+0.01f m %+05.01f %+05.01f %+05.01f a %+0.02f %+0.02f %+0.02f g %+0.02f %+0.02f %+0.02f d %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+05.01f %04.01f a %+05.01f b %+05.01f q %+07.01f i %+05.01f t %+05.01f %04u %02u:%02u:%04.01f lla %+06.02f %+07.02f %06.01f v %+05.01f %+05.01f %+05.01f p %04.01f\n\r",
 						mhp_sensors.static_pressure,
 						mhp_sensors_gnss.magnetometer[0],
 						mhp_sensors_gnss.magnetometer[1],
@@ -293,6 +343,7 @@ void sendCalibrate(SensorType_t sensor) {
 
 	tx_packet.setAddressing(false);
 	tx_packet.setType(SENSORS_CALIBRATE);
+	tx_packet.setAction(PKT_ACTION_COMMAND);
 	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(CalibrateSensor_t));
 
 	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
@@ -303,7 +354,41 @@ void requestPowerOn(void) {
 
 	tx_packet.setAddressing(false);
 	tx_packet.setType(SYSTEM_POWER_ON);
+	tx_packet.setAction(PKT_ACTION_REQUEST);
 	tx_packet.setData((uint8_t *)&power_on_pkt, sizeof(PowerOn_t));
+
+	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+}
+
+void requestOrientation(PacketTypes_t type) {
+	if(type != SENSORS_BOARD_ORIENTATION && type != SENSORS_GNSS_ORIENTATION)
+		return;
+
+	AxisMapping_t axis_mapping_pkt;
+
+	tx_packet.setAddressing(false);
+	tx_packet.setType(type);
+	tx_packet.setAction(PKT_ACTION_REQUEST);
+	tx_packet.setData((uint8_t *)&axis_mapping_pkt, sizeof(AxisMapping_t));
+
+	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+}
+
+void setOrientation(PacketTypes_t type, AxisMapping_t * axis_mapping) {
+	if(orientation_requested) return;
+
+	if(type != SENSORS_BOARD_ORIENTATION && type != SENSORS_GNSS_ORIENTATION)
+		return;
+
+	orientation_action = PKT_ACTION_NACK;
+	orientation_requested = type;
+
+	AxisMapping_t axis_mapping_pkt;
+
+	tx_packet.setAddressing(false);
+	tx_packet.setType(type);
+	tx_packet.setAction(PKT_ACTION_COMMAND);
+	tx_packet.setData((uint8_t *)axis_mapping, sizeof(AxisMapping_t));
 
 	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
 }

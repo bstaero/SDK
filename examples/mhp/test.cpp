@@ -32,6 +32,7 @@
 volatile bool display_telemetry = false;
 volatile bool display_telemetry_timing = false;
 volatile bool waiting_on_calibrate = false;
+volatile bool waiting_on_orientation = false;
 volatile bool write_file = false;
 
 // for command line (terminal) input
@@ -40,16 +41,25 @@ struct termios initial_settings, new_settings;
 
 /*<---Local Functions----->*/
 void updateCalibration(void);
+void updateOrientation(void);
 /*<-End Local Functions--->*/
 
 void printTestHelp() {
 	printf("Keys:\n");
 	printf("  t   : Toggle telemetry display\n");
 	printf("  i   : Toggle telemetry timing display\n");
+	printf("\n");
 	printf("  d   : Request dynamic pressure calibration\n");
 	printf("  g   : Request gyroscope calibration\n");
 	printf("  m   : Request magnetometer calibration\n");
+	printf("\n");
+	printf("  u   : Request imu orientation\n");
+	printf("  U   : Set imu orientation\n");
+	printf("  n   : Request GNSS orientation\n");
+	printf("  N   : Set GNSS orientation\n");
+	printf("\n");
 	printf("  s   : Request serial number and comms revision\n");
+	printf("\n");
 	printf("  p   : Print this help\n");
 }
 
@@ -90,72 +100,114 @@ void updateTest() {
 		first_run = false;
 	}
 
-	if(waiting_on_calibrate) {
-		updateCalibration();
-	} else {
+	AxisMapping_t temp_axis_mapping;
+	int temp_int = 0;
 
-		char input; 
+	if(waiting_on_calibrate) updateCalibration();
+	if(waiting_on_orientation) updateOrientation();
 
-		if( inputAvailable() ) {
-			input = getchar();
+	char input; 
 
-			if(input > 0) {
-				switch(input) {
+	if( inputAvailable() ) {
+		input = getchar();
 
-					case 't':
-						display_telemetry_timing = false;
-						display_telemetry? display_telemetry=false: display_telemetry=true;
-						break;
+		if(input > 0) {
+			switch(input) {
 
-					case 'i':
-						display_telemetry = false;
-						display_telemetry_timing? display_telemetry_timing=false: display_telemetry_timing=true;
-						break;
+				case 't':
+					display_telemetry_timing = false;
+					display_telemetry? display_telemetry=false: display_telemetry=true;
+					break;
 
-					case 'd':
-						sendCalibrate(DYNAMIC_PRESSURE);
-						waiting_on_calibrate = true;
-						printf("Dynamic Pressure Calibration Requested.. ");
-						fflush(stdout);
-						break;
+				case 'i':
+					display_telemetry = false;
+					display_telemetry_timing? display_telemetry_timing=false: display_telemetry_timing=true;
+					break;
 
-					case 'g':
-						sendCalibrate(GYROSCOPE);
-						waiting_on_calibrate = true;
-						printf("Gyroscope Pressure Calibration Requested.. ");
-						fflush(stdout);
-						break;
+				case 'd':
+					sendCalibrate(DYNAMIC_PRESSURE);
+					waiting_on_calibrate = true;
+					printf("Dynamic Pressure Calibration Requested.. ");
+					fflush(stdout);
+					break;
 
-					case 'm':
-						sendCalibrate(MAGNETOMETER);
-						waiting_on_calibrate = true;
-						printf("Magnetometer Calibration Requested.. ");
-						fflush(stdout);
-						break;
+				case 'g':
+					sendCalibrate(GYROSCOPE);
+					waiting_on_calibrate = true;
+					printf("Gyroscope Pressure Calibration Requested.. ");
+					fflush(stdout);
+					break;
 
-					case 's':
-						requestPowerOn();
-						break;
+				case 'm':
+					sendCalibrate(MAGNETOMETER);
+					waiting_on_calibrate = true;
+					printf("Magnetometer Calibration Requested.. ");
+					fflush(stdout);
+					break;
 
-					case 'p':
-						printTestHelp();
-						break;
+				case 'u':
+					requestOrientation(SENSORS_BOARD_ORIENTATION);
+					break;
 
-					case 3: // <CTRL-C> 
-					case 'q':
-						printf("Keyboard caught exit signal ...\n");
-						running = false;
-						break;
+				case 'U':
+					if(waiting_on_orientation) break;
+					waiting_on_orientation = true;
 
-					default:
-						break;
-				}
-				input = 0;
-			} else {
-				clearerr(stdin);
+					temp_axis_mapping.axis[0] = -2;
+					temp_axis_mapping.axis[1] = -1;
+					temp_axis_mapping.axis[2] = -3;
+
+					printf("Setting IMU orietation to [%i,%i,%i].. ",
+							temp_axis_mapping.axis[0],
+							temp_axis_mapping.axis[1],
+							temp_axis_mapping.axis[2]);
+					fflush(stdout);
+
+					setOrientation(SENSORS_BOARD_ORIENTATION, &temp_axis_mapping);
+					break;
+
+				case 'n':
+					requestOrientation(SENSORS_GNSS_ORIENTATION);
+					break;
+
+				case 'N':
+					if(waiting_on_orientation) break;
+					waiting_on_orientation = true;
+
+					temp_axis_mapping.axis[0] = 1;
+					temp_axis_mapping.axis[1] = 2;
+					temp_axis_mapping.axis[2] = 3;
+
+					printf("Setting GNSS orietation to [%i,%i,%i].. ",
+							temp_axis_mapping.axis[0],
+							temp_axis_mapping.axis[1],
+							temp_axis_mapping.axis[2]);
+					fflush(stdout);
+
+					setOrientation(SENSORS_GNSS_ORIENTATION, &temp_axis_mapping);
+					break;
+
+				case 's':
+					requestPowerOn();
+					break;
+
+				case 'p':
+					printTestHelp();
+					break;
+
+				case 3: // <CTRL-C> 
+				case 'q':
+					printf("Keyboard caught exit signal ...\n");
+					running = false;
+					break;
+
+				default:
+					break;
 			}
+			input = 0;
+		} else {
+			clearerr(stdin);
 		}
-
 	}
 
 }
@@ -182,6 +234,28 @@ void updateCalibration() {
 
 	end_time = 0.0;
 	waiting_on_calibrate = false;
+}
+
+void updateOrientation() {
+	static float end_time = 0.0;
+	if(end_time == 0.0 && orientation_requested != 0) {
+		end_time = getElapsedTime() + 2.0;;
+	}
+
+	if(orientation_requested != 0 && getElapsedTime() < end_time)
+		return;
+
+	if(getElapsedTime() < end_time && orientation_action == PKT_ACTION_ACK) {
+		printf("SUCCESS\n");
+	} else {
+		calibration_requested = UNKNOWN_SENSOR;
+		printf("FAILED\n");
+	}
+
+	orientation_requested = (PacketTypes_t)0;
+
+	end_time = 0.0;
+	waiting_on_orientation = false;
 }
 
 
