@@ -83,6 +83,7 @@ void printTestHelp() {
     printf("  F   : Send a four point flight plan consisting of waypoint 80\n");
     printf("  w   : Command aircraft to go to waypoint 80\n");
     printf("  D   : Delete flight plan consisting of waypoint 80\n");
+    printf("  b   : Request Dubin's path information\n");
     printf("\n");
     printf("  p   : print this help\n");
 }
@@ -390,6 +391,13 @@ void updateTest() {
                 flight_plan_map.mode = DELETE;
 
                 comm_handler->sendCommand(FLIGHT_PLAN, (uint8_t *)temp_waypoints, num_points, &flight_plan_map);
+                break;
+							
+            // Request Dubin's path 
+            case 'b':
+                printf("Requesting current Dubin's path\n");
+
+								comm_handler->request(DUBIN_PATH, 0);
                 break;
 
             // Send vehicle to waypoint 80

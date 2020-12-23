@@ -21,12 +21,13 @@ BSTModuleFlightPlan::BSTModuleFlightPlan() : BSTCommunicationsModule () {
 
 	pmesg(VERBOSE_ALLOC, "BSTModuleFlightPlan::BSTModuleFlightPlan()\n");
 
-	max_num_data_types = 3;
-	data_types = new DataType_t[3]; 
+	max_num_data_types = 4;
+	data_types = new DataType_t[4]; 
 
 	registerDataType(FLIGHT_PLAN, 0, true, true);
 	registerDataType(FLIGHT_PLAN_MAP, sizeof(FlightPlanMap_t), true, true);
 	registerDataType(FLIGHT_PLAN_WAYPOINT, sizeof(Waypoint_t), true, true);
+	registerDataType(DUBIN_PATH, sizeof(DubinsPath_t), false, true); 
 
 	reset();
 
@@ -317,6 +318,7 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 		case FLIGHT_PLAN_MAP:
 		case FLIGHT_PLAN_WAYPOINT:
 		case LAST_MAPPING_WAYPOINT:
+		case DUBIN_PATH:
 			BSTCommunicationsModule::send(type,data,size,NULL);
 			break;
 	}
@@ -429,6 +431,10 @@ void BSTModuleFlightPlan::request(uint8_t type, uint8_t parameter){
 		case FLIGHT_PLAN_WAYPOINT:
 			pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_WAYPOINT REQUEST %i\n",parameter);
 
+			parent->write(type,PKT_ACTION_REQUEST,&parameter,1,NULL);
+			break;
+
+		default:
 			parent->write(type,PKT_ACTION_REQUEST,&parameter,1,NULL);
 			break;
 	}
@@ -728,6 +734,10 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 			}
 
 
+			break;
+
+		case DUBIN_PATH:
+			BSTCommunicationsModule::parse(type, action, data, size );
 			break;
 
 		case INVALID_PACKET:
