@@ -153,9 +153,9 @@ void updateTest() {
 					if(waiting_on_orientation) break;
 					waiting_on_orientation = true;
 
-					temp_axis_mapping.axis[0] = -2;
-					temp_axis_mapping.axis[1] = -1;
-					temp_axis_mapping.axis[2] = -3;
+					temp_axis_mapping.axis[0] = 3;
+					temp_axis_mapping.axis[1] = -2;
+					temp_axis_mapping.axis[2] = 1;
 
 					printf("Setting IMU orietation to [%i,%i,%i].. ",
 							temp_axis_mapping.axis[0],
