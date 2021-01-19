@@ -204,6 +204,13 @@ void handlePacket(uint8_t type, uint8_t action, const void * data)
 							"Q,"
 							"TAS,"
 							"IAS,"
+							"U,"
+							"V,"
+							"W,"
+							"Q_0,"
+							"Q_1,"
+							"Q_2,"
+							"Q_3,"
 							"GPS_TIME,"
 							"GPS_WEEK,"
 							"HOUR,"
@@ -255,6 +262,13 @@ void handlePacket(uint8_t type, uint8_t action, const void * data)
 						mhp_data.q,
 						mhp_data.ias,
 						mhp_data.tas,
+						mhp_data.wind[0],
+						mhp_data.wind[1],
+						mhp_data.wind[2],
+						mhp_data.quaternion[0],
+						mhp_data.quaternion[1],
+						mhp_data.quaternion[2],
+						mhp_data.quaternion[3],
 						mhp_timing.gps_time, // [s]
 						(double)mhp_sensors_gnss.week,
 						(double)mhp_sensors_gnss.hour,

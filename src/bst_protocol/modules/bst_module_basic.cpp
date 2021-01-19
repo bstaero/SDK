@@ -29,9 +29,13 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(SENSORS_MHP, sizeof(MHP_t), false, false);
 	registerDataType(SENSORS_GNSS_RTCM, sizeof(RTCM_t), false, false);
 	registerDataType(SENSORS_MHP_SENSORS, sizeof(MHPSensors_t), false, false);
+	registerDataType(SENSORS_DYNP_CALIBRATION, sizeof(SingleAxisSensorCalibration_t), true, true);
+	registerDataType(SENSORS_GYRO_CALIBRATION, sizeof(ThreeAxisSensorCalibration_t), true, true);
+	registerDataType(SENSORS_MAG_CALIBRATION, sizeof(ThreeAxisSensorCalibration_t), true, true);
+	registerDataType(SENSORS_MAG_CURRENT_CAL, sizeof(ThreeAxisFirstOrderCorrection_t), true, true);
+	registerDataType(SENSORS_ADSB, sizeof(ADSB_t), false, false);
 	registerDataType(SENSORS_MHP_GNSS, sizeof(MHPSensorsGNSS_t), false, false);
 	registerDataType(SENSORS_MHP_TIMING, sizeof(MHPTiming_t), false, false);
-	registerDataType(SENSORS_ADSB, sizeof(ADSB_t), false, false);
 
 	/* STATE */
 	registerDataType(STATE_STATE, sizeof(State_t), false, false); // FIXME

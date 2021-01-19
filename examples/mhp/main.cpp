@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 		case COMM_SERIAL:
 			comm_type = COMM_SERIAL;
 			if(!param[0][0]) strcpy(&param[0][0],"/dev/ttyUSB0");
-			if(!param[1][0]) strcpy(&param[1][0],"115200");
+			if(!param[1][0]) strcpy(&param[1][0],"921600");
 			break;
 		case COMM_SOCKET:
 			comm_type = COMM_SOCKET;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 		default:
 			comm_type = COMM_SERIAL;
 			if(!param[0][0]) strcpy(&param[0][0],"/dev/ttyUSB0");
-			if(!param[1][0]) strcpy(&param[1][0],"115200");
+			if(!param[1][0]) strcpy(&param[1][0],"921600");
 			break;
 	}
 
@@ -216,7 +216,7 @@ void printHelp() {
 	printf("Usage: test [OPTIONS]\n");
 	printf("  Serial port paramerters:\n");
 	printf("    -d <serial device name> : default /dev/ttyUSB0\n");
-	printf("    -b <serial baud>        : default 115200\n");
+	printf("    -b <serial baud>        : default 921600\n");
 	printf("  Socket paramerters:\n");
 	printf("    -i <server ip number>   : default localhost\n");
 	printf("    -p <socket port number> : default 55555\n");

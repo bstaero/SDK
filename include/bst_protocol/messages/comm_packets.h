@@ -177,6 +177,10 @@ typedef enum {
 	SENSORS_MHP=13,
 	SENSORS_GNSS_RTCM=14,
 	SENSORS_MHP_SENSORS=15,
+	SENSORS_DYNP_CALIBRATION=25,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_GYRO_CALIBRATION=26,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MAG_CALIBRATION=27,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MAG_CURRENT_CAL=28,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_ADSB=29,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_MHP_GNSS=30,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_MHP_TIMING=31,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
@@ -275,7 +279,7 @@ typedef enum {
 
 /*--------[ Configuration ]--------*/
 
-#define COMMS_VERSION 3150
+#define COMMS_VERSION 3160
 
 #define MAX_ALTITUDE 20000
 
@@ -377,15 +381,19 @@ typedef struct _State_t {
 
 #define LAUNCH_WAYPOINT 113
 
+#define LOOK_AT_POINT 120
+
 #define LOST_COMM_WAYPOINT 119
+
+#define MAX_LOOK_AT_POINTS 10
 
 #define MAX_USER_WAYPOINTS 100
 
-#define MAX_WAYPOINTS 120
+#define MAX_WAYPOINTS 130
 
 #define VIRTUAL_WAYPOINT 114
 
-#define WAYPOINT_MAP_SIZE 16
+#define WAYPOINT_MAP_SIZE 17
 
 typedef enum {
 	RSR,
@@ -506,7 +514,7 @@ typedef struct _DubinsPath_t {
 
 typedef struct _FlightPlanMap_t {
 	FPMapMode_t mode;
-	uint8_t map[16];
+	uint8_t map[17];
 
 #ifdef __cplusplus
 	_FlightPlanMap_t() {
@@ -514,7 +522,7 @@ typedef struct _FlightPlanMap_t {
 
 		mode = NONE;
 
-		for (_i = 0; _i < 16; ++_i)
+		for (_i = 0; _i < 17; ++_i)
 			map[_i] = 0;
 	}
 #endif
@@ -637,6 +645,7 @@ typedef struct _MHP_t {
 	float ias;  // [m/s]
 	float tas;  // [m/s]
 	float wind[3];  // [m/s]
+	float quaternion[4];
 
 #ifdef __cplusplus
 	_MHP_t() {
@@ -651,6 +660,9 @@ typedef struct _MHP_t {
 
 		for (_i = 0; _i < 3; ++_i)
 			wind[_i] = 0.0;
+
+		for (_i = 0; _i < 4; ++_i)
+			quaternion[_i] = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) MHP_t;
@@ -811,6 +823,18 @@ typedef struct _SensorOffsets_t {
 #endif
 } __attribute__ ((packed)) SensorOffsets_t;
 
+typedef struct _SingleAxisSensorCalibration_t {
+	float b;  // Offset Bias
+	float m;  // Scale Factor
+
+#ifdef __cplusplus
+	_SingleAxisSensorCalibration_t() {
+		b = 0.0;
+		m = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) SingleAxisSensorCalibration_t;
+
 typedef struct _SingleValue_t {
 	float value;
 
@@ -848,6 +872,23 @@ typedef struct _ThreeAxisSensor_t {
 	}
 #endif
 } __attribute__ ((packed)) ThreeAxisSensor_t;
+
+typedef struct _ThreeAxisSensorCalibration_t {
+	float b[3];  // Offset Bias
+	float m[9];  // Homography (transformation) Matrix
+
+#ifdef __cplusplus
+	_ThreeAxisSensorCalibration_t() {
+		uint8_t _i;
+
+		for (_i = 0; _i < 3; ++_i)
+			b[_i] = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			m[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) ThreeAxisSensorCalibration_t;
 
 typedef struct _ADSB_t {
 	float system_time;
@@ -949,6 +990,30 @@ typedef struct _IMU_t {
 	}
 #endif
 } __attribute__ ((packed)) IMU_t;
+
+typedef struct _ThreeAxisFirstOrderCorrection_t {
+	SensorType_t sensor;
+	float x[2];
+	float y[2];
+	float z[2];
+
+#ifdef __cplusplus
+	_ThreeAxisFirstOrderCorrection_t() {
+		uint8_t _i;
+
+		sensor = UNKNOWN_SENSOR;
+
+		for (_i = 0; _i < 2; ++_i)
+			x[_i] = 0.0;
+
+		for (_i = 0; _i < 2; ++_i)
+			y[_i] = 0.0;
+
+		for (_i = 0; _i < 2; ++_i)
+			z[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) ThreeAxisFirstOrderCorrection_t;
 
 typedef struct _Sensors_t {
 	IMU_t imu;
@@ -1527,6 +1592,7 @@ typedef struct _TelemetryControl_t {
 	float vrate;
 	float altitude;
 	uint8_t waypoint;
+	uint8_t look_at_point;
 	LateralControlMode_t lat_mode;
 	AltitudeControlMode_t alt_mode;
 	NavigationControllerMode_t nav_mode;
@@ -1548,6 +1614,7 @@ typedef struct _TelemetryControl_t {
 		vrate = 0.0;
 		altitude = 0.0;
 		waypoint = 0;
+		look_at_point = 0;
 		lat_mode = LAT_MODE_INVALID;
 		alt_mode = ALT_MODE_INVALID;
 		nav_mode = NAV_INVALID;
