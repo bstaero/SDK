@@ -42,10 +42,6 @@
 #include <mach/mach_time.h> // system time
 #endif
 
-#ifdef VERBOSE
-#  include "debug.h"
-#endif
-
 /*<---Global Variables---->*/
 CommunicationsInterface * comm_interface;
 int in_fid = -1;
@@ -166,7 +162,7 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 		if(strlen(outfile)) {
-			out_fid = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 644);
+			out_fid = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 			if(out_fid < 0) {
 				printf("ERROR - unable to open file %s for writing.\n",outfile);
 				close(in_fid);

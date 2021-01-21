@@ -20,6 +20,7 @@
 #define _MAIN_H_
 
 #include "bst_packet.h"
+#include "debug.h"
 
 extern bool big_endian;
 extern bool running;
