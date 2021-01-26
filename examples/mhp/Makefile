@@ -30,7 +30,7 @@ VPATH     +=
 INCLUDES  += -I./
 OBJ       += main.o test.o test_handler.o
 
-#FLAGS=-g -DVERBOSE
+FLAGS+=-g -DVERBOSE
 
 ifneq ($(HOST_OS), Darwin)
 LDFLAGS+=-lrt

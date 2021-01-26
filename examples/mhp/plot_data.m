@@ -109,9 +109,12 @@ function plot_data(data)
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
 	ax(fig_index) = subplot(1,1,1);
+	%plot(data.DATA_PRODUCT_TIME(start_index:end),...
+			%[data.ALPHA(start_index:end).*180/pi,...
+			 %data.BETA(start_index:end).*180/pi,]);
 	plot(data.DATA_PRODUCT_TIME(start_index:end),...
-			[data.ALPHA(start_index:end).*180/pi,...
-			 data.BETA(start_index:end).*180/pi,]);
+			[smooth(data.ALPHA(start_index:end).*180/pi,0.005),...
+			 smooth(data.BETA(start_index:end).*180/pi,0.005),]);
 
 	title('Wind Angles [deg]');
 	legend('\alpha','\beta');
@@ -120,6 +123,9 @@ function plot_data(data)
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
 	ax(fig_index) = subplot(1,1,1);
+	%plot(data.DATA_PRODUCT_TIME(start_index:end),...
+			%[data.IAS(start_index:end),...
+			 %data.TAS(start_index:end),]);
 	plot(data.DATA_PRODUCT_TIME(start_index:end),...
 			[data.IAS(start_index:end),...
 			 data.TAS(start_index:end),]);
@@ -130,16 +136,16 @@ function plot_data(data)
 
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
-	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_0, 1000);
+	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_0, 100);
 	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'k');
 	hold on;
-	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_1, 1000);
+	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_1, 100);
 	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'b');
-	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_2, 1000);
+	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_2, 100);
 	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'r');
-	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_3, 1000);
+	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_3, 100);
 	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'g');
-	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_4, 1000);
+	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_4, 100);
 	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'c');
 	hold off;
 
