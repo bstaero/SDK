@@ -53,7 +53,7 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
     void setFletcher16 (uint8_t * data, uint8_t size);
   #endif
 #else
-	uint8_t CAN_Read() {return simulatedCANRead();}
+	uint8_t CAN_Read(uint8_t p) {return simulatedCANRead();}
 	uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
 		return simulatedCANWrite(p, id, data, size);
 	}
@@ -106,6 +106,13 @@ void updateGPS(
 
 void updateGPSRTCM(float system_time, uint8_t size, uint8_t * data);
 
+void updateGPSSVIN(
+		uint32_t time_elapsed,
+		uint32_t time_minimum,
+		float accuracy,
+		float accuracy_minimum,
+		uint8_t flags);
+
 // ---
 // All of the values in the update functions should be referenced to
 // the autopilot frame, defined by the PCB
@@ -156,6 +163,21 @@ void updateHumidity(float system_time,
 void updateSupply(float system_time,
 		float voltage, float current, float coulomb_count, float temperature); // [V, A, mAh, deg c]
 
+void updateADSB(float system_time,
+		uint32_t icao_address,
+		double latitude,
+		double longitude,
+		uint8_t altitude_type,
+		float altitude,
+		float heading,
+		float horizontal_velocity,
+		float vertical_velocity,
+		char callsign[9],
+		uint8_t emitter_type,
+		uint8_t tslc,
+		uint16_t flags,
+		uint16_t squawk);
+
 /** @addtogroup Low_Level
  * @{
  */ 
@@ -173,8 +195,63 @@ void updateSupply(float system_time,
  * @{
  */ 
 #define BRIDGE_START_BYTE '@'	
-
 #define BRIDGE_PACKET_SIZE 128
+
+#if 0 // CAN ONLY USE WITH "FIXED" CAN BOARDS
+#define BRIDGE_BUFFER_PREAMBLE\
+	static uint8_t cnt = 0;\
+\
+	if(cnt + size > pkt_size) {\
+		cnt = 0u; buffer[0] = 0;\
+	}\
+\
+	memcpy(buffer + cnt, byte, size);\
+	cnt += size;\
+\
+	if (buffer[0] == BRIDGE_START_BYTE) {\
+		if (cnt == pkt_size) {\
+			if (checkFletcher16(buffer, pkt_size)) {
+
+#define BRIDGE_BUFFER_CONCLUSION\
+			} else {\
+				pmesg(VERBOSE_ERROR, "%s: ERROR\r\n",function_name);\
+				BRIDGE_pktDrops++;\
+			}\
+			cnt = 0u; buffer[0] = 0;\
+		}\
+	} else {\
+		cnt = 0u; buffer[0] = 0;\
+	}
+#else
+#define BRIDGE_BUFFER_PREAMBLE\
+	static uint8_t cnt = 0;\
+\
+	uint8_t i;\
+	for(i=0; i<size; i++) {\
+\
+		if(cnt > pkt_size) {\
+			cnt = 0u; buffer[0] = 0;\
+		}\
+\
+		buffer[cnt++] = byte[i];\
+\
+		if (buffer[0] == BRIDGE_START_BYTE) {\
+			if (cnt == pkt_size) {\
+				if (checkFletcher16(buffer, pkt_size)) {
+
+#define BRIDGE_BUFFER_CONCLUSION\
+					cnt = 0u; buffer[0] = 0;\
+				} else {\
+					BRIDGE_pktDrops++;\
+					cnt = 1u; buffer[0] = 0;\
+				}\
+			}\
+		} else {\
+			cnt = 0u; buffer[0] = 0;\
+		}\
+	}
+#endif
+
 /**
  * @}
  */ 
@@ -190,31 +267,34 @@ static uint32_t BRIDGE_pktDrops = 0u;
 /** @defgroup BRIDGE_Private_Functions
  * @{
  */ 
-void BRIDGE_HandleReceiverPkt(uint8_t *byte);
-void BRIDGE_HandlePressurePkt(uint8_t *byte);
-void BRIDGE_HandleAirDataPkt(uint8_t *byte);
-void BRIDGE_HandleMHPPkt(uint8_t *byte);
-void BRIDGE_HandleIMUPkt(uint8_t *byte);
-void BRIDGE_HandleAccelPkt(uint8_t *byte);
-void BRIDGE_HandleGyroPkt(uint8_t *byte);
-void BRIDGE_HandleMagPkt(uint8_t *byte);
-void BRIDGE_HandleActuatorPkt(uint8_t *byte);
-void BRIDGE_HandleGNSSPkt(uint8_t *byte);
-void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte);
-void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte);
-void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte);
-void BRIDGE_HandleGNSSVelPkt(uint8_t *byte);
-void BRIDGE_HandleGNSSHealthPkt(uint8_t *byte);
-void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte);
-void BRIDGE_HandleGNSSRTCMPkt(uint8_t *byte);
-void BRIDGE_HandleSupplyPkt(uint8_t *byte);
+void BRIDGE_HandleReceiverPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandlePressurePkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleAirDataPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleMHPPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleIMUPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleAccelPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGyroPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleMagPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleActuatorPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSVelPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSHealthPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSRTCMPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSSVINPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleSupplyPkt(uint8_t *byte,uint8_t size);
 
-void BRIDGE_HandleNDVIUpPkt(uint8_t *byte);
-void BRIDGE_HandleNDVIDownPkt(uint8_t *byte);
-void BRIDGE_HandleNDVIPkt(uint8_t *byte);
+void BRIDGE_HandleNDVIUpPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleNDVIDownPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleNDVIPkt(uint8_t *byte,uint8_t size);
 
-void BRIDGE_HandleAGLPkt(uint8_t *byte);
-void BRIDGE_HandleProximityPkt(uint8_t *byte);
+void BRIDGE_HandleAGLPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleProximityPkt(uint8_t *byte,uint8_t size);
+
+void BRIDGE_HandleADSBPkt(uint8_t *byte,uint8_t size);
 
 void updateGPSValues(
 		float ts, int16_t w, uint8_t h, uint8_t m, float s,
@@ -265,39 +345,38 @@ float getElapsedTime(void);
  * @param	size Size of data [bytes]
  * @retval None
  */
-void BRIDGE_Arbiter(uint32_t id, void *data, uint8_t size)
+void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 {
-	uint8_t i;
+	uint8_t * data = (uint8_t *) data_ptr;
 
-	for (i=0; i<size; i++)
+	switch(id)
 	{
-		switch(id)
-		{
-			case CAN_PKT_RECEIVER:   BRIDGE_HandleReceiverPkt((uint8_t *)data+i); break;
-			case CAN_PKT_PRESSURE:   BRIDGE_HandlePressurePkt((uint8_t *)data+i); break;
-			case CAN_PKT_AIR_DATA:   BRIDGE_HandleAirDataPkt((uint8_t *)data+i); break;
-			case CAN_PKT_MHP:        BRIDGE_HandleMHPPkt((uint8_t *)data+i); break;
-			case CAN_PKT_IMU:        BRIDGE_HandleIMUPkt((uint8_t *)data+i); break;
-			case CAN_PKT_ACCEL:      BRIDGE_HandleAccelPkt((uint8_t *)data+i); break;
-			case CAN_PKT_GYRO:       BRIDGE_HandleGyroPkt((uint8_t *)data+i); break;
-			case CAN_PKT_MAG:        BRIDGE_HandleMagPkt((uint8_t *)data+i); break;
-			case CAN_PKT_ACTUATOR:   BRIDGE_HandleActuatorPkt((uint8_t *)data+i); break;
-			case CAN_PKT_GNSS:       BRIDGE_HandleGNSSPkt((uint8_t *)data+i); break;
-			case CAN_PKT_GNSS_UTC:   BRIDGE_HandleGNSSUTCPkt((uint8_t *)data+i); break;
-			case CAN_PKT_GNSS_UTC_W: BRIDGE_HandleGNSSUTCWPkt((uint8_t *)data+i); break;
-			case CAN_PKT_GNSS_LLA:   BRIDGE_HandleGNSSLLAPkt((uint8_t *)data+i); break;
-			case CAN_PKT_GNSS_VEL:   BRIDGE_HandleGNSSVelPkt((uint8_t *)data+i); break;
-			case CAN_PKT_GNSS_HEALTH:BRIDGE_HandleGNSSHealthPkt((uint8_t *)data+i); break;
-			case CAN_PKT_GNSS_HEALTH_2:BRIDGE_HandleGNSSHealth2Pkt((uint8_t *)data+i); break;
-			case CAN_PKT_GNSS_RTCM  :BRIDGE_HandleGNSSRTCMPkt((uint8_t *)data+i); break;
-			case CAN_PKT_SUPPLY:     BRIDGE_HandleSupplyPkt((uint8_t *)data+i); break;
-			case CAN_PKT_NDVI:       BRIDGE_HandleNDVIPkt((uint8_t *)data+i); break;
-			case CAN_PKT_NDVI_UP:    BRIDGE_HandleNDVIUpPkt((uint8_t *)data+i); break;
-			case CAN_PKT_NDVI_DOWN:  BRIDGE_HandleNDVIDownPkt((uint8_t *)data+i); break;
-			case CAN_PKT_AGL:	       BRIDGE_HandleAGLPkt((uint8_t *)data+i); break;
-			case CAN_PKT_PROXIMITY:	 BRIDGE_HandleProximityPkt((uint8_t *)data+i); break;
-			default: break;
-		}
+		case CAN_PKT_RECEIVER:   BRIDGE_HandleReceiverPkt(data,size); break;
+		case CAN_PKT_PRESSURE:   BRIDGE_HandlePressurePkt(data,size); break;
+		case CAN_PKT_AIR_DATA:   BRIDGE_HandleAirDataPkt(data,size); break;
+		case CAN_PKT_MHP:        BRIDGE_HandleMHPPkt(data,size); break;
+		case CAN_PKT_IMU:        BRIDGE_HandleIMUPkt(data,size); break;
+		case CAN_PKT_ACCEL:      BRIDGE_HandleAccelPkt(data,size); break;
+		case CAN_PKT_GYRO:       BRIDGE_HandleGyroPkt(data,size); break;
+		case CAN_PKT_MAG:        BRIDGE_HandleMagPkt(data,size); break;
+		case CAN_PKT_ACTUATOR:   BRIDGE_HandleActuatorPkt(data,size); break;
+		case CAN_PKT_GNSS:       BRIDGE_HandleGNSSPkt(data,size); break;
+		case CAN_PKT_GNSS_UTC:   BRIDGE_HandleGNSSUTCPkt(data,size); break;
+		case CAN_PKT_GNSS_UTC_W: BRIDGE_HandleGNSSUTCWPkt(data,size); break;
+		case CAN_PKT_GNSS_LLA:   BRIDGE_HandleGNSSLLAPkt(data,size); break;
+		case CAN_PKT_GNSS_VEL:   BRIDGE_HandleGNSSVelPkt(data,size); break;
+		case CAN_PKT_GNSS_HEALTH:BRIDGE_HandleGNSSHealthPkt(data,size); break;
+		case CAN_PKT_GNSS_HEALTH_2:BRIDGE_HandleGNSSHealth2Pkt(data,size); break;
+		case CAN_PKT_GNSS_RTCM:  BRIDGE_HandleGNSSRTCMPkt(data,size); break;
+		case CAN_PKT_GNSS_SVIN:  BRIDGE_HandleGNSSSVINPkt(data,size); break;
+		case CAN_PKT_SUPPLY:     BRIDGE_HandleSupplyPkt(data,size); break;
+		case CAN_PKT_NDVI:       BRIDGE_HandleNDVIPkt(data,size); break;
+		case CAN_PKT_NDVI_UP:    BRIDGE_HandleNDVIUpPkt(data,size); break;
+		case CAN_PKT_NDVI_DOWN:  BRIDGE_HandleNDVIDownPkt(data,size); break;
+		case CAN_PKT_AGL:	       BRIDGE_HandleAGLPkt(data,size); break;
+		case CAN_PKT_PROXIMITY:	 BRIDGE_HandleProximityPkt(data,size); break;
+		case CAN_PKT_ADSB:    	 BRIDGE_HandleADSBPkt(data,size); break;
+		default: break;
 	}
 }
 
@@ -307,61 +386,36 @@ void BRIDGE_Arbiter(uint32_t id, void *data, uint8_t size)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleReceiverPkt(uint8_t *byte)
+void BRIDGE_HandleReceiverPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_Receiver_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleReceiverPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_Receiver_t)];
 
-	// prevent overflow
-	if (cnt >= BRIDGE_PACKET_SIZE || cnt > sizeof(CAN_Receiver_t) )
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleReceiverPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
+	if(!can_pwm_in) can_pwm_in = 1u;
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	CAN_Receiver_t *data = (CAN_Receiver_t *)buffer;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_Receiver_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_Receiver_t))) // verify checksum
-			{
-				if(!can_pwm_in) can_pwm_in = 1u;
-				CAN_Receiver_t *data = (CAN_Receiver_t *)buffer;
-
-#ifndef _TEST
-				float t0 = getElapsedTime();
-				updatePWMIn(t0, data->usec);
+	float t0 = getElapsedTime();
+	updatePWMIn(t0, data->usec);
 #ifndef ARCH_stm32f1
-				pwm_in_count++;
-#endif
+	pwm_in_count++;
 #endif
 
-				pmesg(VERBOSE_CAN, "RECEIVER: %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d\r\n",
-						data->usec[0],data->usec[1],data->usec[2],data->usec[3],
-						data->usec[4],data->usec[5],data->usec[6],data->usec[7],
-						data->usec[8],data->usec[9],data->usec[10],data->usec[11],
-						data->usec[12],data->usec[13],data->usec[14],data->usec[15]);
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleReceiverPkt: ERROR\r\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	pmesg(VERBOSE_CAN, "RECEIVER: %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d\r\n",
+			data->usec[0],data->usec[1],data->usec[2],data->usec[3],
+			data->usec[4],data->usec[5],data->usec[6],data->usec[7],
+			data->usec[8],data->usec[9],data->usec[10],data->usec[11],
+			data->usec[12],data->usec[13],data->usec[14],data->usec[15]);
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -370,70 +424,48 @@ void BRIDGE_HandleReceiverPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandlePressurePkt(uint8_t *byte)
+void BRIDGE_HandlePressurePkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_Pressure_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandlePressurePkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_Pressure_t)];
 
-	// prevent overflow
-	if (cnt >= BRIDGE_PACKET_SIZE || cnt > sizeof(CAN_Pressure_t))
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandlePressurePkt: BUFFER OVERFLOW\n");
+	//----- packet specific code -----//
+	
+	if(!can_pressure_sensor) can_pressure_sensor = 1u;
+
+	CAN_Pressure_t *data;
+	data = (CAN_Pressure_t *)buffer;
+
+	float t0 = getElapsedTime();
+	if(data->pressureSta > -FLT_MAX) {
+		//FIXME -- sensors is expecting hPa, should be expecting Pa
+		updateStaticPressure(t0, data->pressureSta, data->temp);
 	}
-
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
-
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_Pressure_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_Pressure_t))) // verify checksum
-			{
-				if(!can_pressure_sensor) can_pressure_sensor = 1u;
-
-				CAN_Pressure_t *data;
-				data = (CAN_Pressure_t *)buffer;
-
-				float t0 = getElapsedTime();
-				if(data->pressureSta > -FLT_MAX) {
-					//FIXME -- sensors is expecting hPa, should be expecting Pa
-					updateStaticPressure(t0, data->pressureSta, data->temp);
-				}
-				if(data->pressureDyn > -FLT_MAX) {
-					//FIXME -- sensors is expecting hPa, should be expecting Pa
-					//FIXME -- changed back to expecting Pa, I guess this is correct, but needs to be checked
-					updateDynamicPressure(t0, data->pressureDyn, data->temp);
-				}
-				if(data->temp > -FLT_MAX) {
-					updateTemperature(t0, data->temp);
-				}
+	if(data->pressureDyn > -FLT_MAX) {
+		//FIXME -- sensors is expecting hPa, should be expecting Pa
+		//FIXME -- changed back to expecting Pa, I guess this is correct, but needs to be checked
+		updateDynamicPressure(t0, data->pressureDyn, data->temp);
+	}
+	if(data->temp > -FLT_MAX) {
+		updateTemperature(t0, data->temp);
+	}
 #ifndef ARCH_stm32f1
-				pressure_count++;
+	pressure_count++;
 #endif
 
-				// DEBUG
-				pmesg(VERBOSE_CAN, "PRESSURE: %+.5f [Pa], %+.5f [Pa], %+.2f [deg C]\n\r", 
-						data->pressureSta, data->pressureDyn, data->temp);
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandlePressurePkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	// DEBUG
+	pmesg(VERBOSE_CAN, "PRESSURE: %+.5f [Pa], %+.5f [Pa], %+.2f [deg C]\n\r", 
+			data->pressureSta, data->pressureDyn, data->temp);
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -442,63 +474,41 @@ void BRIDGE_HandlePressurePkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleAirDataPkt(uint8_t *byte)
+void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_AirData_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleAirDataPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_AirData_t)];
 
-	// prevent overflow
-	if (cnt >= BRIDGE_PACKET_SIZE || cnt > sizeof(CAN_AirData_t))
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleAirDataPkt: BUFFER OVERFLOW\n");
+	//----- packet specific code -----//
+	
+	if(!can_pressure_sensor) can_pressure_sensor = 1u;
+
+	CAN_AirData_t *data;
+	data = (CAN_AirData_t *)buffer;
+
+	float t0 = getElapsedTime();
+	if(data->static_pressure > -FLT_MAX) {
+		updateStaticPressure(t0, data->static_pressure, data->air_temperature);
+	}
+	if(data->dynamic_pressure > -FLT_MAX) {
+		updateDynamicPressure(t0, data->dynamic_pressure, data->air_temperature);
+	}
+	if(data->air_temperature > -FLT_MAX) {
+		updateTemperature(t0, data->air_temperature);
+	}
+	if(data->humidity > -FLT_MAX) {
+		updateHumidity(t0, data->humidity);
 	}
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	//----- packet specific code -----//
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_AirData_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_AirData_t))) // verify checksum
-			{
-				if(!can_pressure_sensor) can_pressure_sensor = 1u;
-
-				CAN_AirData_t *data;
-				data = (CAN_AirData_t *)buffer;
-
-				float t0 = getElapsedTime();
-				if(data->static_pressure > -FLT_MAX) {
-					updateStaticPressure(t0, data->static_pressure, data->air_temperature);
-				}
-				if(data->dynamic_pressure > -FLT_MAX) {
-					updateDynamicPressure(t0, data->dynamic_pressure, data->air_temperature);
-				}
-				if(data->air_temperature > -FLT_MAX) {
-					updateTemperature(t0, data->air_temperature);
-				}
-				if(data->humidity > -FLT_MAX) {
-					updateHumidity(t0, data->humidity);
-				}
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleAirDataPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -507,90 +517,68 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleMHPPkt(uint8_t *byte)
+void BRIDGE_HandleMHPPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
-
-	// prevent overflow
-	if (cnt >= BRIDGE_PACKET_SIZE || cnt > sizeof(CAN_MHP_t))
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleMHPPkt: BUFFER OVERFLOW\n");
-	}
-
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
-
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_MHP_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_MHP_t))) // verify checksum
-			{
-				if(!can_pressure_sensor) can_pressure_sensor = 1u;
-
-				CAN_MHP_t *data;
-				data = (CAN_MHP_t *)buffer;
-
-				float t0 = getElapsedTime();
-#if 0
-				updateMHP(t0, 
-						data->static_pressure,
-						data->dynamic_pressure,
-						data->air_temperature,
-						data->humidity,
-						data->gyroscope,
-						data->accelerometer,
-						data->magnetometer,
-						data->alpha,
-						data->beta);
-#else
-				uint8_t i;
-				float dyn_p[5];
-				float gyr[3];
-				float acc[3];
-				float mag[3];
-
-				for(i=0;i<5;i++) 
-					dyn_p[i] = (float)(data->dynamic_pressure[i])/1000.0;
-				for(i=0;i<3;i++) {
-						gyr[i] = (float)(data->gyroscope[i])/1000.0;
-						acc[i] = (float)(data->accelerometer[i])/1000.0;
-						mag[i] = (float)(data->magnetometer[i])/100.0;
-				}
-
-				updateMHP(
-						t0, 
-						//(float)(data->system_time)/1000.0,
-						(float)(data->static_pressure)/1000.0,
-						dyn_p,
-						(float)(data->air_temperature)/100.0,
-						(float)(data->humidity)/100.0,
-						gyr,
-						acc,
-						mag,
-						(float)(data->alpha)/1000.0,
-						(float)(data->beta)/1000.0);
+	static uint8_t pkt_size = sizeof(CAN_MHP_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleMHPPkt";
 #endif
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleMHPPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
+	static uint8_t buffer[sizeof(CAN_MHP_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+	
+	if(!can_pressure_sensor) can_pressure_sensor = 1u;
+
+	CAN_MHP_t *data;
+	data = (CAN_MHP_t *)buffer;
+
+	float t0 = getElapsedTime();
+#if 0
+	updateMHP(t0, 
+			data->static_pressure,
+			data->dynamic_pressure,
+			data->air_temperature,
+			data->humidity,
+			data->gyroscope,
+			data->accelerometer,
+			data->magnetometer,
+			data->alpha,
+			data->beta);
+#else
+	uint8_t i;
+	float dyn_p[5];
+	float gyr[3];
+	float acc[3];
+	float mag[3];
+
+	for(i=0;i<5;i++) 
+		dyn_p[i] = (float)(data->dynamic_pressure[i])/1000.0;
+	for(i=0;i<3;i++) {
+			gyr[i] = (float)(data->gyroscope[i])/1000.0;
+			acc[i] = (float)(data->accelerometer[i])/1000.0;
+			mag[i] = (float)(data->magnetometer[i])/100.0;
 	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+
+	updateMHP(
+			t0, 
+			//(float)(data->system_time)/1000.0,
+			(float)(data->static_pressure)/1000.0,
+			dyn_p,
+			(float)(data->air_temperature)/100.0,
+			(float)(data->humidity)/100.0,
+			gyr,
+			acc,
+			mag,
+			(float)(data->alpha)/1000.0,
+			(float)(data->beta)/1000.0);
+#endif
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -599,63 +587,43 @@ void BRIDGE_HandleMHPPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleIMUPkt(uint8_t *byte)
+void BRIDGE_HandleIMUPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_IMU_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleIMUPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_IMU_t)];
 
-	// prevent overflow
-	if (cnt >= BRIDGE_PACKET_SIZE || cnt > sizeof(CAN_IMU_t)) // size must match
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleIMUPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
+	
+	if(!can_imu_sensor) can_imu_sensor = 1u;
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
-
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_IMU_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_IMU_t))) // verify checksum
-			{
-				if(!can_imu_sensor) can_imu_sensor = 1u;
-
-				CAN_IMU_t *data;
-				data = (CAN_IMU_t *)buffer;
+	CAN_IMU_t *data;
+	data = (CAN_IMU_t *)buffer;
 
 #ifndef _TEST
-				float t0 = getElapsedTime();
+	float t0 = getElapsedTime();
 
-				updateIMU(t0, 
-						data->ax, data->ay, data->az, 
-						data->gx, data->gy, data->gz, 
-						data->mx, data->my, data->mz);
+	updateIMU(t0, 
+			data->ax, data->ay, data->az, 
+			data->gx, data->gy, data->gz, 
+			data->mx, data->my, data->mz);
 
 #ifndef ARCH_stm32f1
-				imu_count++;
+	imu_count++;
 #endif
 #endif
 
-				pmesg(VERBOSE_CAN, "IMU: %+.3f, %+.3f, %+.3f [g], %+.3f, %+.3f, %+.3f [rad/s], %+.2f [deg C]\n\r", 
-						data->ax, data->ay, data->az, data->gx, data->gy, data->gz, data->temp);
+	pmesg(VERBOSE_CAN, "IMU: %+.3f, %+.3f, %+.3f [g], %+.3f, %+.3f, %+.3f [rad/s], %+.2f [deg C]\n\r", 
+			data->ax, data->ay, data->az, data->gx, data->gy, data->gz, data->temp);
 
-			} else {
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleIMUPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
+	//----- packet specific code -----//
 
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	} else {
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -664,59 +632,39 @@ void BRIDGE_HandleIMUPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleAccelPkt(uint8_t *byte)
+void BRIDGE_HandleAccelPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_Accelerometer_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleAccelPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_Accelerometer_t)];
 
-	// prevent overflow
-	if (cnt >= BRIDGE_PACKET_SIZE || cnt > sizeof(CAN_Accelerometer_t)) // size must match
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleAccelPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	if(!can_imu_sensor) can_imu_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_Accelerometer_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_Accelerometer_t))) // verify checksum
-			{
-				if(!can_imu_sensor) can_imu_sensor = 1u;
-
-				CAN_Accelerometer_t *data;
-				data = (CAN_Accelerometer_t *)buffer;
+	CAN_Accelerometer_t *data;
+	data = (CAN_Accelerometer_t *)buffer;
 
 #ifndef _TEST
-				float t0 = getElapsedTime();
+	float t0 = getElapsedTime();
 
-				updateAccelerometer(t0, 
-						data->ax, data->ay, data->az);
+	updateAccelerometer(t0, 
+			data->ax, data->ay, data->az);
 
-				//accel_count++;
+	//accel_count++;
 #endif
 
-				pmesg(VERBOSE_CAN, "ACC: %+.3f, %+.3f, %+.3f [g]\n",
-						data->ax, data->ay, data->az, data->temp);
+	pmesg(VERBOSE_CAN, "ACC: %+.3f, %+.3f, %+.3f [g]\n",
+			data->ax, data->ay, data->az, data->temp);
 
-			} else {
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleAccelPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
+	//----- packet specific code -----//
 
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	} else {
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -725,59 +673,39 @@ void BRIDGE_HandleAccelPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGyroPkt(uint8_t *byte)
+void BRIDGE_HandleGyroPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_Gyroscope_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGyroPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_Gyroscope_t)];
 
-	// prevent overflow
-	if (cnt >= BRIDGE_PACKET_SIZE || cnt > sizeof(CAN_Gyroscope_t)) // size must match
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleGyroPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
+		
+	if(!can_imu_sensor) can_imu_sensor = 1u;
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
-
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_Gyroscope_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_Gyroscope_t))) // verify checksum
-			{
-				if(!can_imu_sensor) can_imu_sensor = 1u;
-
-				CAN_Gyroscope_t *data;
-				data = (CAN_Gyroscope_t *)buffer;
+	CAN_Gyroscope_t *data;
+	data = (CAN_Gyroscope_t *)buffer;
 
 #ifndef _TEST
-				float t0 = getElapsedTime();
+	float t0 = getElapsedTime();
 
-				updateGyroscope(t0, 
-						data->gx, data->gy, data->gz);
+	updateGyroscope(t0, 
+			data->gx, data->gy, data->gz);
 
-				//gyro_count++;
+	//gyro_count++;
 #endif
 
-				pmesg(VERBOSE_CAN, "GYR: %+.3f, %+.3f, %+.3f [rad/s]\n",
-						data->gx, data->gy, data->gz, data->temp);
+	pmesg(VERBOSE_CAN, "GYR: %+.3f, %+.3f, %+.3f [rad/s]\n",
+			data->gx, data->gy, data->gz, data->temp);
 
-			} else {
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGyroPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
+	//----- packet specific code -----//
 
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	} else {
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -786,65 +714,42 @@ void BRIDGE_HandleGyroPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleMagPkt(uint8_t *byte)
+void BRIDGE_HandleMagPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_Magnetometer_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleMagPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_Magnetometer_t)];
 
-	// prevent overflow
-	if (cnt >= BRIDGE_PACKET_SIZE || cnt > sizeof(CAN_Magnetometer_t)) // size must match
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleMagPkt: BUFFER OVERFLOW\n");
-	}
+		//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+		if(!can_mag_sensor) can_mag_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_Magnetometer_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_Magnetometer_t))) // verify checksum
-			{
-				if(!can_mag_sensor) can_mag_sensor = 1u;
+	CAN_Magnetometer_t *data;
+	data = (CAN_Magnetometer_t *)buffer;
 
-				CAN_Magnetometer_t *data;
-				data = (CAN_Magnetometer_t *)buffer;
-
-#ifndef _TEST
-				float t0 = getElapsedTime();
+	float t0 = getElapsedTime();
 
 #if defined IMPLEMENTATION_firmware // FIXME - make the same between firmware and hardware
-				updateMagValues(t0, 
-						data->mx, data->my, data->mz);
-				//mag_count++;
+	updateMagValues(t0, 
+			data->mx, data->my, data->mz);
+	//mag_count++;
 #else
-				updateMagnetometer(t0, 
-						data->mx, data->my, data->mz);
-				//mag_count++;
+	updateMagnetometer(t0, 
+			data->mx, data->my, data->mz);
+	//mag_count++;
 #endif
 
-#endif
+	pmesg(VERBOSE_CAN, "MAG: %+.3f, %+.3f, %+.3f [uT]\n",
+			data->mx, data->my, data->mz);
 
-				pmesg(VERBOSE_CAN, "MAG: %+.3f, %+.3f, %+.3f [uT]\n",
-						data->mx, data->my, data->mz);
+	//----- packet specific code -----//
 
-			} else {
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleMagPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	} else {
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -859,115 +764,93 @@ extern uint32_t last_actuator_command;
 #if defined _SP_ACTUATOR_HACKHD
 static camera_triggered = 0u;
 #endif
-void BRIDGE_HandleActuatorPkt(uint8_t *byte)
+void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 {
 #if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_Actuator_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleActuatorPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_Actuator_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_Actuator_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-		
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleActuatorPkt: BUFFER OVERFLOW\n");
-	}
+	BRIDGE_BUFFER_PREAMBLE
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
-
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_Actuator_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_Actuator_t))) // verify checksum
-			{
-				CAN_Actuator_t *data;
-				data = (CAN_Actuator_t *)buffer;
+	//----- packet specific code -----//
+	
+	CAN_Actuator_t *data;
+	data = (CAN_Actuator_t *)buffer;
 
 #if defined _SP_ACTUATOR || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000
 #ifdef _SP_ACTUATOR
-				LED_Toggle(0);	
+	LED_Toggle(0);	
 #if 1
-				PWM_SetPulseWidth(0, data->usec[DIP_GetVal()]);
+	PWM_SetPulseWidth(0, data->usec[DIP_GetVal()]);
 #else
-				uint16_t usec = data->usec[DIP_GetVal()];
+	uint16_t usec = data->usec[DIP_GetVal()];
 
-				if(usec > 800 && usec < 1400)
-					PWM_SetPulseWidth(0,1000);
-				if(usec > 1600 && usec < 2300)
-					PWM_SetPulseWidth(0,2000);
+	if(usec > 800 && usec < 1400)
+		PWM_SetPulseWidth(0,1000);
+	if(usec > 1600 && usec < 2300)
+		PWM_SetPulseWidth(0,2000);
 #endif
 #endif
 #ifdef _SP_ACTUATOR_HACKHD
-				if(data->usec[DIP_GetVal()] > 1500 && !camera_triggered) {
-					camera_triggered = 1u;
-					LED_On(0);	
-					LED_On(1);
-					Delay(500);
-					LED_Off(1);
-					Delay(1500); // wait for picture
-					LED_Off(0);
-				}
+	if(data->usec[DIP_GetVal()] > 1500 && !camera_triggered) {
+		camera_triggered = 1u;
+		LED_On(0);	
+		LED_On(1);
+		Delay(500);
+		LED_Off(1);
+		Delay(1500); // wait for picture
+		LED_Off(0);
+	}
 
-				if(data->usec[DIP_GetVal()] < 1500 && camera_triggered) {
-					camera_triggered = 0u;
-				}
+	if(data->usec[DIP_GetVal()] < 1500 && camera_triggered) {
+		camera_triggered = 0u;
+	}
 #endif
 #ifdef _SP_ACTUATOR_A6000
-				updateActuator(data->usec[DIP_GetVal()]);
+	updateActuator(data->usec[DIP_GetVal()]);
 #endif
 #else
-				uint16_t actuator_values[CAN_NUM_ACTUATORS];
-				uint8_t i;
+	uint16_t actuator_values[CAN_NUM_ACTUATORS];
+	uint8_t i;
 
-				for(i=0; i<CAN_NUM_ACTUATORS; i++) {
-					actuator_values[i] = data->usec[i];
-				}
+	for(i=0; i<CAN_NUM_ACTUATORS; i++) {
+		actuator_values[i] = data->usec[i];
+	}
 
 #if !defined _SP_RECEIVER && !defined _SP_FUTABA
-				updateActuatorValues(actuator_values);
+	updateActuatorValues(actuator_values);
 #endif
 #ifdef IMPLEMENTATION_xplane
-				/*
-				static float last_time = 0;
-				float now = getElapsedTime();
-				float dT = now - last_time;
-				last_time = now;
-				pmesg(VERBOSE_CAN, "ACTUATOR: dT=%.5f\n", dT);
-				*/
+	/*
+	static float last_time = 0;
+	float now = getElapsedTime();
+	float dT = now - last_time;
+	last_time = now;
+	pmesg(VERBOSE_CAN, "ACTUATOR: dT=%.5f\n", dT);
+	*/
 #endif
 
 
 #endif
 
-				pmesg(VERBOSE_CAN, "ACTUATOR: %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d\r\n",
-						data->usec[0],data->usec[1],data->usec[2],data->usec[3],
-						data->usec[4],data->usec[5],data->usec[6],data->usec[7],
-						data->usec[8],data->usec[9]);
+	pmesg(VERBOSE_CAN, "ACTUATOR: %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d\r\n",
+			data->usec[0],data->usec[1],data->usec[2],data->usec[3],
+			data->usec[4],data->usec[5],data->usec[6],data->usec[7],
+			data->usec[8],data->usec[9]);
 
 #ifdef VERBOSE
 #ifdef ARCH_stm32f4
-				LED_Blink(0,100);
+	LED_Blink(0,100);
 #endif
 #endif
 
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleActuatorPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
+
 //#endif
 #if defined _SP_RECEIVER || defined _SP_FUTABA
 	last_actuator_command = GetTimeU();
@@ -981,75 +864,53 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGNSSPkt(uint8_t *byte)
+void BRIDGE_HandleGNSSPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_GNSS_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_GNSS_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_GNSS_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	if(!can_gps_sensor) can_gps_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_GNSS_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_GNSS_t))) // verify checksum
-			{
-				if(!can_gps_sensor) can_gps_sensor = 1u;
+	CAN_GNSS_t *data;
+	data = (CAN_GNSS_t *)buffer;
 
-				CAN_GNSS_t *data;
-				data = (CAN_GNSS_t *)buffer;
-
-				float t0 = getElapsedTime();
+	float t0 = getElapsedTime();
 #if defined IMPLEMENTATION_firmware // FIXME - make the same between firmware and hardware
-				updateGPSValues(t0, data->week, data->hours, data->minutes, data->seconds,
-						data->latitude, data->longitude, data->altitude,
-						data->vx, data->vy, data->vz,
-						data->heading, data->speed,
-						data->pdop, data->satellites, data->fix_type);
+	updateGPSValues(t0, data->week, data->hours, data->minutes, data->seconds,
+			data->latitude, data->longitude, data->altitude,
+			data->vx, data->vy, data->vz,
+			data->heading, data->speed,
+			data->pdop, data->satellites, data->fix_type);
 #ifndef ARCH_stm32f1
-				gps_count++;
+	gps_count++;
 #endif
 #else
-				updateGPS(t0, data->week, data->hours, data->minutes, data->seconds,
-						data->latitude, data->longitude, data->altitude,
-						data->vx, data->vy, data->vz,
-						data->heading, data->speed,
-						data->pdop, data->satellites, data->fix_type);
+	updateGPS(t0, data->week, data->hours, data->minutes, data->seconds,
+			data->latitude, data->longitude, data->altitude,
+			data->vx, data->vy, data->vz,
+			data->heading, data->speed,
+			data->pdop, data->satellites, data->fix_type);
 #ifndef ARCH_stm32f1
-				gps_count++;
+	gps_count++;
 #endif
 #endif
 
-				pmesg(VERBOSE_CAN, "GNSS: %02d:%02d:%02.1f | %+.1f %+.1f %+.1f | %+.1f %+.1f | %+.1f %d\n\r", 
-						data->hours, data->minutes, data->seconds, 
-						data->latitude, data->longitude, data->altitude, 
-						data->heading, data->speed, data->pdop, data->satellites);
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	pmesg(VERBOSE_CAN, "GNSS: %02d:%02d:%02.1f | %+.1f %+.1f %+.1f | %+.1f %+.1f | %+.1f %d\n\r", 
+			data->hours, data->minutes, data->seconds, 
+			data->latitude, data->longitude, data->altitude, 
+			data->heading, data->speed, data->pdop, data->satellites);
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1058,56 +919,34 @@ void BRIDGE_HandleGNSSPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte)
+void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_GNSS_UTC_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSUTCPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_GNSS_UTC_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_GNSS_UTC_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSUTCPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	if(!can_gps_sensor) can_gps_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_GNSS_UTC_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_GNSS_UTC_t))) // verify checksum
-			{
-				if(!can_gps_sensor) can_gps_sensor = 1u;
+	CAN_GNSS_UTC_t *data;
+	data = (CAN_GNSS_UTC_t *)buffer;
 
-				CAN_GNSS_UTC_t *data;
-				data = (CAN_GNSS_UTC_t *)buffer;
+	float t0 = getElapsedTime();
+	
+	updateGPSUTCValues(t0, 0, data->hours, data->minutes, data->seconds);
 
-				float t0 = getElapsedTime();
-				
-				updateGPSUTCValues(t0, 0, data->hours, data->minutes, data->seconds);
+	pmesg(VERBOSE_CAN, "GNSS: %02d:%02d:%02.1f\n\r",
+			data->hours, data->minutes, data->seconds);
 
-				pmesg(VERBOSE_CAN, "GNSS: %02d:%02d:%02.1f\n\r",
-						data->hours, data->minutes, data->seconds);
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1116,56 +955,34 @@ void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte)
+void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_GNSS_UTC_W_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSUTCWPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_GNSS_UTC_W_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_GNSS_UTC_W_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSUTCPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	if(!can_gps_sensor) can_gps_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_GNSS_UTC_W_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_GNSS_UTC_W_t))) // verify checksum
-			{
-				if(!can_gps_sensor) can_gps_sensor = 1u;
+	CAN_GNSS_UTC_W_t *data;
+	data = (CAN_GNSS_UTC_W_t *)buffer;
 
-				CAN_GNSS_UTC_W_t *data;
-				data = (CAN_GNSS_UTC_W_t *)buffer;
+	float t0 = getElapsedTime();
+	
+	updateGPSUTCValues(t0, data->week, data->hours, data->minutes, data->seconds);
 
-				float t0 = getElapsedTime();
-				
-				updateGPSUTCValues(t0, data->week, data->hours, data->minutes, data->seconds);
+	pmesg(VERBOSE_CAN, "GNSS: %02d:%02d:%02.1f\n\r",
+			data->hours, data->minutes, data->seconds);
 
-				pmesg(VERBOSE_CAN, "GNSS: %02d:%02d:%02.1f\n\r",
-						data->hours, data->minutes, data->seconds);
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1174,60 +991,38 @@ void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte)
+void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+  static uint8_t pkt_size = sizeof(CAN_GNSS_LLA_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSLLAPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_GNSS_LLA_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_GNSS_LLA_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSLLAPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	if(!can_gps_sensor) can_gps_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_GNSS_LLA_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_GNSS_LLA_t))) // verify checksum
-			{
-				if(!can_gps_sensor) can_gps_sensor = 1u;
+	CAN_GNSS_LLA_t *data;
+	data = (CAN_GNSS_LLA_t *)buffer;
 
-				CAN_GNSS_LLA_t *data;
-				data = (CAN_GNSS_LLA_t *)buffer;
+	float t0 = getElapsedTime();
 
-				float t0 = getElapsedTime();
-			
-				updateGPSLLAValues(t0,
-						data->latitude, data->longitude, data->altitude);
+	updateGPSLLAValues(t0,
+			data->latitude, data->longitude, data->altitude);
 #ifndef ARCH_stm32f1
-				gps_count++;
+	gps_count++;
 #endif
 
-				pmesg(VERBOSE_CAN, "GNSS: %+.1f %+.1f %+.1f\n\r", 
-						data->latitude, data->longitude, data->altitude);
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	pmesg(VERBOSE_CAN, "GNSS: %+.1f %+.1f %+.1f\n\r", 
+			data->latitude, data->longitude, data->altitude);
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1236,59 +1031,37 @@ void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGNSSVelPkt(uint8_t *byte)
+void BRIDGE_HandleGNSSVelPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+  static uint8_t pkt_size = sizeof(CAN_GNSS_VEL_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSVelPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_GNSS_VEL_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_GNSS_VEL_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSVelPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	if(!can_gps_sensor) can_gps_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_GNSS_VEL_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_GNSS_VEL_t))) // verify checksum
-			{
-				if(!can_gps_sensor) can_gps_sensor = 1u;
+	CAN_GNSS_VEL_t *data;
+	data = (CAN_GNSS_VEL_t *)buffer;
 
-				CAN_GNSS_VEL_t *data;
-				data = (CAN_GNSS_VEL_t *)buffer;
+	float t0 = getElapsedTime();
+	
+	updateGPSVelValues(t0,
+			data->heading, data->speed,
+			data->vx, data->vy, data->vz);
 
-				float t0 = getElapsedTime();
-				
-				updateGPSVelValues(t0,
-						data->heading, data->speed,
-						data->vx, data->vy, data->vz);
+	pmesg(VERBOSE_CAN, "GNSS: %+.1f %+.1f %+.1f | %+.1f %+.1f\n\r", 
+			data->vx, data->vy, data->vz,
+			data->heading, data->speed);
 
-				pmesg(VERBOSE_CAN, "GNSS: %+.1f %+.1f %+.1f | %+.1f %+.1f\n\r", 
-						data->vx, data->vy, data->vz,
-						data->heading, data->speed);
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1297,56 +1070,34 @@ void BRIDGE_HandleGNSSVelPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte)
+void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+  static uint8_t pkt_size = sizeof(CAN_GNSS_HEALTH_2_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSHealth2Pkt";
+#endif
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_GNSS_HEALTH_2_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	static uint8_t buffer[sizeof(CAN_GNSS_HEALTH_2_t)];
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSHealth2Pkt: BUFFER OVERFLOW\n");
-	}
+	BRIDGE_BUFFER_PREAMBLE
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	//----- packet specific code -----//
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_GNSS_HEALTH_2_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_GNSS_HEALTH_2_t))) // verify checksum
-			{
-				if(!can_gps_sensor) can_gps_sensor = 1u;
+	if(!can_gps_sensor) can_gps_sensor = 1u;
 
-				CAN_GNSS_HEALTH_2_t *data;
-				data = (CAN_GNSS_HEALTH_2_t *)buffer;
+	CAN_GNSS_HEALTH_2_t *data;
+	data = (CAN_GNSS_HEALTH_2_t *)buffer;
 
-				float t0 = getElapsedTime();
-				
-				updateGPSHealthValues(t0, data->pdop, data->satellites, data->fix_type);
+	float t0 = getElapsedTime();
+	
+	updateGPSHealthValues(t0, data->pdop, data->satellites, data->fix_type);
 
-				pmesg(VERBOSE_CAN, "GNSS: %+.1f %d\n\r", data->pdop, data->satellites);
+	pmesg(VERBOSE_CAN, "GNSS: %+.1f %d\n\r", data->pdop, data->satellites);
 
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1355,56 +1106,33 @@ void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGNSSHealthPkt(uint8_t *byte)
+void BRIDGE_HandleGNSSHealthPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+  static uint8_t pkt_size = sizeof(CAN_GNSS_HEALTH_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSHealthPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_GNSS_HEALTH_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_GNSS_HEALTH_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSHealthPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	if(!can_gps_sensor) can_gps_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_GNSS_HEALTH_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_GNSS_HEALTH_t))) // verify checksum
-			{
-				if(!can_gps_sensor) can_gps_sensor = 1u;
+	CAN_GNSS_HEALTH_t *data;
+	data = (CAN_GNSS_HEALTH_t *)buffer;
 
-				CAN_GNSS_HEALTH_t *data;
-				data = (CAN_GNSS_HEALTH_t *)buffer;
+	float t0 = getElapsedTime();
+	
+	updateGPSHealthValues(t0, data->pdop, data->satellites, 0);
 
-				float t0 = getElapsedTime();
-				
-				updateGPSHealthValues(t0, data->pdop, data->satellites, 0);
+	pmesg(VERBOSE_CAN, "GNSS: %+.1f %d\n\r", data->pdop, data->satellites);
 
-				pmesg(VERBOSE_CAN, "GNSS: %+.1f %d\n\r", data->pdop, data->satellites);
+	//----- packet specific code -----//
 
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1413,56 +1141,71 @@ void BRIDGE_HandleGNSSHealthPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleGNSSRTCMPkt(uint8_t *byte)
+void BRIDGE_HandleGNSSRTCMPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_GNSS || defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_GNSS_RTCM_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSRTCMPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_GNSS_RTCM_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_GNSS_RTCM_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
+	BRIDGE_BUFFER_PREAMBLE
 
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleRTCMPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	if(!can_gps_sensor) can_gps_sensor = 1u;
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_GNSS_RTCM_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_GNSS_RTCM_t))) // verify checksum
-			{
-				if(!can_gps_sensor) can_gps_sensor = 1u;
+	CAN_GNSS_RTCM_t *data;
+	data = (CAN_GNSS_RTCM_t *)buffer;
 
-				CAN_GNSS_RTCM_t *data;
-				data = (CAN_GNSS_RTCM_t *)buffer;
+	float t0 = getElapsedTime();
+	
+	updateGPSRTCM(t0, data->size, data->payload);
 
-				float t0 = getElapsedTime();
-				
-				updateGPSRTCM(t0, data->size, data->payload);
+	pmesg(VERBOSE_CAN, "GNSS RTCM Data\n\r");
 
-				pmesg(VERBOSE_CAN, "GNSS RTCM Data\n\r");
+	//----- packet specific code -----//
 
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleGNSSRTCMPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+/**
+ * @brief	Handle GNSS packet
+ * @param	byte Pointer to the byte of data
+ * @retval None
+ */
+void BRIDGE_HandleGNSSSVINPkt(uint8_t *byte, uint8_t size)
+{
+#if defined BOARD_GCS
+	static uint8_t pkt_size = sizeof(CAN_GNSS_SVIN_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleGNSSSVINPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_GNSS_SVIN_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+
+	if(!can_gps_sensor) can_gps_sensor = 1u;
+
+	CAN_GNSS_SVIN_t *data;
+	data = (CAN_GNSS_SVIN_t *)buffer;
+	
+	updateGPSSVIN( 
+			data->time_elapsed,
+			data->time_minimum,
+			data->accuracy,
+			data->accuracy_minimum,
+			data->flags);
+
+	pmesg(VERBOSE_CAN, "GNSS SVIN Data\n\r");
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1471,54 +1214,32 @@ void BRIDGE_HandleGNSSRTCMPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleSupplyPkt(uint8_t *byte)
+void BRIDGE_HandleSupplyPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_Supply_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleSupplyPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_Supply_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_Supply_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleSupplyPkt: BUFFER OVERFLOW\n");
-	}
+	BRIDGE_BUFFER_PREAMBLE
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
-
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_Supply_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_Supply_t))) // verify checksum
-			{
-				CAN_Supply_t *data;
-				data = (CAN_Supply_t *)buffer;
+	//----- packet specific code -----//
+	
+	CAN_Supply_t *data;
+	data = (CAN_Supply_t *)buffer;
 
 #ifndef _TEST
-				float t0 = getElapsedTime();
-				updateSupply(t0,data->voltage,data->current, data->coulomb_count,data->temperature);
+	float t0 = getElapsedTime();
+	updateSupply(t0,data->voltage,data->current, data->coulomb_count,data->temperature);
 #endif
 
-				pmesg(VERBOSE_CAN, "SUPPLY: %.01f V, %.01f A, %.01f mAh, %.01f deg C\n\r", data->voltage, data->current, data->coulomb_count, data->temperature);
+	pmesg(VERBOSE_CAN, "SUPPLY: %.01f V, %.01f A, %.01f mAh, %.01f deg C\n\r", data->voltage, data->current, data->coulomb_count, data->temperature);
 
-			}
-			else
-			{
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleSupplyPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1527,53 +1248,30 @@ void BRIDGE_HandleSupplyPkt(uint8_t *byte)
  * @param   byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleNDVIUpPkt(uint8_t *byte)
+void BRIDGE_HandleNDVIUpPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_arbiter || defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_NDVI_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleNDVIUpPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_NDVI_t)];
 
+	BRIDGE_BUFFER_PREAMBLE
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_NDVI_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleNDVIUpPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
+	
+	CAN_NDVI_t *data;
+	data = (CAN_NDVI_t *)buffer;
+	handleNDVI(getElapsedTime(), data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
 
-	// add byte to the buffer
-	buffer[cnt++] =   *byte;
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "NDVI %02u: %0.02f ?, %0.02f ?, %0.02f deg C, %0.02f deg C\n\r",
+			data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_NDVI_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_NDVI_t))) // verify checksum
-			{
-				CAN_NDVI_t *data;
-				data = (CAN_NDVI_t *)buffer;
-				handleNDVI(getElapsedTime(), data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
+	//----- packet specific code -----//
 
-				// DEBUG - sanity check
-				pmesg(VERBOSE_CAN, "NDVI %02u: %0.02f ?, %0.02f ?, %0.02f deg C, %0.02f deg C\n\r",
-						data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
-			}
-			else
-			{
-				// Discard all bytes
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleNDVIUpPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1582,53 +1280,30 @@ void BRIDGE_HandleNDVIUpPkt(uint8_t *byte)
  * @param   byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleNDVIDownPkt(uint8_t *byte)
+void BRIDGE_HandleNDVIDownPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_arbiter || defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_NDVI_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleNDVIDownPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_NDVI_t)];
 
+	BRIDGE_BUFFER_PREAMBLE
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_NDVI_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleNDVIDownPkt: BUFFER OVERFLOW\n");
-	}
+	//----- packet specific code -----//
 
-	// add byte to the buffer
-	buffer[cnt++] =   *byte;
+	CAN_NDVI_t *data;
+	data = (CAN_NDVI_t *)buffer;
+	handleNDVI(getElapsedTime(), data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_NDVI_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_NDVI_t))) // verify checksum
-			{
-				CAN_NDVI_t *data;
-				data = (CAN_NDVI_t *)buffer;
-				handleNDVI(getElapsedTime(), data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "NDVI %02u: %0.02f ?, %0.02f ?, %0.02f deg C, %0.02f deg C\n\r",
+			data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
 
-				// DEBUG - sanity check
-				pmesg(VERBOSE_CAN, "NDVI %02u: %0.02f ?, %0.02f ?, %0.02f deg C, %0.02f deg C\n\r",
-						data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
-			}
-			else
-			{
-				// Discard all bytes
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleNDVIDownPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1638,52 +1313,30 @@ void BRIDGE_HandleNDVIDownPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleNDVIPkt(uint8_t *byte)
+void BRIDGE_HandleNDVIPkt(uint8_t *byte, uint8_t size)
 {
 #ifdef BOARD_pro_arbiter
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_NDVI_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleNDVIPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_NDVI_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_NDVI_t)) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleNDVIPkt: BUFFER OVERFLOW\n");
-	}
+	BRIDGE_BUFFER_PREAMBLE
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	//----- packet specific code -----//
+	
+	CAN_NDVI_t *data;
+	data = (CAN_NDVI_t *)buffer;
+	handleNDVI(getElapsedTime(), data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_NDVI_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_NDVI_t))) // verify checksum
-			{
-				CAN_NDVI_t *data;
-				data = (CAN_NDVI_t *)buffer;
-				handleNDVI(getElapsedTime(), data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "NDVI %02u: %0.02f ?, %0.02f ?, %0.02f deg C, %0.02f deg C\n\r", 
+			data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
 
-				// DEBUG - sanity check
-				pmesg(VERBOSE_CAN, "NDVI %02u: %0.02f ?, %0.02f ?, %0.02f deg C, %0.02f deg C\n\r", 
-						data->id, data->red, data->near_ir, data->ir_ambient, data->ir_object);
-			}
-			else
-			{
-				// Discard all bytes
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleNDVIPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			buffer[0] = 0;
-			cnt = 0u; // reset byte counter
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1693,53 +1346,31 @@ void BRIDGE_HandleNDVIPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleAGLPkt(uint8_t *byte)
+void BRIDGE_HandleAGLPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
+	static uint8_t pkt_size = sizeof(CAN_AGL_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleAGLPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_AGL_t)];
 
-	// prevent overflow
-	if (cnt > sizeof(CAN_AGL_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleAGLPkt: BUFFER OVERFLOW\n");
-	}
+	BRIDGE_BUFFER_PREAMBLE
 
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
+	//----- packet specific code -----//
+	
+	CAN_AGL_t *data;
+	data = (CAN_AGL_t *)buffer;
+	//updateAGL(getElapsedTime(), data->distance, data->velocity);
+	updateAGL(getElapsedTime(), data->distance);
 
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_AGL_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_AGL_t))) // verify checksum
-			{
-				CAN_AGL_t *data;
-				data = (CAN_AGL_t *)buffer;
-				//updateAGL(getElapsedTime(), data->distance, data->velocity);
-				updateAGL(getElapsedTime(), data->distance);
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "AGL: %0.02f s, %0.02f m, %0.02f m/s\n", 
+			data->timestamp, data->distance, data->velocity);
 
-				// DEBUG - sanity check
-				pmesg(VERBOSE_CAN, "AGL: %0.02f s, %0.02f m, %0.02f m/s\n", 
-						data->timestamp, data->distance, data->velocity);
-			}
-			else
-			{
-				// Discard all bytes
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleAGLPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -1748,54 +1379,80 @@ void BRIDGE_HandleAGLPkt(uint8_t *byte)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleProximityPkt(uint8_t *byte)
+void BRIDGE_HandleProximityPkt(uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core && defined IMPLEMENTATION_firmware
-	static uint8_t buffer[BRIDGE_PACKET_SIZE];
-	static uint8_t cnt = 0u;
-
-	// prevent overflow
-	if (cnt > sizeof(CAN_Proximity_t) || cnt >= BRIDGE_PACKET_SIZE)
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-		pmesg(VERBOSE_ERROR, "BRIDGE_HandleProximityPkt: BUFFER OVERFLOW\n");
-	}
-
-	// add byte to the buffer
-	buffer[cnt++] =	*byte;
-
-	if (buffer[0] == BRIDGE_START_BYTE) // first byte must be a start byte
-	{
-		if (cnt == sizeof(CAN_Proximity_t)) // size must match
-		{
-			if (checkFletcher16(buffer, sizeof(CAN_Proximity_t))) // verify checksum
-			{
-#ifdef VERBOSE
-				CAN_Proximity_t *data = (CAN_Proximity_t *)buffer;
+	static uint8_t pkt_size = sizeof(CAN_Proximity_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleProximityPkt";
 #endif
-				//updateProximity(getElapsedTime(), data->distance, data->velocity);
-				//updateProximity(getElapsedTime(), data->x, data->y, data->z, data->distance);
+	static uint8_t buffer[sizeof(CAN_Proximity_t)];
 
-				// DEBUG - sanity check
-				pmesg(VERBOSE_CAN, "PROXIMITY: %0.02f s, %0.02f m, %0.02f m/s\n", 
-						data->timestamp, data->distance, data->velocity);
-			}
-			else
-			{
-				// Discard all bytes
-				pmesg(VERBOSE_ERROR, "BRIDGE_HandleProximityPkt: ERROR\n");
-				BRIDGE_pktDrops++;
-			}
-			cnt = 0u; // reset byte counter
-			buffer[0] = 0;
-		}
-	}
-	else
-	{
-		cnt = 0u; // reset byte counter
-		buffer[0] = 0;
-	}
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+	
+#ifdef VERBOSE
+	CAN_Proximity_t *data = (CAN_Proximity_t *)buffer;
+#endif
+	//updateProximity(getElapsedTime(), data->distance, data->velocity);
+	//updateProximity(getElapsedTime(), data->x, data->y, data->z, data->distance);
+
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "PROXIMITY: %0.02f s, %0.02f m, %0.02f m/s\n", 
+			data->timestamp, data->distance, data->velocity);
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+
+/**
+ * @brief	Handle ADSB packet
+ * @param	byte Pointer to the byte of data
+ * @retval None
+ */
+void BRIDGE_HandleADSBPkt(uint8_t *byte, uint8_t size)
+{
+#if defined BOARD_core
+	static uint8_t pkt_size = sizeof(CAN_ADSB_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleADSBPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_ADSB_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+
+	CAN_ADSB_t *data = (CAN_ADSB_t *)buffer;
+
+	updateADSB(data->timestamp,
+			data->icao_address,
+			data->latitude,
+			data->longitude,
+			data->altitude_type,
+			data->altitude,
+			data->heading,
+			data->horizontal_velocity,
+			data->vertical_velocity,
+			data->callsign,
+			data->emitter_type,
+			data->tslc,
+			data->flags,
+			data->squawk);
+
+#ifdef VERBOSE
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "ADSB: %0.02f s, %s: %0.01f deg, %0.01f deg, %0.01f m\n", 
+			data->timestamp, data->callsign, data->latitude, data->longitude, data->altitude);
+#endif
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
 
@@ -2195,6 +1852,29 @@ uint8_t BRIDGE_SendGNSSRTCMPkt(uint8_t p, uint8_t size, uint8_t * payload) {
 	return CAN_Write(p, CAN_PKT_GNSS_RTCM, &data, sizeof(CAN_GNSS_RTCM_t)) == sizeof(CAN_GNSS_RTCM_t);
 }
 
+uint8_t BRIDGE_SendGNSSSVINPkt(uint8_t p,
+		uint32_t time_elapsed,
+		uint32_t time_minimum,
+		float accuracy,
+		float accuracy_minimum,
+		uint8_t flags) {
+
+	CAN_GNSS_SVIN_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.time_elapsed = time_elapsed;
+	data.time_minimum = time_minimum;
+	data.accuracy = accuracy;
+	data.accuracy_minimum = accuracy_minimum;
+	data.flags = flags;
+
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_GNSS_SVIN_t));
+
+	return CAN_Write(p, CAN_PKT_GNSS_SVIN, &data, sizeof(CAN_GNSS_SVIN_t)) == sizeof(CAN_GNSS_SVIN_t);
+}
+
+
 /**
  * @brief	Send supply packet
  * @param	p CAN peripheral ID
@@ -2313,6 +1993,45 @@ uint8_t BRIDGE_SendProximityPkt(uint8_t p, float ts, float distance, float veloc
 
 	return CAN_Write(p, CAN_PKT_PROXIMITY, &data, sizeof(CAN_Proximity_t));
 }
+
+uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
+		uint32_t icao_address,
+		double latitude,
+		double longitude,
+		uint8_t altitude_type,
+		float altitude,
+		float heading,
+		float horizontal_velocity,
+		float vertical_velocity,
+		char callsign[9],
+		uint8_t emitter_type,
+		uint8_t tslc,
+		uint16_t flags,
+		uint16_t squawk) {
+
+	CAN_ADSB_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.timestamp = ts; // [s]
+	data.icao_address = icao_address;
+	data.latitude = latitude;
+	data.longitude = longitude;
+	data.altitude_type = altitude_type;
+	data.altitude = altitude;
+	data.heading = heading;
+	data.horizontal_velocity = horizontal_velocity;
+	data.vertical_velocity =  vertical_velocity;
+	memcpy(data.callsign,callsign,9);
+	data.emitter_type = emitter_type;
+	data.tslc = tslc;
+	data.flags = flags;
+	data.squawk = squawk;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_ADSB_t));
+
+	return CAN_Write(p, CAN_PKT_ADSB, &data, sizeof(CAN_ADSB_t));
+}
+
 
 /**
  * @brief	Return packet drops
