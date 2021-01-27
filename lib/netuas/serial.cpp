@@ -948,6 +948,38 @@ speed_t getBaudSpeed( int baud )
 	} else if ( baud == 921600 ) {
 		speed = B921600;
 #endif
+#ifdef B1000000
+	} else if ( baud == 1000000 ) {
+		speed = B1000000;
+#endif
+#ifdef B1152000
+	} else if ( baud == 1152000 ) {
+		speed = B1152000;
+#endif
+#ifdef B1500000
+	} else if ( baud == 1500000 ) {
+		speed = B1500000;
+#endif
+#ifdef B2000000
+	} else if ( baud == 2000000 ) {
+		speed =  B2000000;
+#endif
+#ifdef B2500000
+	} else if ( baud == 2500000 ) {
+		speed = B2500000;
+#endif
+#ifdef B3000000
+	} else if ( baud == 3000000 ) {
+		speed = B3000000;
+#endif
+#ifdef B3500000
+	} else if ( baud == 3500000 ) {
+		speed = B3500000;
+#endif
+#ifdef B4000000
+	} else if ( baud == 4000000 ) {
+		speed = B4000000;
+#endif
 	} else {
 		cout << "Unsupported baud rate " << baud;
 	}
