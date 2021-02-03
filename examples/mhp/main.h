@@ -28,6 +28,8 @@ extern bool running;
 bool readByte(uint8_t * data);
 bool writeBytes(uint8_t * data, uint16_t num);
 
+bool writeFile(uint8_t * data, uint16_t num);
+
 void printHelp();
 
 void setupTime();

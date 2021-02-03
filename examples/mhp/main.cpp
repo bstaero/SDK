@@ -103,7 +103,6 @@ int main(int argc, char *argv[])
 				strcpy(infile,optarg);
 				break;
 			case 'o':
-				comm_type = COMM_FILE;
 				strcpy(outfile,optarg);
 				break;
 			default:
@@ -161,15 +160,16 @@ int main(int argc, char *argv[])
 			printf("ERROR - unable to open file %s for reading.\n",infile);
 			exit(1);
 		}
-		if(strlen(outfile)) {
-			out_fid = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-			if(out_fid < 0) {
-				printf("ERROR - unable to open file %s for writing.\n",outfile);
-				close(in_fid);
-				exit(1);
-			}
-			write_file = true;
+	}
+
+	if(strlen(outfile)) {
+		out_fid = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		if(out_fid < 0) {
+			printf("ERROR - unable to open file %s for writing.\n",outfile);
+			close(in_fid);
+			exit(1);
 		}
+		write_file = true;
 	}
 
 	initializeTest();
@@ -238,11 +238,13 @@ bool writeBytes(uint8_t * data, uint16_t num) {
 	if(comm_type == COMM_SERIAL || comm_type == COMM_SOCKET)
 		return comm_interface->write(data, num) == num;
 
-	if(comm_type == COMM_FILE)
-		return write(out_fid, data, num);
-
 	return false;
 }
+
+bool writeFile(uint8_t * data, uint16_t num) {
+	return write(out_fid, data, num);
+}
+
 
 double start_time = 0.0;
 

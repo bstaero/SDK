@@ -177,6 +177,8 @@ typedef enum {
 	SENSORS_MHP=13,
 	SENSORS_GNSS_RTCM=14,
 	SENSORS_MHP_SENSORS=15,
+	SENSORS_MHP_9H_SENSORS=23,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MHP_9H_TIMING=24,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_DYNP_CALIBRATION=25,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_GYRO_CALIBRATION=26,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_MAG_CALIBRATION=27,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
@@ -666,6 +668,68 @@ typedef struct _MHP_t {
 	}
 #endif
 } __attribute__ ((packed)) MHP_t;
+
+typedef struct _MHP9HSensors_t {
+	float system_time;  // [s]
+	uint8_t error_code;
+	float static_pressure;  // [Pa]
+	float dynamic_pressure[9];  // [Pa]
+	float air_temperature;  // [deg C]
+	float humidity;  // [%]
+	float gyroscope[3];  // [rad/s]
+	float accelerometer[3];  // [g]
+
+#ifdef __cplusplus
+	_MHP9HSensors_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		error_code = 0;
+		static_pressure = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			dynamic_pressure[_i] = 0.0;
+
+		air_temperature = 0.0;
+		humidity = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			gyroscope[_i] = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			accelerometer[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHP9HSensors_t;
+
+typedef struct _MHP9HTiming_t {
+	float system_time;  // [s]
+	float static_pressure_time;  // [s]
+	float dynamic_pressure_time[9];  // [s]
+	float air_temperature_time;  // [s]
+	float humidity_time;  // [s]
+	float imu_time;  // [s]
+	float magnetometer_time;  // [s]
+	float gps_time;  // [s]
+
+#ifdef __cplusplus
+	_MHP9HTiming_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		static_pressure_time = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			dynamic_pressure_time[_i] = 0.0;
+
+		air_temperature_time = 0.0;
+		humidity_time = 0.0;
+		imu_time = 0.0;
+		magnetometer_time = 0.0;
+		gps_time = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHP9HTiming_t;
 
 typedef struct _MHPSensors_t {
 	float system_time;  // [s]

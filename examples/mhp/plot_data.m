@@ -20,7 +20,7 @@
 %*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*%
 function plot_data(data)
 
-	start_index = 1000;
+	start_index = 1;
 	fig_index = 1;
 
 	%----- [ ] -----%
@@ -82,10 +82,24 @@ function plot_data(data)
 			data.DYNAMIC_PRESSURE_3(start_index:end));
 	plot(data.DYNAMIC_PRESSURE_TIME_4(start_index:end),...
 			data.DYNAMIC_PRESSURE_4(start_index:end));
+	if isfield(data,'DYNAMIC_PRESSURE_TIME_5')
+		plot(data.DYNAMIC_PRESSURE_TIME_5(start_index:end),...
+				data.DYNAMIC_PRESSURE_5(start_index:end));
+		plot(data.DYNAMIC_PRESSURE_TIME_6(start_index:end),...
+				data.DYNAMIC_PRESSURE_6(start_index:end));
+		plot(data.DYNAMIC_PRESSURE_TIME_7(start_index:end),...
+				data.DYNAMIC_PRESSURE_7(start_index:end));
+		plot(data.DYNAMIC_PRESSURE_TIME_8(start_index:end),...
+				data.DYNAMIC_PRESSURE_8(start_index:end));
+	end
 	hold off;
 
 	title('Dynamic Pressure [Pa]');
-	legend('0','1','2','3','4');
+	if isfield(data,'DYNAMIC_PRESSURE_TIME_5')
+		legend('0','1','2','3','4','5','6','7','8');
+	else
+		legend('0','1','2','3','4');
+	end
 	xlabel('time [s]');
 
 	%----- [ ] -----%
@@ -137,21 +151,35 @@ function plot_data(data)
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
 	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_0, 100);
-	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'k');
+	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
 	hold on;
 	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_1, 100);
-	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'b');
+	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
 	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_2, 100);
-	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'r');
+	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
 	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_3, 100);
-	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'g');
+	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
 	[N,edges] = histcounts(data.DYNAMIC_PRESSURE_4, 100);
-	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N,'c');
+	edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
+	if isfield(data,'DYNAMIC_PRESSURE_TIME_5')
+		[N,edges] = histcounts(data.DYNAMIC_PRESSURE_5, 100);
+		edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
+		[N,edges] = histcounts(data.DYNAMIC_PRESSURE_6, 100);
+		edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
+		[N,edges] = histcounts(data.DYNAMIC_PRESSURE_7, 100);
+		edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
+		[N,edges] = histcounts(data.DYNAMIC_PRESSURE_8, 100);
+		edges = edges(2:end) - (edges(2)-edges(1))/2; plot(edges, N);
+	end
 	hold off;
 
 	xlim([-1,1])  
 
-	legend('Center','1','2','3','4');
+	if isfield(data,'DYNAMIC_PRESSURE_TIME_5')
+		legend('Center','1','2','3','4','5','6','7','8');
+	else
+		legend('Center','1','2','3','4');
+	end
 	xlabel('Pressure [Pa]');
 	ylabel('Count');
 

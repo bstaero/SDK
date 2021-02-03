@@ -156,6 +156,9 @@ void updateTest() {
 					temp_axis_mapping.axis[0] = 3;
 					temp_axis_mapping.axis[1] = -2;
 					temp_axis_mapping.axis[2] = 1;
+					//temp_axis_mapping.axis[0] = -3;
+					//temp_axis_mapping.axis[1] = -2;
+					//temp_axis_mapping.axis[2] = -1;
 
 					printf("Setting IMU orietation to [%i,%i,%i].. ",
 							temp_axis_mapping.axis[0],
@@ -177,6 +180,11 @@ void updateTest() {
 					temp_axis_mapping.axis[0] = 1;
 					temp_axis_mapping.axis[1] = 2;
 					temp_axis_mapping.axis[2] = 3;
+
+					//temp_axis_mapping.axis[0] = -3;
+					//temp_axis_mapping.axis[1] = 1;
+					//temp_axis_mapping.axis[2] = -2;
+
 
 					printf("Setting GNSS orietation to [%i,%i,%i].. ",
 							temp_axis_mapping.axis[0],
