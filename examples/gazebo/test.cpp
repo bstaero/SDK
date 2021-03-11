@@ -52,6 +52,8 @@ PayloadControl_t payload_current_state = PAYLOAD_CTRL_OFF;
 Command_t set_command;
 volatile bool set_command_ack;
 
+static float cmd_yaw = 0;
+
 // Calibration
 volatile bool waiting_on_calibrate = false;
 extern volatile SensorType_t calibration_requested;
@@ -78,6 +80,7 @@ void printTestHelp() {
     printf("\n");
     printf("  u   : Send vrate=1\n");
     printf("  d   : Send vrate=-1\n");
+    printf("  y   : Send heading += 90 degrees\n");
     printf("\n");
     printf("  f   : Send simple flight plan consisting of waypoint 80\n");
     printf("  F   : Send a four point flight plan consisting of waypoint 80\n");
@@ -303,6 +306,17 @@ void updateTest() {
                 printf("Sending velocity command\n");
                 command.id = CMD_VRATE;
                 command.value = -1.0;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+                break;
+
+            case 'y':
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+
+                printf("Sending heading command\n");
+                command.id = CMD_YAW;
+								cmd_yaw = cmd_yaw+M_PI/2;
+								if(cmd_yaw >= 2*M_PI) cmd_yaw = 0;
+                command.value = cmd_yaw;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
                 break;
 

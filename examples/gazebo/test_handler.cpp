@@ -69,7 +69,7 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case SENSORS_AGL:
 			memcpy(&agl_data,data,sizeof(SingleValueSensor_t));
 			if(show_telemetry)
-				printf("\tLaser:\t:0.02f\n",agl_data.value);
+				printf("\tLaser:\t:%0.02f\n",agl_data.value);
 			break;
 
 		case SENSORS_CALIBRATE:
@@ -336,6 +336,11 @@ void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void
 					printf("Setting Z velocity to %f", tmp_command->value);
 					if(ack) printf(" successful\n");
 					else printf(" failed (CMD_VRATE)\n");
+					break;
+				case CMD_YAW:
+					printf("Setting heading to %0.01f", tmp_command->value * 180.0/M_PI);
+					if(ack) printf(" successful\n");
+					else printf(" failed (CMD_YAW)\n");
 					break;
 
 			}
