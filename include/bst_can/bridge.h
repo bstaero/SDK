@@ -115,6 +115,12 @@ uint8_t BRIDGE_SendGNSSHealthPkt(uint8_t p,
 		float pdop, uint8_t satellites, uint8_t fix_type);
 
 uint8_t BRIDGE_SendGNSSRTCMPkt(uint8_t p, uint8_t size, uint8_t * payload);
+uint8_t BRIDGE_SendGNSSSVINPkt(uint8_t p,
+		uint32_t time_elapsed,
+		uint32_t time_minimum,
+		float accuracy,
+		float accuracy_minimum,
+		uint8_t flags);
 
 uint8_t BRIDGE_SendSupplyPkt(uint8_t p, float voltage, float current, float coulomb_count, float temperature);
 
@@ -124,6 +130,24 @@ uint8_t BRIDGE_SendNDVIPkt(uint8_t p, uint8_t id, float red, float near_ir, floa
 uint8_t BRIDGE_SendAGLPkt(uint8_t p, float *ts, float *distance, float *velocity);
 uint8_t BRIDGE_SendProximityPkt(uint8_t p, float ts, float distance, float velocity);
 
+uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
+		uint32_t icao_address,
+		double latitude,
+		double longitude,
+		uint8_t altitude_type,
+		float altitude,
+		float heading,
+		float horizontal_velocity,
+		float vertical_velocity,
+		char callsign[9],
+		uint8_t emitter_type,
+		uint8_t tslc,
+		uint16_t flags,
+		uint16_t squawk);
+
+uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
+		uint16_t id,
+		uint8_t channel);
 
 uint32_t BRIDGE_GetPktDrop(void);
 /**

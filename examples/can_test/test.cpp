@@ -27,6 +27,9 @@
 
 #include "flight_plan.h"
 
+#include "bridge.h"
+
+
 // variables
 bool show_gps = false;
 bool show_mag = false;
@@ -39,34 +42,16 @@ bool new_dynamic = false;
 bool new_static = false;
 
 // functional definitions
-bool sendPayloadData(uint8_t * data, uint8_t size);
 
 // packet for transmision
 Packet              tx_packet;
-
-extern TelemetryOrientation_t telemetry_orientation;
-extern TelemetryPosition_t    telemetry_position;
-extern TelemetryPressure_t    telemetry_pressure;
-extern TelemetrySystem_t      telemetry_system;
-extern TelemetryControl_t     telemetry_control;
-
-extern UserPayload_t          rx_payload;
-UserPayload_t                 tx_payload;
-
-extern GPS_t                  gps;
-extern ThreeAxisSensor_t      mag;
-extern Pressure_t             dyn_p;
-extern Pressure_t             stat_p;
 
 // for command line (terminal) input
 struct termios initial_settings, new_settings;
 
 void printTestHelp() {
 	printf("Keys:\n");
-	printf("  g   : Toggle GPS Display\n");
-	printf("  m   : Toggle Magnetometer Display\n");
-	printf("  d   : Toggle Dynamic Pressure Display\n");
-	printf("  s   : Toggle Static Pressure Display\n");
+	printf("  t   : take a picture\n");
 	printf("\n");
 	printf("  p   : print this help\n");
 }
@@ -104,36 +89,19 @@ void initializeTest() {
 
 void updateTest() {
 	char input; 
-
-	Command_t command;
-
-	uint8_t num_points = 0;
-	Waypoint_t temp_waypoint;
-	Waypoint_t temp_waypoints[MAX_WAYPOINTS];
-
-	FlightPlanMap_t flight_plan_map;
-	FlightPlan flight_plan;
-
+	static uint8_t is_triggering = 0;
+	static float trigger_time = 0;
 
 	if( inputAvailable() ) {
 		input = getchar();
 
 		if(input > 0) {
 			switch(input) {
-				case 'g':
-					show_gps = !show_gps;
-					break;
-
-				case 'm':
-					show_mag = !show_mag;
-					break;
-
-				case 'd':
-					show_dynamic = !show_dynamic;
-					break;
-
-				case 's':
-					show_static = !show_static;
+				case 't':
+					if(!is_triggering) {
+						is_triggering = 1;
+						trigger_time = getElapsedTime();
+					}
 					break;
 
 				case 'p':
@@ -156,80 +124,19 @@ void updateTest() {
 		}
 	}
 
-	// show telemetry
+	uint16_t actuators[16];
 
-	if(show_gps) {
-		if(new_gps) {
-			printf("GPS: %u %02u:%02u:%04.1f %+06.02f,%+07.02f,%05.01f %+05.01f %05.01f %02u %05.01f %03.01f %u %+05.02f,%+05.02f,%+05.02f\n",
-					gps.week,
-					gps.hour,
-					gps.minute,
-					gps.seconds,
-					gps.latitude,
-					gps.longitude,
-					gps.altitude,
-					gps.speed,
-					gps.course,
-					gps.satellites,
-					gps.pdop,
-					gps.last_fix,
-					gps.fix_type,
-					gps.velocity.x,
-					gps.velocity.y,
-					gps.velocity.z);
-			new_gps = false;
-		}
+	if(is_triggering) {
+		if(getElapsedTime() - trigger_time > 0.1) is_triggering = 0;
+		actuators[0] = 2000;
+	} else {
+		actuators[0] = 1000;
 	}
 
-	if(show_mag) {
-		if(new_mag) {
-			printf("MAG: %+05.02f %+05.02f %+05.02f\n",
-					mag.x,
-					mag.y,
-					mag.z);
-			new_mag = false;
-		}
-	}
-
-	if(show_dynamic) {
-		if(new_dynamic) {
-			printf("DYNAMIC: %07.01f HPa %05.02f Deg C\n",
-					dyn_p.pressure,
-					dyn_p.temperature);
-			new_dynamic = false;
-		}
-	}
-
-	if(show_static) {
-		if(new_static) {
-			printf("STATIC: %07.01f HPa %05.02f Deg C\n",
-					stat_p.pressure,
-					stat_p.temperature);
-			new_static = false;
-		}
-	}
+	BRIDGE_SendActuatorPkt(1,actuators);
 
 }
 
 void exitTest() {
 	tcsetattr(0, TCSANOW, &initial_settings);
-}
-
-bool sendPayloadData(uint8_t * data, uint8_t size) {
-	uint8_t ptr = 0;
-
-	while(ptr < size) {
-		if(size-ptr > 64) tx_payload.size = 64;
-		else tx_payload.size = size-ptr;
-
-		memcpy(tx_payload.buffer,&(data[ptr]),tx_payload.size);
-
-		comm_handler->send(PAYLOAD_DATA_CHANNEL_0, (uint8_t *)&tx_payload, sizeof(UserPayload_t), NULL);
-
-		ptr += tx_payload.size;
-		tx_payload.size = 0;
-		for(uint8_t i=0; i<64; i++) tx_payload.buffer[i] = 0;
-	}
-
-	return true;
 }

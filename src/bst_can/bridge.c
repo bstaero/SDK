@@ -137,16 +137,13 @@ void updateDynamicPressure(float system_time,
 void updateStaticPressure(float system_time,
 		float pressure, float temperature); // [hPa, deg C]
 
-void updateMHP(float system_time,
+void updateMHPSensors(float system_time,
 		float static_pressure,
 		float dynamic_pressure[5],
 		float temperature,
 		float humidity,
 		float gyroscope[3],
-		float accelerometer[3],
-		float magnetometer[3],
-		float alpha,
-		float beta); // [hPa, hPa[5], deg C, %, rad, rad]
+		float accelerometer[3]);
 
 void updateAGL(float system_time,
 		float distance); // [m]
@@ -177,6 +174,9 @@ void updateADSB(float system_time,
 		uint8_t tslc,
 		uint16_t flags,
 		uint16_t squawk);
+
+void updatePayloadTrigger(float system_time,
+		uint16_t id, uint8_t channel);
 
 /** @addtogroup Low_Level
  * @{
@@ -296,6 +296,8 @@ void BRIDGE_HandleProximityPkt(uint8_t *byte,uint8_t size);
 
 void BRIDGE_HandleADSBPkt(uint8_t *byte,uint8_t size);
 
+void BRIDGE_HandleTriggerPkt(uint8_t *byte,uint8_t size);
+
 void updateGPSValues(
 		float ts, int16_t w, uint8_t h, uint8_t m, float s,
 		double latitude, double longitude, float altitude,
@@ -376,6 +378,7 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_AGL:	       BRIDGE_HandleAGLPkt(data,size); break;
 		case CAN_PKT_PROXIMITY:	 BRIDGE_HandleProximityPkt(data,size); break;
 		case CAN_PKT_ADSB:    	 BRIDGE_HandleADSBPkt(data,size); break;
+		case CAN_PKT_TRIGGER:    BRIDGE_HandleTriggerPkt(data,size); break;
 		default: break;
 	}
 }
@@ -536,45 +539,29 @@ void BRIDGE_HandleMHPPkt(uint8_t *byte, uint8_t size)
 	data = (CAN_MHP_t *)buffer;
 
 	float t0 = getElapsedTime();
-#if 0
-	updateMHP(t0, 
-			data->static_pressure,
-			data->dynamic_pressure,
-			data->air_temperature,
-			data->humidity,
-			data->gyroscope,
-			data->accelerometer,
-			data->magnetometer,
-			data->alpha,
-			data->beta);
-#else
+
 	uint8_t i;
 	float dyn_p[5];
 	float gyr[3];
 	float acc[3];
-	float mag[3];
+	//float mag[3];
 
 	for(i=0;i<5;i++) 
 		dyn_p[i] = (float)(data->dynamic_pressure[i])/1000.0;
 	for(i=0;i<3;i++) {
 			gyr[i] = (float)(data->gyroscope[i])/1000.0;
 			acc[i] = (float)(data->accelerometer[i])/1000.0;
-			mag[i] = (float)(data->magnetometer[i])/100.0;
+			//mag[i] = (float)(data->magnetometer[i])/100.0;
 	}
 
-	updateMHP(
-			t0, 
-			//(float)(data->system_time)/1000.0,
+
+	updateMHPSensors(t0,
 			(float)(data->static_pressure)/1000.0,
 			dyn_p,
 			(float)(data->air_temperature)/100.0,
 			(float)(data->humidity)/100.0,
 			gyr,
-			acc,
-			mag,
-			(float)(data->alpha)/1000.0,
-			(float)(data->beta)/1000.0);
-#endif
+			acc);
 
 	//----- packet specific code -----//
 
@@ -1456,6 +1443,42 @@ void BRIDGE_HandleADSBPkt(uint8_t *byte, uint8_t size)
 #endif
 }
 
+/**
+ * @brief	Handle Trigger packet
+ * @param	byte Pointer to the byte of data
+ * @retval None
+ */
+void BRIDGE_HandleTriggerPkt(uint8_t *byte, uint8_t size)
+{
+#if defined BOARD_core
+	static uint8_t pkt_size = sizeof(CAN_Trigger_t);
+#ifdef DEBUG
+	static char * function_name = "BRIDGE_HandleTriggerPkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_Trigger_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+
+	CAN_Trigger_t *data = (CAN_Trigger_t *)buffer;
+
+	updatePayloadTrigger(data->timestamp,
+			data->id,
+			data->channel);
+
+#ifdef VERBOSE
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "TRIGGER: %0.02f s, num %u on ch %u\n", 
+			data->timestamp, data->id, data->channel);
+#endif
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
 // ==============================================================================
 // FUNCTIONS FOR SENDING CAN-BUS PACKETS
 // ==============================================================================
@@ -2030,6 +2053,21 @@ uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_ADSB_t));
 
 	return CAN_Write(p, CAN_PKT_ADSB, &data, sizeof(CAN_ADSB_t));
+}
+
+uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
+		uint16_t id,
+		uint8_t channel) {
+	CAN_Trigger_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.timestamp = *ts;
+	data.id = id;
+	data.channel = channel;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_Trigger_t));
+
+	return CAN_Write(p, CAN_PKT_TRIGGER, &data, sizeof(CAN_Trigger_t));
 }
 
 

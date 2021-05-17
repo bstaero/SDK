@@ -81,6 +81,7 @@ void printTestHelp() {
     printf("  u   : Send vrate=1\n");
     printf("  d   : Send vrate=-1\n");
     printf("  y   : Send heading += 90 degrees\n");
+    printf("  Y   : Disable heading control\n");
     printf("\n");
     printf("  f   : Send simple flight plan consisting of waypoint 80\n");
     printf("  F   : Send a four point flight plan consisting of waypoint 80\n");
@@ -317,6 +318,15 @@ void updateTest() {
 								cmd_yaw = cmd_yaw+M_PI/2;
 								if(cmd_yaw >= 2*M_PI) cmd_yaw = 0;
                 command.value = cmd_yaw;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+                break;
+
+            case 'Y':
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+
+                printf("Sending heading command\n");
+                command.id = CMD_YAW;
+                command.value = NAN;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
                 break;
 

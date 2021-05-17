@@ -23,240 +23,130 @@
 #include "main.h"
 #include "structs.h"
 
-TelemetryOrientation_t telemetry_orientation;
-TelemetryPosition_t    telemetry_position;
-TelemetryPressure_t    telemetry_pressure;
-TelemetrySystem_t      telemetry_system;
-TelemetryControl_t     telemetry_control;
+uint32_t gps_count;
+uint32_t imu_count;
+uint32_t pressure_count;
+uint32_t pwm_in_count;
 
-extern SystemStatus_t  system_status;
+uint8_t can_pressure_sensor;
+uint8_t can_imu_sensor;
+uint8_t can_mag_sensor;
+uint8_t can_gps_sensor;
 
-GPS_t                  gps;
-ThreeAxisSensor_t      mag;
-Pressure_t             dyn_p;
-Pressure_t             stat_p;
+uint8_t can_pwm_in;
 
-GCSSurveyIn_t          svin;
+void updateActuatorValues(uint16_t * values) {}
+void updatePWMIn(float system_time, uint16_t * usec) {}
 
-extern bool new_gps;
-extern bool new_mag;
-extern bool new_dynamic;
-extern bool new_static;
 
-UserPayload_t          rx_payload;
+void updateGPS(
+		float system_time, uint16_t week, uint8_t hour, uint8_t minute, float seconds,
+		double latitude, double longitude, float altitude,
+		float vel_n, float vel_e, float vel_d,
+		float course, float speed,
+		float pdop, uint8_t satellites, uint8_t fix_type) {}
 
-void receive(uint8_t type, void * data, uint16_t size, const void * parameter) 
-{
-	switch(type) {
-		/* SENSORS */
-		case SENSORS_GPS:
-			memcpy(&gps,data,sizeof(GPS_t));
-			new_gps = true;
-			break;
-		case SENSORS_ACCELEROMETER:
-			break;
-		case SENSORS_GYROSCOPE:
-			break;
-		case SENSORS_MAGNETOMETER:
-			memcpy(&mag,data,sizeof(ThreeAxisSensor_t));
-			new_mag = true;
-			break;
-		case SENSORS_IMU:
-			break;
-		case SENSORS_DYNAMIC_PRESSURE:
-			memcpy(&dyn_p,data,sizeof(Pressure_t));
-			new_dynamic = true;
-			break;
-		case SENSORS_STATIC_PRESSURE:
-			memcpy(&stat_p,data,sizeof(Pressure_t));
-			new_static = true;
-			break;
-		case SENSORS_AIR_TEMPERATURE:
-		case SENSORS_AGL:
-		case SENSORS_CALIBRATE:
-		case SENSORS_BOARD_ORIENTATION:
-		case SENSORS_GNSS_ORIENTATION:
-		case SENSORS_MHP:
-			break;
-		case SENSORS_GNSS_RTCM:
-			printf("RTCM Data\n");
-			break;
-		case SENSORS_MHP_SENSORS:
-		case SENSORS_MHP_GNSS:
-		case SENSORS_MHP_TIMING:
+void updateAccelerometer(float system_time,
+		float ax, float ay, float az) {}
 
-			/* STATE */
-		case STATE_STATE:
-		case STATE_ESTIMATOR_PARAM:
+void updateGyroscope(float system_time,
+		float gx, float gy, float gz) {}
 
-			/* CONTROL */
-		case CONTROL_COMMAND:
-		case CONTROL_PID:
-		case CONTROL_FLIGHT_PARAMS:
-		case CONTROL_FILTER_PARAMS:
+void updateMagnetometer(float system_time,
+		float mx, float my, float mz) {}
 
-			/* ACTUATORS */
-		case ACTUATORS_VALUES:
-		case ACTUATORS_CALIBRATION:
-		case ACTUATORS_ROTOR_PARAMS:
-		case ACTUATORS_MIXING_PARAMS:
+void updateIMU(float system_time, 
+		float ax, float ay, float az, 
+		float gx, float gy, float gz, 
+		float mx, float my, float mz) {}
 
-			/* HANDSET */
-		case HANDSET_VALUES:
-		case HANDSET_CALIBRATION:
+void updateDynamicPressure(float system_time,
+		float pressure, float temperature) {}
 
-			/* INPUT */
-		case INPUT_HANDSET_VALUES:
-		case INPUT_HANDSET_SETUP:
-		case INPUT_JOYSTICK_VALUES:
-		case INPUT_JOYSTICK_SETUP:
+void updateStaticPressure(float system_time,
+		float pressure, float temperature) {}
 
-			/* SYSTEM */
-		case SYSTEM_POWER_ON:
-		case SYSTEM_INITIALIZE:
-		case SYSTEM_HEALTH_AND_STATUS:
-			memcpy(&system_status,data,sizeof(SystemStatus_t));
-			printf("%08.01f %05.02f V %+06.02f A %05.01f %% %07.01f mAh\n",
-					getElapsedTime(),
-					system_status.batt_voltage,
-					system_status.batt_current,
-					system_status.batt_percent,
-					system_status.batt_coulomb_count);
-			break;
-		case SYSTEM_HARDWARE_ERROR:
-		case SYSTEM_REBOOT:
-			break;
+void updateMHPSensors(float system_time,
+		float static_pressure,
+		float dynamic_pressure[5],
+		float temperature,
+		float humidity,
+		float gyroscope[3],
+		float accelerometer[3]) {}
 
-			/* TELEMETRY */
-		case TELEMETRY_HEARTBEAT:
-			break;
+void updateHumidity(float system_time,
+		float humidity) {}
 
-		case TELEMETRY_POSITION:
-			memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
-			break;
+void updateAGL(float system_time,
+		float distance) {}
 
-		case TELEMETRY_ORIENTATION:
-			memcpy(&telemetry_orientation,data,sizeof(TelemetryOrientation_t));
-			break;
-		case TELEMETRY_PRESSURE:
-			memcpy(&telemetry_pressure,data,sizeof(TelemetryPressure_t));
-			break;
-		case TELEMETRY_CONTROL:
-			memcpy(&telemetry_control,data,sizeof(TelemetryControl_t));
-			break;
-		case TELEMETRY_SYSTEM:
-			memcpy(&telemetry_system,data,sizeof(TelemetrySystem_t));
-			break;
-		case TELEMETRY_GCS:
-			break;
-		case TELEMETRY_GCS_LOCATION:
-			break;
+void updateProximity(float system_time,
+		float distance) {}
 
-		case TELEMETRY_PAYLOAD:
-			break;
+void updateTemperature(float system_time,
+		float temperature) {}
 
-		case TELEMETRY_GCS_SVIN:
-			memcpy(&svin,data,sizeof(GCSSurveyIn_t));
-			char status[30];
-			switch(svin.flags) {
-				case SURVEY_IN_WAITING: sprintf(status,"Waiting"); break;
-				case SURVEY_IN_REQUESTED: sprintf(status,"Requested"); break;
-				case SURVEY_IN_COMPLETE: sprintf(status,"Complete"); break;
-				case SENDING_RTCM3: sprintf(status,"Sending RTCM"); break;
-			}
-			printf("Survey status: %u of %u sec %.01f of %.01f m :%s\n",
-					svin.time_elapsed,
-					svin.time_minimum,
-					svin.accuracy,
-					svin.accuracy_minimum,
-					status);
-			break;
+void updateSupply(float system_time,
+		float voltage, float current, float coulomb_count, float temperature) {}
 
-			/* FLIGHT PLAN */
-		case FLIGHT_PLAN:
-		case FLIGHT_PLAN_MAP:
-		case FLIGHT_PLAN_WAYPOINT:
-		case LAST_MAPPING_WAYPOINT:
-		case DUBIN_PATH:
+void updateGPSValues(
+		float ts, int16_t w, uint8_t h, uint8_t m, float s,
+		double latitude, double longitude, float altitude,
+		float vel_n, float vel_e, float vel_d,
+		float course, float sog,
+		float pdop, uint8_t satellites) {}
 
-			/* VEHICLE CONFIGURATION */
-		case VEHICLE_PARAMS:
-		case VEHICLE_LIMITS:
-		case VEHICLE_LAUNCH_PARAMS:
-		case VEHICLE_LAND_PARAMS:
 
-			/* MISSION */
-		case MISSION_CHECKLIST:
-		case MISSION_PARAMETERS:
+void updateGPSUTCValues(
+		float ts, uint16_t w, uint8_t h, uint8_t m, float s) {}
 
-			/* PAYLOAD */
-		case PAYLOAD_TRIGGER:
-		case PAYLOAD_PARAMS:
-		case PAYLOAD_NDVI:
-		case PAYLOAD_LDCR:
-		case PAYLOAD_CONTROL:
-		case PAYLOAD_CAMERA_TAG:
-		case PAYLOAD_STATUS:
-			break;
 
-		case PAYLOAD_DATA_CHANNEL_0:
-			memcpy(&rx_payload,data,sizeof(UserPayload_t));
-			char out[100];
+void updateGPSLLAValues(
+		float ts,
+		double latitude, double longitude, float altitude) {}
 
-			snprintf(out,rx_payload.size+1,
-					"%s",(char*)rx_payload.buffer);
-			//printf("Got %i bytes from the payload: [%s]\n",rx_payload.size,out);
-			printf("%s",out);
+void updateGPSVelValues(
+		float ts,
+		float course, float sog,
+		float vel_n, float vel_e, float vel_d) {}
 
-			break;
+void updateGPSHealthValues(
+		float ts,
+		float pdop, uint8_t satellites, uint8_t fix_type) {}
 
-		case PAYLOAD_DATA_CHANNEL_1:
-		case PAYLOAD_DATA_CHANNEL_2:
-		case PAYLOAD_DATA_CHANNEL_3:
-		case PAYLOAD_DATA_CHANNEL_4:
-		case PAYLOAD_DATA_CHANNEL_5:
-		case PAYLOAD_DATA_CHANNEL_6:
-		case PAYLOAD_DATA_CHANNEL_7:
-
-			/* ERRORS */
-		default:
-		case INVALID_PACKET:
-			break;
-	}
+void updateMagValues(
+		float ts,
+		float mag_x,
+		float mag_y,
+		float mag_z) {
+	printf("mag\n");
 }
 
-uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * parameter) 
-{
-	printf("receiveCommand: type=%u\n", type);
+void handleNDVI(float ts, uint8_t id, float red, float near_ir, float ir_ambient, float ir_object) {}
 
-	// validate this is a command
-	if( size != sizeof(Command_t) ) {
-		printf("receiveCommand: invlid data size - size=%u\n", size);
-		return false;
-	}
+void updateGPSRTCM(float t0, uint8_t size, uint8_t * data) {}
 
-	// do something with commands
-	return false;
-}
+void updateGPSSVIN(
+		uint32_t time_elapsed,
+		uint32_t time_minimum,
+		float accuracy,
+		float accuracy_minimum,
+		uint8_t flags) {}
 
-void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void * parameter) 
-{
-	printf("receiveReply: type=%u\n", type);
-	ack? fprintf(stderr,"ACK\n"): fprintf(stderr,"NACK\n");
+void updateADSB(float system_time,
+		uint32_t icao_address,
+		double latitude,
+		double longitude,
+		uint8_t altitude_type,
+		float altitude,
+		float heading,
+		float horizontal_velocity,
+		float vertical_velocity,
+		char callsign[9],
+		uint8_t emitter_type,
+		uint8_t tslc,
+		uint16_t flags,
+		uint16_t squawk) {}
 
-	Command_t * tmp_command = (Command_t *) data;
-}
-
-void request(uint8_t type, uint8_t value) 
-{
-	printf("request: type=%u\n", type);
-	// do something with status request
-}
-
-bool publish(uint8_t type, uint8_t param) 
-{
-	printf("publish: type=%u\n", type);
-
-	// do something with status request
-	return true;
-}
+void updatePayloadTrigger(float system_time,
+		uint16_t id, uint8_t channel) {}

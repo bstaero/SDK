@@ -204,6 +204,7 @@ typedef enum {
 	CAN_PKT_NDVI=80,
 	CAN_PKT_NDVI_DOWN=81,
 	CAN_PKT_NDVI_UP=82,
+	CAN_PKT_TRIGGER=83,
 
 	/* ERRORS */
 }  __attribute__ ((packed)) CAN_PacketTypes_t;
@@ -625,6 +626,26 @@ typedef struct _CAN_Proximity_t {
 	}
 #endif
 } __attribute__ ((packed)) CAN_Proximity_t;
+
+typedef struct _CAN_Trigger_t {
+	uint8_t startByte;
+
+	float timestamp;
+	uint16_t id;  // [#] trigger (photo) number
+	uint8_t channel;  // [#] payload channel
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_Trigger_t() {
+		startByte = 0;
+		timestamp = 0.0;
+		id = 0;
+		channel = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_Trigger_t;
 
 /*--------[ SYSTEM ]--------*/
 

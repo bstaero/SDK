@@ -26,6 +26,8 @@
 #include "bst_protocol.h"
 #include "helper_functions.h"
 
+#include "simulated_can.h"
+
 /* NetUAS */
 #include "netuas_serial.h"
 #include "netuas_socket.h"
@@ -63,7 +65,7 @@ void printHelp();
 int main(int argc, char *argv[])
 {
 #ifdef VERBOSE
-	verbose = VERBOSE_ALL;
+	verbose = VERBOSE_CAN;
 #endif
 
 	uint16_t temp = 0x0100;
@@ -129,31 +131,14 @@ int main(int argc, char *argv[])
 	if(comm_interface != NULL)
 		comm_interface->initialize(param[0],param[1],param[2]);
 
-	BSTModuleBasic basic_module;
-	BSTModuleFlightPlan flight_plan_module;
-
-	basic_module.registerReceive(receive);
-	basic_module.registerReceiveCommand(receiveCommand);
-	basic_module.registerReceiveReply(receiveReply);
-	basic_module.registerPublish(publish);
-
-	//flight_plan_module.registerReceive(receive);
-	//flight_plan_module.registerReceiveCommand(receiveCommand);
-	//flight_plan_module.registerReceiveReply(receiveReply);
-	//flight_plan_module.registerPublish(publish);
-
-	((BSTProtocol *)comm_handler)->registerModule(&basic_module);
-	//((BSTProtocol *)comm_handler)->registerModule(&flight_plan_module);
-
-	comm_handler->getInterface()->open();
-	comm_handler->setAddressing(false);
+	setupSimulatedCAN(comm_interface);
 
 	initializeTest();
 	printTestHelp();
 
 	while(comm_interface->isConnected() && running) {
 		// Update communications
-		comm_handler->update();
+		simulatedCANRead();
 
 		// Perform user functions
 		updateTest();

@@ -19,11 +19,5 @@
 #ifndef _TEST_HANDLER_H_
 #define _TEST_HANDLER_H_
 
-#include <inttypes.h>
-
-void receive(uint8_t type, void * data, uint16_t size, const void * parameter);
-uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * parameter);
-void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void * parameter);
-bool publish(uint8_t type, uint8_t param);
 
 #endif
