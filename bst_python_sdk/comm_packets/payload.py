@@ -25,6 +25,11 @@ from .comm_packets import *
 #                                 msg-gen.py                                   #
 #                                DO NOT EDIT                                   #
 
+#---------[ Actuators ]---------#
+
+NUM_PAYLOAD_CHANNELS = 8
+NUM_PAYLOAD_DATA_CHANNELS = 8
+
 #---------[ Controller ]---------#
 
 class CommandID (Enum):
@@ -39,6 +44,40 @@ class CommandID (Enum):
 
 	CMD_PAYLOAD_CONTROL=35
 
+	# Gimbal Control
+
+	CMD_LOOK_AT=36
+
+#---------[ Input ]---------#
+
+class PayloadInterface (Enum):
+	INTERFACE_UNKNOWN=0
+	INTERFACE_BST_PROTOCOL=1
+	INTERFACE_UBLOX_GPS=2
+	INTERFACE_NMEA_GPS=3
+	INTERFACE_MAVLINK=4
+	INTERFACE_PAYLOAD_PASSTHRU=5
+	INTERFACE_HWIL=6
+
+class PayloadSignal (Enum):
+	UNKNOWN_TYPE=0
+	DISCRETE_IO=1
+	PWM_50HZ=2
+	PWM_300HZ=3
+	FALLING_EDGE_TRIGGER=4
+	RISING_EDGE_TRIGGER=5
+	CONTINUOUS_TRIGGER=6
+	CONTINUOUS_TRIGGER_LOW=7
+
+class PayloadType (Enum):
+	PAYLOAD_TYPE_CAMERA=0
+	PAYLOAD_TYPE_DOOR=1
+	PAYLOAD_TYPE_POWER=2
+	PAYLOAD_TYPE_PITCH=3
+	PAYLOAD_TYPE_ROLL=4
+	PAYLOAD_TYPE_YAW=5
+	PAYLOAD_TYPE_UNUSED=6
+
 #---------[ PAYLOAD ]---------#
 
 class PayloadControl (Enum):
@@ -49,6 +88,15 @@ class PayloadControl (Enum):
 	PAYLOAD_CTRL_SHUTDOWN=4
 	PAYLOAD_CTRL_ERROR=5
 	PAYLOAD_CTRL_INVALID=6
+
+class PayloadState (Enum):
+	PAYLOAD_STATE_OPEN=0
+	PAYLOAD_STATE_CLOSED=1
+	PAYLOAD_STATE_AUTO=2
+	PAYLOAD_STATE_ON=3
+	PAYLOAD_STATE_OFF=4
+	PAYLOAD_STATE_MANUAL=5
+	PAYLOAD_STATE_UNKNOWN=6
 
 #---------[ Payload Sensors ]---------#
 
@@ -544,18 +592,21 @@ class TelemetryPayload:
 #---------[ Payload ]---------#
 
 class PayloadID (Enum):
-	PAYLOAD_UNKNOWN=0
-	PAYLOAD_QX1=1
-	PAYLOAD_A6000=2
-	PAYLOAD_FLIR_TAU2=3
-	PAYLOAD_TETRACAM_ADC_LITE=4
-	PAYLOAD_A5100=5
-	PAYLOAD_MAPIR_KERNEL=6
-	PAYLOAD_FLIR_VUE_PRO=7
-	PAYLOAD_MICASENSE_REDEDGE=8
-	PAYLOAD_PARTICLES_PLUS=9
-	PAYLOAD_K30=10
-	PAYLOAD_MINIGAS=11
+	PAYLOAD_UNKNOWN=192
+	PAYLOAD_QX1=193
+	PAYLOAD_A6000=194
+	PAYLOAD_FLIR_TAU2=195
+	PAYLOAD_TETRACAM_ADC_LITE=196
+	PAYLOAD_A5100=197
+	PAYLOAD_MAPIR_KERNEL=198
+	PAYLOAD_FLIR_VUE_PRO=199
+	PAYLOAD_MICASENSE_REDEDGE=200
+	PAYLOAD_PARTICLES_PLUS=201
+	PAYLOAD_K30=202
+	PAYLOAD_MINIGAS=203
+	PAYLOAD_TRACE_GAS=204
+	PAYLOAD_LICOR=205
+	PAYLOAD_SPECTROMETER=206
 
 class NDVI:
 	SIZE = 21
@@ -608,15 +659,28 @@ class NDVI:
 		return bytearray(buf)
 
 class PayloadParam:
-	SIZE = 17
+	SIZE = 52
 
-	def __init__ (self, channel = 0, deltaD = 0.0, deltaT = 0.0, pulse = 0.0,
-	cruise_speed = 0.0):
+	def __init__ (self, channel = 0, channelName = [None] * 32, deltaD = 0.0,
+	pulse = 0.0, powerUp = 0.0, powerDown = 0.0, payloadType = PayloadType(0),
+	payloadSignal = PayloadSignal(0), payloadState = PayloadState(0)):
 		self.channel = channel
+
+		if (len(channelName) != 32):
+			raise ValueError('array channelName expecting length '+str(32)+' got '+str(len(channelName)))
+
+		self.channelName = list(channelName)
+
 		self.deltaD = deltaD
-		self.deltaT = deltaT
 		self.pulse = pulse
-		self.cruise_speed = cruise_speed
+		self.powerUp = powerUp
+		self.powerDown = powerDown
+
+		self.payloadType = PayloadType(payloadType)
+
+		self.payloadSignal = PayloadSignal(payloadSignal)
+
+		self.payloadState = PayloadState(payloadState)
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
@@ -627,17 +691,32 @@ class PayloadParam:
 		self.channel = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
 
-		self.deltaD = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
+		self.channelName = [];
 
-		self.deltaT = struct.unpack_from('<f',buf,offset)[0]
+		for i in range(0,32):
+			self.channelName.append(struct.unpack_from('<B',buf,offset)[0])
+			offset = offset+struct.calcsize('<B')
+
+		self.deltaD = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 		self.pulse = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.cruise_speed = struct.unpack_from('<f',buf,offset)[0]
+		self.powerUp = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
+
+		self.powerDown = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.payloadType = PayloadType(struct.unpack_from('<B',buf,offset)[0])
+		offset = offset+struct.calcsize('<B')
+
+		self.payloadSignal = PayloadSignal(struct.unpack_from('<B',buf,offset)[0])
+		offset = offset+struct.calcsize('<B')
+
+		self.payloadState = PayloadState(struct.unpack_from('<B',buf,offset)[0])
+		offset = offset+struct.calcsize('<B')
 
 	def getSize(self):
 		return self.SIZE
@@ -646,17 +725,58 @@ class PayloadParam:
 		buf = []
 
 		buf.extend(struct.pack('<B', self.channel))
+
+		for val in self.channelName:
+		    buf.extend(struct.pack('<B', val))
+
 		buf.extend(struct.pack('<f', self.deltaD))
-		buf.extend(struct.pack('<f', self.deltaT))
 		buf.extend(struct.pack('<f', self.pulse))
-		buf.extend(struct.pack('<f', self.cruise_speed))
+		buf.extend(struct.pack('<f', self.powerUp))
+		buf.extend(struct.pack('<f', self.powerDown))
+
+		buf.put(PayloadType.encode(self.payloadType));
+
+		buf.put(PayloadSignal.encode(self.payloadSignal));
+
+		buf.put(PayloadState.encode(self.payloadState));
+		return bytearray(buf)
+
+class PayloadSerial:
+	SIZE = 5
+
+	def __init__ (self, baudRate = 0, payloadInterface = PayloadInterface(0)):
+		self.baudRate = baudRate
+
+		self.payloadInterface = PayloadInterface(payloadInterface)
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [PayloadSerial]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.baudRate = struct.unpack_from('<I',buf,offset)[0]
+		offset = offset + struct.calcsize('<I')
+
+		self.payloadInterface = PayloadInterface(struct.unpack_from('<B',buf,offset)[0])
+		offset = offset+struct.calcsize('<B')
+
+	def getSize(self):
+		return self.SIZE
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<I', self.baudRate))
+
+		buf.put(PayloadInterface.encode(self.payloadInterface));
 		return bytearray(buf)
 
 class PayloadTrigger:
-	SIZE = 39
+	SIZE = 40
 
 	def __init__ (self, latitude = 0.0, longitude = 0.0, altitude = 0.0,
-	q = [None] * 4, percent = 0, id = 0):
+	q = [None] * 4, percent = 0, id = 0, channel = 0):
 		self.latitude = latitude
 		self.longitude = longitude
 		self.altitude = altitude
@@ -668,6 +788,7 @@ class PayloadTrigger:
 
 		self.percent = percent
 		self.id = id
+		self.channel = channel
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
@@ -696,6 +817,9 @@ class PayloadTrigger:
 		self.id = struct.unpack_from('<H',buf,offset)[0]
 		offset = offset + struct.calcsize('<H')
 
+		self.channel = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
 	def getSize(self):
 		return self.SIZE
 
@@ -711,6 +835,7 @@ class PayloadTrigger:
 
 		buf.extend(struct.pack('<B', self.percent))
 		buf.extend(struct.pack('<H', self.id))
+		buf.extend(struct.pack('<B', self.channel))
 		return bytearray(buf)
 
 class UserPayload:
@@ -757,7 +882,7 @@ class UserPayload:
 		return bytearray(buf)
 
 class CameraTag:
-	SIZE = 79
+	SIZE = 80
 
 	def __init__ (self, trigger_info = 0, week = 0, hour = 0, minute = 0,
 	seconds = 0.0, filename = [None] * 32):

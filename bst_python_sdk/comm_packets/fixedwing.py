@@ -316,7 +316,7 @@ class LandingParameters:
 	abort_height = 0.0, flap_deflection = 0.0, flare_min_pitch = 0.0,
 	cross_track_error = 0.0, cross_track_angle = 0.0, height_error_bound = 0.0,
 	abort_trigger_time = 0.0, decision_time = 0.0, commit_time = 0.0,
-	flare_time = 0.0, unused = [None] * 16):
+	flare_time = 0.0, agl_offset = 0.0, unused = [None] * 12):
 		self.ias = ias
 		self.glide_slope = glide_slope
 		self.safe_height = safe_height
@@ -330,9 +330,10 @@ class LandingParameters:
 		self.decision_time = decision_time
 		self.commit_time = commit_time
 		self.flare_time = flare_time
+		self.agl_offset = agl_offset
 
-		if (len(unused) != 16):
-			raise ValueError('array unused expecting length '+str(16)+' got '+str(len(unused)))
+		if (len(unused) != 12):
+			raise ValueError('array unused expecting length '+str(12)+' got '+str(len(unused)))
 
 		self.unused = list(unused)
 
@@ -381,9 +382,12 @@ class LandingParameters:
 		self.flare_time = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
+		self.agl_offset = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
 		self.unused = [];
 
-		for i in range(0,16):
+		for i in range(0,12):
 			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
 
@@ -406,6 +410,7 @@ class LandingParameters:
 		buf.extend(struct.pack('<f', self.decision_time))
 		buf.extend(struct.pack('<f', self.commit_time))
 		buf.extend(struct.pack('<f', self.flare_time))
+		buf.extend(struct.pack('<f', self.agl_offset))
 
 		for val in self.unused:
 		    buf.extend(struct.pack('<B', val))

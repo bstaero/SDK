@@ -298,6 +298,7 @@ class CAN_PacketTypes (Enum):
 	CAN_PKT_GNSS_SVIN=56
 	CAN_PKT_AGL=96
 	CAN_PKT_PROXIMITY=112
+	CAN_PKT_ADSB=144
 
 	# STATE
 
@@ -337,6 +338,7 @@ class CAN_PacketTypes (Enum):
 	CAN_PKT_NDVI=80
 	CAN_PKT_NDVI_DOWN=81
 	CAN_PKT_NDVI_UP=82
+	CAN_PKT_TRIGGER=83
 
 	# ERRORS
 
@@ -398,6 +400,120 @@ class CAN_NDVI:
 		return bytearray(buf)
 
 #---------[ SENSORS ]---------#
+
+class CAN_ADSB:
+	SIZE = 59
+
+	def __init__ (self, startByte = 0, timestamp = 0.0, icao_address = 0,
+	latitude = 0.0, longitude = 0.0, altitude_type = 0, altitude = 0.0,
+	heading = 0.0, horizontal_velocity = 0.0, vertical_velocity = 0.0,
+	callsign = [None] * 9, emitter_type = 0, tslc = 0, flags = 0, squawk = 0,
+	chk = 0):
+		self.startByte = startByte
+		self.timestamp = timestamp
+		self.icao_address = icao_address
+		self.latitude = latitude
+		self.longitude = longitude
+		self.altitude_type = altitude_type
+		self.altitude = altitude
+		self.heading = heading
+		self.horizontal_velocity = horizontal_velocity
+		self.vertical_velocity = vertical_velocity
+
+		if (len(callsign) != 9):
+			raise ValueError('array callsign expecting length '+str(9)+' got '+str(len(callsign)))
+
+		self.callsign = list(callsign)
+
+		self.emitter_type = emitter_type
+		self.tslc = tslc
+		self.flags = flags
+		self.squawk = squawk
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_ADSB]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.timestamp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.icao_address = struct.unpack_from('<I',buf,offset)[0]
+		offset = offset + struct.calcsize('<I')
+
+		self.latitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset + struct.calcsize('<d')
+
+		self.longitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset + struct.calcsize('<d')
+
+		self.altitude_type = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.altitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.heading = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.horizontal_velocity = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.vertical_velocity = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.callsign = [];
+
+		for i in range(0,9):
+			self.callsign.append(struct.unpack_from('<B',buf,offset)[0])
+			offset = offset+struct.calcsize('<B')
+
+		self.emitter_type = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.tslc = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.flags = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+		self.squawk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+		buf.extend(struct.pack('<f', self.timestamp))
+		buf.extend(struct.pack('<I', self.icao_address))
+		buf.extend(struct.pack('<d', self.latitude))
+		buf.extend(struct.pack('<d', self.longitude))
+		buf.extend(struct.pack('<B', self.altitude_type))
+		buf.extend(struct.pack('<f', self.altitude))
+		buf.extend(struct.pack('<f', self.heading))
+		buf.extend(struct.pack('<f', self.horizontal_velocity))
+		buf.extend(struct.pack('<f', self.vertical_velocity))
+
+		for val in self.callsign:
+		    buf.extend(struct.pack('<B', val))
+
+		buf.extend(struct.pack('<B', self.emitter_type))
+		buf.extend(struct.pack('<B', self.tslc))
+		buf.extend(struct.pack('<H', self.flags))
+		buf.extend(struct.pack('<H', self.squawk))
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
 
 class CAN_AGL:
 	SIZE = 15
@@ -1190,6 +1306,51 @@ class CAN_Proximity:
 		buf.extend(struct.pack('<f', self.timestamp))
 		buf.extend(struct.pack('<f', self.distance))
 		buf.extend(struct.pack('<f', self.velocity))
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
+
+class CAN_Trigger:
+	SIZE = 10
+
+	def __init__ (self, startByte = 0, timestamp = 0.0, id = 0, channel = 0,
+	chk = 0):
+		self.startByte = startByte
+		self.timestamp = timestamp
+		self.id = id
+		self.channel = channel
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_Trigger]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.timestamp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.id = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+		self.channel = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+		buf.extend(struct.pack('<f', self.timestamp))
+		buf.extend(struct.pack('<H', self.id))
+		buf.extend(struct.pack('<B', self.channel))
 		buf.extend(struct.pack('<H', self.chk))
 		return bytearray(buf)
 
