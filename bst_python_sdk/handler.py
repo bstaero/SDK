@@ -33,7 +33,7 @@ packet_mapping = {
     PacketTypes.TELEMETRY_POSITION.value: TelemetryPosition(),
     PacketTypes.TELEMETRY_PRESSURE.value: TelemetryPressure(),
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem(),
-    PacketTypes.PAYLOAD_CHANNEL_0.value: UserPayload()
+    PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload()
 }
 
 can_actuators = CAN_Actuator()
@@ -58,7 +58,7 @@ def standard_handler(pkt):
             return None
 
         try:
-            if pkt.TYPE.value >= PacketTypes.PAYLOAD_CHANNEL_0.value:
+            if pkt.TYPE.value >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
                 packet_mapping[pkt.TYPE.value].buffer = [None] * 64
 
             print(pkt.DATA)
