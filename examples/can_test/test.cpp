@@ -41,6 +41,17 @@ bool new_mag = false;
 bool new_dynamic = false;
 bool new_static = false;
 
+bool print_timing = false;
+
+extern uint32_t gnss_lla_cnt;
+extern uint32_t gnss_utc_cnt;
+extern uint32_t gnss_vel_cnt;
+extern uint32_t gnss_hs_cnt;
+
+extern uint32_t mag_cnt;
+
+extern uint32_t stat_p_cnt;
+
 // functional definitions
 
 // packet for transmision
@@ -128,9 +139,20 @@ void updateTest() {
 
 	if(is_triggering) {
 		if(getElapsedTime() - trigger_time > 0.1) is_triggering = 0;
-		actuators[0] = 2000;
+		actuators[14] = 2000;
 	} else {
-		actuators[0] = 1000;
+		actuators[14] = 1000;
+	}
+
+	if(print_timing) {
+	printf("LLA %04.1f  UTC %04.01f  VEL %04.01f  HS %04.01f | MAG %05.01f | STAT %05.01f\n",
+			(float)gnss_lla_cnt/getElapsedTime(),
+			(float)gnss_utc_cnt/getElapsedTime(),
+			(float)gnss_vel_cnt/getElapsedTime(),
+			(float)gnss_hs_cnt/getElapsedTime(),
+			(float)mag_cnt/getElapsedTime(),
+			(float)stat_p_cnt/getElapsedTime()
+			);
 	}
 
 	BRIDGE_SendActuatorPkt(1,actuators);

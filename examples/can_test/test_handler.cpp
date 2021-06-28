@@ -35,9 +35,19 @@ uint8_t can_gps_sensor;
 
 uint8_t can_pwm_in;
 
+
+uint32_t gnss_lla_cnt;
+uint32_t gnss_utc_cnt;
+uint32_t gnss_vel_cnt;
+uint32_t gnss_hs_cnt;
+
+uint32_t mag_cnt;
+
+uint32_t stat_p_cnt;
+
+
 void updateActuatorValues(uint16_t * values) {}
 void updatePWMIn(float system_time, uint16_t * usec) {}
-
 
 void updateGPS(
 		float system_time, uint16_t week, uint8_t hour, uint8_t minute, float seconds,
@@ -53,7 +63,7 @@ void updateGyroscope(float system_time,
 		float gx, float gy, float gz) {}
 
 void updateMagnetometer(float system_time,
-		float mx, float my, float mz) {}
+		float mx, float my, float mz) {mag_cnt++;}
 
 void updateIMU(float system_time, 
 		float ax, float ay, float az, 
@@ -64,7 +74,7 @@ void updateDynamicPressure(float system_time,
 		float pressure, float temperature) {}
 
 void updateStaticPressure(float system_time,
-		float pressure, float temperature) {}
+		float pressure, float temperature) {stat_p_cnt++;}
 
 void updateMHPSensors(float system_time,
 		float static_pressure,
@@ -98,29 +108,27 @@ void updateGPSValues(
 
 
 void updateGPSUTCValues(
-		float ts, uint16_t w, uint8_t h, uint8_t m, float s) {}
+		float ts, uint16_t w, uint8_t h, uint8_t m, float s) {gnss_utc_cnt++;}
 
 
 void updateGPSLLAValues(
 		float ts,
-		double latitude, double longitude, float altitude) {}
+		double latitude, double longitude, float altitude) {gnss_lla_cnt++;}
 
 void updateGPSVelValues(
 		float ts,
 		float course, float sog,
-		float vel_n, float vel_e, float vel_d) {}
+		float vel_n, float vel_e, float vel_d) {gnss_vel_cnt++;}
 
 void updateGPSHealthValues(
 		float ts,
-		float pdop, uint8_t satellites, uint8_t fix_type) {}
+		float pdop, uint8_t satellites, uint8_t fix_type) {gnss_hs_cnt++;}
 
 void updateMagValues(
 		float ts,
 		float mag_x,
 		float mag_y,
-		float mag_z) {
-	printf("mag\n");
-}
+		float mag_z) {}
 
 void handleNDVI(float ts, uint8_t id, float red, float near_ir, float ir_ambient, float ir_object) {}
 

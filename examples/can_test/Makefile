@@ -40,7 +40,8 @@ INCLUDES += -I. \
 					  -I../../lib \
 					  -I../../lib/netuas \
 
-FLAGS=-g -DVERBOSE -DVEHICLE_FIXEDWING -DBOARD_core -DBOARD_GNSS -DBOARD_GCS -DSDK -DIMPLEMENTATION_xplane
+FLAGS=-g -DVEHICLE_FIXEDWING -DBOARD_core -DBOARD_GNSS -DBOARD_GCS -DSDK -DIMPLEMENTATION_xplane
+FLAGS+=-DVERBOSE 
 
 OBJ=comm_protocol.o comm_interface.o bst_module_basic.o bst_module_flight_plan.o debug.o vector.o helper_functions.o flight_plan.o
 OBJ+=bst_protocol.o bst_packet.o bst_module.o
