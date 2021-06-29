@@ -33,6 +33,7 @@ packet_mapping = {
     PacketTypes.TELEMETRY_POSITION.value: TelemetryPosition(),
     PacketTypes.TELEMETRY_PRESSURE.value: TelemetryPressure(),
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem(),
+    PacketTypes.TELEMETRY_PAYLOAD.value: TelemetryPayload(),
     PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload()
 }
 
@@ -54,7 +55,7 @@ def standard_handler(pkt):
         packet_data = None
 
         if pkt.TYPE.value not in packet_mapping:
-            print('Packet type not yet set up for parsing')
+            print('Packet type ',pkt.TYPE.value,' not yet set up for parsing')
             return None
 
         try:

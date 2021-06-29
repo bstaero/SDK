@@ -21,14 +21,12 @@
 #                         ben.busby@blackswifttech.com                         #
 #                                                                              #
 # *#=+--+=#=+--                 --+=#=+--+=#=+--                 --+=#=+--+=#* #
-from . import handler
-
 from .bstpacket import BSTPacket
 
 from .comm_packets.comm_packets import PacketTypes
 from .comm_packets.canpackets import CAN_GNSS_LLA
 
-def parse_stream(data, addressing=True):
+def parse_stream(data, handler, addressing=True):
     pkt = BSTPacket()
     pkt.set_addressing(addressing)
 
