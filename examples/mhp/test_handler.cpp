@@ -40,6 +40,12 @@ MHP9HTiming_t    mhp_9h_timing;
 volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
 volatile PacketTypes_t orientation_requested = (PacketTypes_t)0;
 volatile PacketAction_t orientation_action = PKT_ACTION_NACK;
+
+
+uint32_t product_cnt = 0;
+uint32_t sensors_cnt = 0;
+
+float last_print = 0;
 /*<-End Global Variables-->*/
 
 /*<---Local Functions----->*/
@@ -72,7 +78,7 @@ void handlePacket(uint8_t type, uint8_t action, const void * data)
 	AxisMapping_t * axis_mapping;
 
 	static bool first_run = true;
-	char out[1024];
+	char out[2048];
 
 	switch(type) {
 
@@ -131,11 +137,20 @@ void handlePacket(uint8_t type, uint8_t action, const void * data)
 			break;
 
 		case SENSORS_MHP:
+			product_cnt++;
 			memcpy(&mhp_data,data,sizeof(MHP_t));;
 			break;
 
 		case SENSORS_MHP_SENSORS:
 			memcpy(&mhp_sensors,data,sizeof(MHPSensors_t));;
+			sensors_cnt++;
+
+			/*if(getElapsedTime() - last_print > 1.0) {
+				last_print = getElapsedTime();
+				printf("%0.2f %0.2f\n",
+						(float)product_cnt/getElapsedTime(),
+						(float)sensors_cnt/getElapsedTime());
+			}*/
 
 			if(display_telemetry)
 				printf("%+0.01f m %+05.01f %+05.01f %+05.01f a %+0.02f %+0.02f %+0.02f g %+0.02f %+0.02f %+0.02f d %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+05.01f %04.01f a %+05.01f b %+05.01f q %+07.01f i %+05.01f t %+05.01f %04u %02u:%02u:%04.01f lla %+06.02f %+07.02f %06.01f v %+05.01f %+05.01f %+05.01f p %04.01f\n\r",
@@ -475,7 +490,10 @@ void handlePacket(uint8_t type, uint8_t action, const void * data)
 						break;
 
 		case SENSORS_MHP_GNSS:
-						memcpy(&mhp_sensors_gnss,data,sizeof(MHPSensorsGNSS_t));;
+						//FIXME - this should not be sent by the GPS
+						if( (((MHPSensorsGNSS_t *)data)-> latitude <  200.0) &&
+								(((MHPSensorsGNSS_t *)data)-> latitude > -200.0) )
+							memcpy(&mhp_sensors_gnss,data,sizeof(MHPSensorsGNSS_t));;
 						break;
 
 		case SENSORS_MHP_9H_TIMING:

@@ -184,3 +184,9 @@ function plot_data(data)
 	ylabel('Count');
 
 	linkaxes(ax,'x');
+
+	%----- [ ] -----%
+	figure(fig_index); fig_index = fig_index+1;
+
+	ind=find(data.PDOP > 0.0 & data.PDOP < 2.0);
+	geoplot(data.LATTIUDE(ind), data.LONGITUDE(ind),'.');
