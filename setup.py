@@ -5,7 +5,7 @@ with open("README.md", "r") as readme:
 
 setuptools.setup(
     name="BSTPythonSDK",
-    version="3.16.0.dev2",
+    version="3.16.0.dev3",
     author="Black Swift Technologies",
     author_email="ben.busby@blackswifttech.com",
     description="BST Flight Management SDK",

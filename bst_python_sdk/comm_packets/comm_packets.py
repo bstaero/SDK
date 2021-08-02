@@ -127,19 +127,15 @@ class ActuatorCalibration:
 		offset = 0
 
 		self.channel = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.type = ActuatorFunction(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
 		self.max_usec = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.mid_usec = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.min_usec = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -373,40 +369,28 @@ class EstimatorParameters:
 		offset = 0
 
 		self.cf_acc_gain = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.cf_mag_gain = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.cf_press_gain = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.altitude_filter_Ph = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.altitude_filter_R = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.altitude_filter_Q1 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.altitude_filter_Q2 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.altitude_filter_Q3 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.ax_filter_alpha = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.ax_filter_beta = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.agl_filter_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.agl_filter_cutoff = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -468,7 +452,6 @@ class State:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.q = [];
 
@@ -477,43 +460,30 @@ class State:
 			offset = offset+struct.calcsize('<f')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.ias = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.ias_dot = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.h = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.h_dot = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.turnrate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.accel_y = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.latitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.longitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.vx = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.vy = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.agl = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.tas = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.wind = [];
 
@@ -617,25 +587,18 @@ class Waypoint:
 		offset = 0
 
 		self.num = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.next = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.latitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.longitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.radius = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.action = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -695,79 +658,54 @@ class DubinsPath:
 		offset = 0
 
 		self.xc0_x = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.xc0_y = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.xc1_x = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.xc1_y = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.xc2_x = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.xc2_y = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.t0_i = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.t0_f = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.t1_i = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.t1_f = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.t2_i = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.t2_f = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.a = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.b = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.c0 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.c1 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.c2 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.x0 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.y0 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.z00 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.z01 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.z02 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.big_r = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.origin_lat = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.origin_lon = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.path_type = DubinsPathType(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
@@ -989,22 +927,16 @@ class MHP:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.alpha = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.beta = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.q = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.ias = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.tas = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.wind = [];
 
@@ -1073,13 +1005,10 @@ class MHP9HSensors:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.error_code = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.static_pressure = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.dynamic_pressure = [];
 
@@ -1088,10 +1017,8 @@ class MHP9HSensors:
 			offset = offset+struct.calcsize('<f')
 
 		self.air_temperature = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.humidity = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.gyroscope = [];
 
@@ -1156,10 +1083,8 @@ class MHP9HTiming:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.static_pressure_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.dynamic_pressure_time = [];
 
@@ -1168,19 +1093,14 @@ class MHP9HTiming:
 			offset = offset+struct.calcsize('<f')
 
 		self.air_temperature_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.humidity_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.imu_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.magnetometer_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.gps_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1236,13 +1156,10 @@ class MHPSensors:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.error_code = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.static_pressure = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.dynamic_pressure = [];
 
@@ -1251,10 +1168,8 @@ class MHPSensors:
 			offset = offset+struct.calcsize('<f')
 
 		self.air_temperature = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.humidity = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.gyroscope = [];
 
@@ -1326,7 +1241,6 @@ class MHPSensorsGNSS:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.magnetometer = [];
 
@@ -1335,25 +1249,18 @@ class MHPSensorsGNSS:
 			offset = offset+struct.calcsize('<f')
 
 		self.week = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.hour = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.minute = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.seconds = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.latitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.longitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.velocity = [];
 
@@ -1362,7 +1269,6 @@ class MHPSensorsGNSS:
 			offset = offset+struct.calcsize('<f')
 
 		self.pdop = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1417,10 +1323,8 @@ class MHPTiming:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.static_pressure_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.dynamic_pressure_time = [];
 
@@ -1429,19 +1333,14 @@ class MHPTiming:
 			offset = offset+struct.calcsize('<f')
 
 		self.air_temperature_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.humidity_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.imu_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.magnetometer_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.gps_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1477,13 +1376,10 @@ class Pressure:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.pressure = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.temperature = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1514,7 +1410,6 @@ class RTCM:
 		offset = 0
 
 		self.size = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.payload = [];
 
@@ -1557,31 +1452,22 @@ class SensorOffsets:
 		offset = 0
 
 		self.status = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.gyroscope_x = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.gyroscope_y = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.gyroscope_z = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.magnetometer_x = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.magnetometer_y = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.magnetometer_z = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.dynamic_pressure = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.temperature = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1614,10 +1500,8 @@ class SingleAxisSensorCalibration:
 		offset = 0
 
 		self.b = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.m = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1642,7 +1526,6 @@ class SingleValue:
 		offset = 0
 
 		self.value = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1667,10 +1550,8 @@ class SingleValueSensor:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.value = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1698,16 +1579,12 @@ class ThreeAxisSensor:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.x = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.y = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.z = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -1804,31 +1681,23 @@ class ADSB:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.icao_address = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.latitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.longitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.altitude_type = ADSB_Altitude(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.heading = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.horizontal_velocity = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.vertical_velocity = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.callsign = [];
 
@@ -1840,13 +1709,10 @@ class ADSB:
 		offset = offset+struct.calcsize('<B')
 
 		self.tslc = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.flags = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.squawk = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -1940,43 +1806,30 @@ class GPS:
 		offset = 0
 
 		self.system_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.week = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.hour = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.minute = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.seconds = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.latitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.longitude = struct.unpack_from('<d',buf,offset)[0]
-		offset = offset + struct.calcsize('<d')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.speed = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.course = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.satellites = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.pdop = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.last_fix = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.fix_type = GPSFixType(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
@@ -2343,37 +2196,26 @@ class HardwareError:
 		offset = 0
 
 		self.error_code = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.r0 = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.r1 = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.r2 = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.r3 = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.r12 = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.lr = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.pc = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.psr = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.task = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.irq = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 	def getSize(self):
 		return self.SIZE
@@ -2408,10 +2250,8 @@ class PowerOn:
 		offset = 0
 
 		self.comms_rev = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.serial_num = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 	def getSize(self):
 		return self.SIZE
@@ -2446,31 +2286,22 @@ class SystemStatus:
 		offset = 0
 
 		self.batt_voltage = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.batt_current = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.batt_percent = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.batt_coulomb_count = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.flight_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.rssi = struct.unpack_from('<b',buf,offset)[0]
-		offset = offset + struct.calcsize('<b')
 
 		self.lost_comm = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.lost_gps = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.error_code = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 	def getSize(self):
 		return self.SIZE
@@ -2532,28 +2363,20 @@ class SystemInitialize:
 		offset = offset+struct.calcsize('<B')
 
 		self.sw_rev = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.hw_rev = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.svn_rev = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.comms_rev = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.serial_num = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.vehicle_initialized = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.num_inputs = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.num_actuators = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.name = [];
 
@@ -2872,10 +2695,8 @@ class Command:
 		offset = 0
 
 		self.id = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.value = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -2914,7 +2735,6 @@ class HandsetCalibration:
 		offset = 0
 
 		self.channel = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.function_min = HandsetFunction(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
@@ -2929,7 +2749,6 @@ class HandsetCalibration:
 		offset = offset+struct.calcsize('<B')
 
 		self.usec = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 	def getSize(self):
 		return self.SIZE
@@ -2964,10 +2783,8 @@ class Limit:
 		offset = 0
 
 		self.min = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.max = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -2993,10 +2810,8 @@ class Timeout:
 		offset = 0
 
 		self.seconds = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.waypoint = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 	def getSize(self):
 		return self.SIZE
@@ -3026,16 +2841,12 @@ class PID:
 		offset = 0
 
 		self.id = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.p = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.i = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.d = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.output = Limit()
 		self.output.parse(buf[offset:offset+Limit.SIZE])
@@ -3144,40 +2955,28 @@ class TelemetryControl:
 		offset = 0
 
 		self.roll = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.pitch = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.yaw = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.roll_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.pitch_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.yaw_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.vx = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.vy = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.vrate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.waypoint = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.look_at_point = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.lat_mode = LateralControlMode(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
@@ -3189,7 +2988,6 @@ class TelemetryControl:
 		offset = offset+struct.calcsize('<B')
 
 		self.landing_status = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.actuators = [];
 
@@ -3302,22 +3100,16 @@ class TelemetryPosition:
 		offset = 0
 
 		self.latitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.longitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.height = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.speed = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.course = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.position = ThreeAxisSensor()
 		self.position.parse(buf[offset:offset+ThreeAxisSensor.SIZE])
@@ -3372,29 +3164,22 @@ class TelemetryPressure:
 		offset = 0
 
 		self.static_pressure = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.dynamic_pressure = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.air_temperature = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.humidity = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.wind = ThreeAxisSensor()
 		self.wind.parse(buf[offset:offset+ThreeAxisSensor.SIZE])
 		offset = offset+ThreeAxisSensor.SIZE
 
 		self.ias = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.alpha = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.beta = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -3452,55 +3237,39 @@ class TelemetrySystem:
 		offset = 0
 
 		self.batt_voltage = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.batt_current = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.batt_coulomb_count = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.batt_percent = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.flight_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.week = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
 
 		self.hour = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.minute = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.seconds = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.satellites = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.pdop = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.fix_type = GPSFixType(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
 		self.rssi = struct.unpack_from('<b',buf,offset)[0]
-		offset = offset + struct.calcsize('<b')
 
 		self.lost_comm = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.lost_gps = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.engine_on = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
 
 		self.error_code = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
 
 		self.autopilot_mode = AutopilotMode(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
