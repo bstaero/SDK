@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 	if(comm_type == COMM_UNKNOWN) {
 		comm_type = COMM_SOCKET;
 		strcpy(&param[0][0],"localhost");
-		strcpy(&param[1][0],"55553");
+		strcpy(&param[1][0],"55551");
 		strcpy(&param[2][0],"TCP:CLIENT");
 	}
 
@@ -175,7 +175,7 @@ void printHelp() {
 	printf("    -b <serial baud>        : default 9600\n");
 	printf("  Socket parameters:\n");
 	printf("    -i <server ip number>   : default localhost\n");
-	printf("    -p <socket port number> : default 55552\n");
+	printf("    -p <socket port number> : default 55551\n");
 	printf("  Radio parameters:\n");
 	printf("    -t <xtend address>      : default 0xFFFF\n");
 	printf("    -x <xbee address>       : default 0xFFFF\n");
