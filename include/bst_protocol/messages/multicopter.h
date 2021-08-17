@@ -62,6 +62,9 @@ typedef enum {
 	CMD_MOMENT_X=32,
 	CMD_MOMENT_Y=33,
 	CMD_MOMENT_Z=34,
+
+	/* Speed */
+	CMD_SOG=25,
 }  __attribute__ ((packed)) CommandID_t;
 
 typedef enum {
@@ -82,9 +85,8 @@ typedef struct _FlightControlParameters_t {
 	float nav_lookahead;  // [s]
 	float min_nav_lookahead_dist;  // [m]
 	float wpt_capture_dist;  // [m] radius of circle when to hold position
-	float cruise_speed;  // [m/s] - cruise speed (ground speed)
 	/* -- */
-	uint8_t unused[28];  // place holder for future parameters
+	uint8_t unused[32];  // place holder for future parameters
 	/* need to adjust memory param table if need more space */
 
 #ifdef __cplusplus
@@ -95,9 +97,8 @@ typedef struct _FlightControlParameters_t {
 		nav_lookahead = 0.0;
 		min_nav_lookahead_dist = 0.0;
 		wpt_capture_dist = 0.0;
-		cruise_speed = 0.0;
 
-		for (_i = 0; _i < 28; ++_i)
+		for (_i = 0; _i < 32; ++_i)
 			unused[_i] = 0;
 	}
 #endif
@@ -308,9 +309,10 @@ typedef struct _VehicleParameters_t {
 	float mass;  // [kg]
 	float torque;  // torque due to drag [N / (m/s)]
 	float drag;  // drag on the vehicle [N]
+	float cruise_speed;  // [m/s]
 
 	/* -- */
-	uint8_t unused[16];  // place holder for future parameters
+	uint8_t unused[12];  // place holder for future parameters
 	/* need to adjust memory param table if need more space */
 
 #ifdef __cplusplus
@@ -326,8 +328,9 @@ typedef struct _VehicleParameters_t {
 		mass = 0.0;
 		torque = 0.0;
 		drag = 0.0;
+		cruise_speed = 0.0;
 
-		for (_i = 0; _i < 16; ++_i)
+		for (_i = 0; _i < 12; ++_i)
 			unused[_i] = 0;
 	}
 #endif

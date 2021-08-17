@@ -55,6 +55,8 @@ typedef enum {
 
 	/* Command Interface */
 	CMD_PAYLOAD_CONTROL=35,
+	/* Gimbal Control */
+	CMD_LOOK_AT=36,
 }  __attribute__ ((packed)) CommandID_t;
 
 /*--------[ Input ]--------*/
@@ -66,6 +68,7 @@ typedef enum {
 	INTERFACE_NMEA_GPS,
 	INTERFACE_MAVLINK,
 	INTERFACE_PAYLOAD_PASSTHRU,
+	INTERFACE_HWIL,
 }  __attribute__ ((packed)) PayloadInterface_t;
 
 typedef enum {
@@ -83,6 +86,9 @@ typedef enum {
 	PAYLOAD_TYPE_CAMERA,
 	PAYLOAD_TYPE_DOOR,
 	PAYLOAD_TYPE_POWER,
+	PAYLOAD_TYPE_PITCH,
+	PAYLOAD_TYPE_ROLL,
+	PAYLOAD_TYPE_YAW,
 	PAYLOAD_TYPE_UNUSED,
 }  __attribute__ ((packed)) PayloadType_t;
 
@@ -102,6 +108,9 @@ typedef enum {
 	PAYLOAD_STATE_OPEN,
 	PAYLOAD_STATE_CLOSED,
 	PAYLOAD_STATE_AUTO,
+	PAYLOAD_STATE_ON,
+	PAYLOAD_STATE_OFF,
+	PAYLOAD_STATE_MANUAL,
 	PAYLOAD_STATE_UNKNOWN,
 }  __attribute__ ((packed)) PayloadState_t;
 
