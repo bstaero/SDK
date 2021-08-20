@@ -58,26 +58,37 @@ class GCSStatus:
 		offset = 0
 
 		self.rssi = struct.unpack_from('<b',buf,offset)[0]
+		offset = offset + struct.calcsize('<b')
 
 		self.num_drop = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
 
 		self.hour = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.minute = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.seconds = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.satellites = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.pdop = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.battery_v = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.battery_i = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.batt_level = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.error = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 	def getSize(self):
 		return self.SIZE
@@ -117,12 +128,16 @@ class GCSSurveyIn:
 		offset = 0
 
 		self.time_elapsed = struct.unpack_from('<I',buf,offset)[0]
+		offset = offset + struct.calcsize('<I')
 
 		self.time_minimum = struct.unpack_from('<I',buf,offset)[0]
+		offset = offset + struct.calcsize('<I')
 
 		self.accuracy = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.accuracy_minimum = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.flags = GCSRTKFlags(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
@@ -177,16 +192,22 @@ class TelemetryGCS:
 		offset = 0
 
 		self.latitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.longitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.speed = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.course = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.pressure = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE

@@ -41,13 +41,16 @@ can_actuators = CAN_Actuator()
 
 
 def simulated_can_handler(pkt):
-    # TODO: Need to check pkt.ID == CAN_Actuator
     if pkt.TYPE is PacketTypes.HWIL_CAN:
-        try:
-            can_actuators.parse(pkt.DATA)
-            return can_actuators
-        except BufferError as ErrorMessage:
-            print(ErrorMessage)
+        if pkt.PKT_ID == CAN_PacketTypes.CAN_PKT_ACTUATOR:
+            try:
+                can_actuators.parse(pkt.DATA)
+                return can_actuators
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
+        else:
+            # TODO: Add parsing for other CAN packets
+            pass
 
 
 def standard_handler(pkt):

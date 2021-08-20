@@ -100,12 +100,16 @@ class FlightControlParameters:
 		offset = 0
 
 		self.min_ground_speed = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.nav_lookahead = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.min_nav_lookahead_dist = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.wpt_capture_dist = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
@@ -168,20 +172,26 @@ class VehicleLimits:
 		offset = offset+Limit.SIZE
 
 		self.roll_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.pitch_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.yaw_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.speed = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.vrate = Limit()
 		self.vrate.parse(buf[offset:offset+Limit.SIZE])
 		offset = offset+Limit.SIZE
 
 		self.lost_gps = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.max_pdop = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
@@ -281,16 +291,22 @@ class MissionParameters:
 		offset = offset+Timeout.SIZE
 
 		self.max_range = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.safe_height = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.flight_time = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.battery_min = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.initialized = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.mag_dec = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
@@ -354,31 +370,43 @@ class RotorParameters:
 		offset = 0
 
 		self.id = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.channel = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.k_wv = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.pwm_o = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.pos_x = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.pos_y = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.pos_z = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.t_x = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.t_y = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.t_z = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.dir = RotorDir(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
 		self.rpm_to_thrust = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.thrust_to_moment = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -450,10 +478,13 @@ class LandingParameters:
 		offset = 0
 
 		self.safe_height = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.descend_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.agl_offset = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
@@ -495,8 +526,10 @@ class LaunchParameters:
 		offset = 0
 
 		self.climbout_height = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.timeout = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
@@ -558,21 +591,28 @@ class VehicleParameters:
 			offset = offset+struct.calcsize('<B')
 
 		self.battery_cap = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.battery_num_cells = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.batt_chem = BatteryChemistry(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
 		self.num_rotors = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.mass = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.torque = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.drag = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.cruise_speed = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
