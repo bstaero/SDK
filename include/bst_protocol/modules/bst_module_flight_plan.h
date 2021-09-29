@@ -34,6 +34,10 @@ class BSTModuleFlightPlan : public BSTCommunicationsModule {
 
 		void parse(uint8_t type, uint8_t action, uint8_t * data, uint16_t size);
 
+		void setWaypointTimeout(float timeout);
+		void setDefaultWaypointTimeout();
+
+
 	private:
 
 		int num_waypoints;
@@ -67,6 +71,7 @@ class BSTModuleFlightPlan : public BSTCommunicationsModule {
 		float last_waypoint_sent;
 		bool all_waypoints_received;
 		bool requesting_missing_points;
+		float waypoint_timeout;
 
 		PacketAction_t send_action;
 
