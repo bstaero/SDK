@@ -83,6 +83,30 @@ typedef struct _CAN_GNSS_RTCM_t {
 #endif
 } __attribute__ ((packed)) CAN_GNSS_RTCM_t;
 
+typedef struct _CAN_GNSS_SVIN_t {
+	uint8_t startByte;
+
+	uint32_t time_elapsed;  // [s] - time since start of survey in was requested
+	uint32_t time_minimum;  // [s] - time required for survey in
+	float accuracy;  // [s] - current accuracy of survey in
+	float accuracy_minimum;  // [s] - minimum accuracy required for survey in
+	uint8_t flags;  // see GCSRTKFlags_t
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GNSS_SVIN_t() {
+		startByte = 0;
+		time_elapsed = 0;
+		time_minimum = 0;
+		accuracy = 0.0;
+		accuracy_minimum = 0.0;
+		flags = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GNSS_SVIN_t;
+
 typedef struct _CAN_GNSS_UTC_t {
 	uint8_t startByte;
 
@@ -148,8 +172,10 @@ typedef enum {
 	CAN_PKT_GNSS_UTC_W=53,
 	CAN_PKT_GNSS_RTCM=54,
 	CAN_PKT_GNSS_HEALTH_2=55,
+	CAN_PKT_GNSS_SVIN=56,
 	CAN_PKT_AGL=96,
 	CAN_PKT_PROXIMITY=112,
+	CAN_PKT_ADSB=144,
 
 	/* STATE */
 
@@ -178,6 +204,7 @@ typedef enum {
 	CAN_PKT_NDVI=80,
 	CAN_PKT_NDVI_DOWN=81,
 	CAN_PKT_NDVI_UP=82,
+	CAN_PKT_TRIGGER=83,
 
 	/* ERRORS */
 }  __attribute__ ((packed)) CAN_PacketTypes_t;
@@ -209,6 +236,53 @@ typedef struct _CAN_NDVI_t {
 } __attribute__ ((packed)) CAN_NDVI_t;
 
 /*--------[ SENSORS ]--------*/
+
+typedef struct _CAN_ADSB_t {
+	uint8_t startByte;
+
+	float timestamp;
+	uint32_t icao_address;
+	double latitude;
+	double longitude;
+	uint8_t altitude_type;
+	float altitude;
+	float heading;
+	float horizontal_velocity;
+	float vertical_velocity;
+	char callsign[9];
+	uint8_t emitter_type;
+	uint8_t tslc;
+	uint16_t flags;
+	uint16_t squawk;
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_ADSB_t() {
+		uint8_t _i;
+
+		startByte = 0;
+		timestamp = 0.0;
+		icao_address = 0;
+		latitude = 0.0;
+		longitude = 0.0;
+		altitude_type = 0;
+		altitude = 0.0;
+		heading = 0.0;
+		horizontal_velocity = 0.0;
+		vertical_velocity = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			callsign[_i] = 0;
+
+		emitter_type = 0;
+		tslc = 0;
+		flags = 0;
+		squawk = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_ADSB_t;
 
 typedef struct _CAN_AGL_t {
 	uint8_t startByte;
@@ -552,6 +626,26 @@ typedef struct _CAN_Proximity_t {
 	}
 #endif
 } __attribute__ ((packed)) CAN_Proximity_t;
+
+typedef struct _CAN_Trigger_t {
+	uint8_t startByte;
+
+	float timestamp;
+	uint16_t id;  // [#] trigger (photo) number
+	uint8_t channel;  // [#] payload channel
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_Trigger_t() {
+		startByte = 0;
+		timestamp = 0.0;
+		id = 0;
+		channel = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_Trigger_t;
 
 /*--------[ SYSTEM ]--------*/
 

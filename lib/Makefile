@@ -8,6 +8,7 @@ libbstmr_FLAGS= -DVEHICLE_FIXEDWING
 LDFLAGS=-lrt
 
 FLAGS = $(CFLAGS) $(LDFLAGS) -DVERBOSE -DSDK
+#FLAGS = $(CFLAGS) $(LDFLAGS) -DSDK
 
 INCLUDES+=-I. \
 			    -I./netuas \

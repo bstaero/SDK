@@ -140,24 +140,24 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case PAYLOAD_STATUS:
 			break;
 
-		case PAYLOAD_CHANNEL_0:
+		case PAYLOAD_DATA_CHANNEL_0:
 			memcpy(&rx_payload,data,sizeof(UserPayload_t));
 			char out[100];
 
 			snprintf(out,rx_payload.size+1,
 					"%s",(char*)rx_payload.buffer);
-			//printf("Got %i bytes from the payload: [%s]\n",rx_payload.size,out);
-			printf("%s",out);
+			printf("Got %i bytes from the payload: [%s]\n",rx_payload.size,out);
+			//printf("%s",out);
 
 			break;
 
-		case PAYLOAD_CHANNEL_1:
-		case PAYLOAD_CHANNEL_2:
-		case PAYLOAD_CHANNEL_3:
-		case PAYLOAD_CHANNEL_4:
-		case PAYLOAD_CHANNEL_5:
-		case PAYLOAD_CHANNEL_6:
-		case PAYLOAD_CHANNEL_7:
+		case PAYLOAD_DATA_CHANNEL_1:
+		case PAYLOAD_DATA_CHANNEL_2:
+		case PAYLOAD_DATA_CHANNEL_3:
+		case PAYLOAD_DATA_CHANNEL_4:
+		case PAYLOAD_DATA_CHANNEL_5:
+		case PAYLOAD_DATA_CHANNEL_6:
+		case PAYLOAD_DATA_CHANNEL_7:
 
 			/* ERRORS */
 		default:

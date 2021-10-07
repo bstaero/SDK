@@ -24,7 +24,7 @@
 
 import struct
 
-from comm_packets.comm_packets import PacketTypes
+from .comm_packets.comm_packets import PacketTypes
 
 
 class BSTPacket:
@@ -85,7 +85,7 @@ class BSTPacket:
                     self.CAN_PKT_SIZE = struct.unpack_from('<B', bytes(buf[i:i + 2]))[0]
                     i = i + 2
 
-                if self.SIZE + self.CHECKSUM_SIZE > len(buf) - i: return False
+                if not hwil and self.SIZE + self.CHECKSUM_SIZE > len(buf) - i: return False
 
                 if self.HAS_ADDRESS:
                     # PKT_TO

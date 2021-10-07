@@ -43,21 +43,21 @@ function plot_mhp_data(data, figure);
 	% Dynamic Pressure
 	if (toc - t_dp > dt_dp)
 		t_dp = toc;
-		plot_data(data.time, data.dynamic_pressure(:,1), s_dp1,'k');
-		plot_data(data.time, data.dynamic_pressure(:,2), s_dp2,'k');
-		plot_data(data.time, data.dynamic_pressure(:,3), s_dp3,'k');
-		plot_data(data.time, data.dynamic_pressure(:,4), s_dp4,'k');
-		plot_data(data.time, data.dynamic_pressure(:,5), s_dp5,'k');
+		plot_data(data.mhp_sensors_time, data.dynamic_pressure(:,1), s_dp1,'k');
+		plot_data(data.mhp_sensors_time, data.dynamic_pressure(:,2), s_dp2,'k');
+		plot_data(data.mhp_sensors_time, data.dynamic_pressure(:,3), s_dp3,'k');
+		plot_data(data.mhp_sensors_time, data.dynamic_pressure(:,4), s_dp4,'k');
+		plot_data(data.mhp_sensors_time, data.dynamic_pressure(:,5), s_dp5,'k');
 	end
 
 		% PTH
 	if (toc - t_pth > dt_pth)
 		t_pth = toc;
-		plot_data(data.time, data.static_pressure./1000, s_pth1,'k');
+		plot_data(data.mhp_sensors_time, data.static_pressure./1000, s_pth1,'k');
 		ylim([data.static_pressure(end)./1000-0.1,...
 				  data.static_pressure(end)./1000+0.1]);
-		plot_data(data.time, data.air_temperature, s_pth2,'k');
-		plot_data(data.time, data.humidity, s_pth3,'k');
+		plot_data(data.mhp_sensors_time, data.air_temperature, s_pth2,'k');
+		plot_data(data.mhp_sensors_time, data.humidity, s_pth3,'k');
 	end
 
 		% IMU
@@ -66,9 +66,9 @@ function plot_mhp_data(data, figure);
 		col{1} = '-k';
 		col{2} = '-b';
 		col{3} = '-r';
-		plot_data3(data.time, data.accelerometer.*9.8, s_imu1,col);
-		plot_data3(data.time, data.gyroscope.*180/pi, s_imu2,col);
-		plot_data3(data.time, data.magnetometer, s_imu3,col);
+		plot_data3(data.mhp_sensors_time, data.accelerometer.*9.8, s_imu1,col);
+		plot_data3(data.mhp_sensors_time, data.gyroscope.*180/pi, s_imu2,col);
+		plot_data3(data.mhp_gnss_time, data.magnetometer, s_imu3,col);
 	end
 
 		% Estimate of IAS, alpha, and beta
@@ -86,10 +86,10 @@ function plot_mhp_data(data, figure);
 		
 		col{1} = '-k';
 		col{2} = '-b';
-		plot_data2(data.time, [data.ias',data.tas'], s_est3, col);
+		plot_data2(data.mhp_time, [data.ias',data.tas'], s_est3, col);
 
-		plot_data(data.time, alpha, s_est2,'k');
-		plot_data(data.time, beta, s_est1,'k');
+		plot_data(data.mhp_time, alpha, s_est2,'k');
+		plot_data(data.mhp_time, beta, s_est1,'k');
 	end
 end
 

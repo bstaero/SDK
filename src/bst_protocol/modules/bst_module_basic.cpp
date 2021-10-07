@@ -28,6 +28,14 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(SENSORS_GNSS_ORIENTATION, sizeof(AxisMapping_t), true, true);
 	registerDataType(SENSORS_MHP, sizeof(MHP_t), false, false);
 	registerDataType(SENSORS_GNSS_RTCM, sizeof(RTCM_t), false, false);
+	registerDataType(SENSORS_MHP_SENSORS, sizeof(MHPSensors_t), false, false);
+	registerDataType(SENSORS_DYNP_CALIBRATION, sizeof(SingleAxisSensorCalibration_t), true, true);
+	registerDataType(SENSORS_GYRO_CALIBRATION, sizeof(ThreeAxisSensorCalibration_t), true, true);
+	registerDataType(SENSORS_MAG_CALIBRATION, sizeof(ThreeAxisSensorCalibration_t), true, true);
+	registerDataType(SENSORS_MAG_CURRENT_CAL, sizeof(ThreeAxisFirstOrderCorrection_t), true, true);
+	registerDataType(SENSORS_ADSB, sizeof(ADSB_t), false, false);
+	registerDataType(SENSORS_MHP_GNSS, sizeof(MHPSensorsGNSS_t), false, false);
+	registerDataType(SENSORS_MHP_TIMING, sizeof(MHPTiming_t), false, false);
 
 	/* STATE */
 	registerDataType(STATE_STATE, sizeof(State_t), false, false); // FIXME
@@ -48,7 +56,7 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(ACTUATORS_CALIBRATION, sizeof(ActuatorCalibration_t), true, true);
 #if defined(VEHICLE_FIXEDWING)
 	registerDataType(ACTUATORS_MIXING_PARAMS, sizeof(SurfaceMixing_t), true, true);
-#elif defined(VEHICLE_MULTIROTOR)
+#elif defined(VEHICLE_MULTIROTOR) || defined(VEHICLE_TAILSITTER)
 	registerDataType(ACTUATORS_ROTOR_PARAMS, sizeof(RotorParameters_t), true, true);
 #endif
 	//registerDataType(ACTUATORS_ROTOR_PARAMS, sizeof(), true, true);
@@ -102,13 +110,14 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(PAYLOAD_TRIGGER, sizeof(PayloadTrigger_t), false, false); 
 	registerDataType(PAYLOAD_CAMERA_TAG, sizeof(CameraTag_t), false, false); 
 	registerDataType(PAYLOAD_STATUS, sizeof(PayloadStatus_t), false, true); 
+	registerDataType(PAYLOAD_SERIAL, sizeof(PayloadSerial_t), true, true); 
 
-	registerDataType(PAYLOAD_CHANNEL_0, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_CHANNEL_1, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_CHANNEL_2, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_CHANNEL_3, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_CHANNEL_4, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_CHANNEL_5, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_CHANNEL_6, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_CHANNEL_7, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_0, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_1, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_2, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_3, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_4, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_5, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_6, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_7, sizeof(UserPayload_t), false, false); 
 }

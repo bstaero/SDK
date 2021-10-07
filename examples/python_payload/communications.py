@@ -24,11 +24,8 @@ import os.path
 import binascii
 import struct
 
-sys.path.append('../../python')
-sys.path.append('../../python/comm_packets')
-
-from handler import *
-from listener import *
+from bst_python_sdk.handler import *
+from bst_python_sdk.listener import *
 
 import socket
 import serial

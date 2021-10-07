@@ -54,6 +54,8 @@ class BSTProtocol : public CommunicationsProtocol {
 		Packet rx_packet;
 		Packet tx_packet;
 
+		Packet temp_packet;
+
 		BSTCommunicationsModule * modules[COMM_PROTOCOL_MAX_MODULES];
 		uint8_t num_modules;
 

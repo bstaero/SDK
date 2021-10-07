@@ -38,6 +38,14 @@
     #include "multicopter.h"
 		using namespace bst::comms::multicopter;
 
+  #elif defined(VEHICLE_TAILSITTER)
+    #include "tailsitter.h"
+		using namespace bst::comms::tailsitter;
+
+  #elif defined(VEHICLE_VTOL)
+    #include "vtol.h"
+		using namespace bst::comms::vtol;
+
   #endif
 
   #include "payload.h"

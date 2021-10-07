@@ -1,8 +1,13 @@
 #include "bst_module.h"
 
+#include "debug.h"
+
 //#include <cstddef>
 
 BSTCommunicationsModule::BSTCommunicationsModule() {
+
+	pmesg(VERBOSE_ALLOC, "BSTCommunicationsModule::BSTCommunicationsModule()\n");
+
 	receive_function = NULL;
 	receiveCommand_function = NULL;
 	receiveReply_function = NULL;

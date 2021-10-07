@@ -29,15 +29,15 @@
 |*                                msg-gen.py                                  *|
 \*                               DO NOT EDIT                                  */
 
-#ifndef _MULTICOPTER_H_
-#define _MULTICOPTER_H_
+#ifndef _TAILSITTER_H_
+#define _TAILSITTER_H_
 
 #include <inttypes.h>
 
 #ifdef __cplusplus
 namespace bst {
 namespace comms {
-namespace multicopter {
+namespace tailsitter {
 #endif
 
 /*--------[ Actuators ]--------*/
@@ -50,6 +50,11 @@ typedef enum {
 	/* NOTE - you must check the numbers in the CommandID values */
 	/* contained in the parent folder */
 	/*  */
+	/* Controller Modes */
+	CMD_TECS_MODE=24,
+
+	/* Velocity */
+	CMD_IAS=25,
 
 	/* position */
 	CMD_X_POS=27,
@@ -62,9 +67,6 @@ typedef enum {
 	CMD_MOMENT_X=32,
 	CMD_MOMENT_Y=33,
 	CMD_MOMENT_Z=34,
-
-	/* Speed */
-	CMD_SOG=25,
 }  __attribute__ ((packed)) CommandID_t;
 
 typedef enum {
@@ -77,64 +79,59 @@ typedef enum {
 	CTRL_POS,  // PID on horizontal speed
 	CTRL_ALT,  // PID on vrate
 	CTRL_THRUST,  // PID on thrust
+	CTRL_ENG_2_THROTTLE,  // D is a FF term
+	CTRL_ENG_2_PITCH,  // D is a FF term
 	CTRL_INVALID,
 }  __attribute__ ((packed)) ControlLoop_t;
 
 typedef struct _FlightControlParameters_t {
+	float tecs_Kv;
+	float tecs_Kh;
+	float tecs_max_vx_dot;  // [m/s^2]
 	float min_ground_speed;  // [m/s]
 	float nav_lookahead;  // [s]
 	float min_nav_lookahead_dist;  // [m]
 	float wpt_capture_dist;  // [m] radius of circle when to hold position
-	/* -- */
-	uint8_t unused[32];  // place holder for future parameters
-	/* need to adjust memory param table if need more space */
+	float cruise_speed;  // [m/s] - hover speed (ground speed)
+	float tuning_ias;  // [m/s]
+	float max_height_error_mode;  // max height to switch to new k_height_tracking: default=20
+	float max_v_error_mode;  // max speed to switch to k_speed_hold: default=3
+	float k_height_tracking;  // K-value with large height error: default=1.75
+	float k_flare;  // K-value during flare: default=0.5
+	float k_land;  // K-value during landing; default=1.5
+	float k_cruise;  // K-value for altitude hold mode: default=0.5
+	float k_climb;  // K-value for climbout mode: default=1.8
+	float k_speed_hold;  // K-value with large speed error
+	float transition_fwd_rate;  // Rate limit for transitioning forward [deg/s]
+	float transition_fwd_angle;  // Final angle to transition forward [deg]
+	float transition_hover_rate;  // Rate limit for transitioning forward [deg/s]
+	/* need to adjust param.h if need more space */
 
 #ifdef __cplusplus
 	_FlightControlParameters_t() {
-		uint8_t _i;
-
+		tecs_Kv = 0.0;
+		tecs_Kh = 0.0;
+		tecs_max_vx_dot = 0.0;
 		min_ground_speed = 0.0;
 		nav_lookahead = 0.0;
 		min_nav_lookahead_dist = 0.0;
 		wpt_capture_dist = 0.0;
-
-		for (_i = 0; _i < 32; ++_i)
-			unused[_i] = 0;
+		cruise_speed = 0.0;
+		tuning_ias = 0.0;
+		max_height_error_mode = 0.0;
+		max_v_error_mode = 0.0;
+		k_height_tracking = 0.0;
+		k_flare = 0.0;
+		k_land = 0.0;
+		k_cruise = 0.0;
+		k_climb = 0.0;
+		k_speed_hold = 0.0;
+		transition_fwd_rate = 0.0;
+		transition_fwd_angle = 0.0;
+		transition_hover_rate = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) FlightControlParameters_t;
-
-typedef struct _VehicleLimits_t {
-	Limit_t roll;  // [rad]
-	Limit_t pitch;  // [rad]
-	float roll_rate;  // [rad/s]
-	float pitch_rate;  // [rad/s]
-	float yaw_rate;  // [rad/s]
-	float speed;  // [m/s] side speed limit
-	Limit_t vrate;  // [m/s] vertical speed limit
-	uint8_t lost_gps;  // how long till we consider GPS lost
-	float max_pdop;  // max pdop to trust GPS
-
-	/* -- */
-	uint8_t unused[24];  // place holder for future parameters
-	/* need to adjust memory param table if need more space */
-
-#ifdef __cplusplus
-	_VehicleLimits_t() {
-		uint8_t _i;
-
-		roll_rate = 0.0;
-		pitch_rate = 0.0;
-		yaw_rate = 0.0;
-		speed = 0.0;
-		lost_gps = 0;
-		max_pdop = 0.0;
-
-		for (_i = 0; _i < 24; ++_i)
-			unused[_i] = 0;
-	}
-#endif
-} __attribute__ ((packed)) VehicleLimits_t;
 
 /*--------[ Logging ]--------*/
 
@@ -300,8 +297,44 @@ typedef struct _LaunchParameters_t {
 #endif
 } __attribute__ ((packed)) LaunchParameters_t;
 
+typedef struct _VehicleLimits_t {
+	Limit_t roll_angle;  // [rad] also kept in control loops
+	Limit_t pitch_angle;  // [rad] also kept in control loops
+	float roll_rate;  // [rad/s]
+	float pitch_rate;  // [rad/s]
+	float yaw_rate;  // [rad/s]
+	float speed;  // [m/s] side speed limit
+	Limit_t vrate;  // [m/s] vertical speed limit
+	Limit_t ias;  // [m/s]
+	uint8_t lost_gps;  // how long till we consider GPS lost
+	float lost_gps_roll;  // [rad]
+	float max_pdop;  // max pdop to trust GPS
+	float max_scale_factor;  // scale factor for IAS based gain schedule: default=5
+	Limit_t flightpath_angle;  // [rad] [-1,1]
+	Limit_t flightpath_angle_flap;  // [rad], (-1, 1)
+	float flightpath_angle_fraction;  // [percent] [0,1]
+	/* -- */
+
+#ifdef __cplusplus
+	_VehicleLimits_t() {
+		roll_rate = 0.0;
+		pitch_rate = 0.0;
+		yaw_rate = 0.0;
+		speed = 0.0;
+		lost_gps = 0;
+		lost_gps_roll = 0.0;
+		max_pdop = 0.0;
+		max_scale_factor = 0.0;
+		flightpath_angle_fraction = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) VehicleLimits_t;
+
 typedef struct _VehicleParameters_t {
-	char name[16];  // name of the vehicle
+	char name[16];  // used to set the name of the vehicle
+	float flight_time;  // [min]
+	float standard_bank;  // [rad]
+	float cruise_speed;  // [m/s]
 	float battery_cap;  // [mAH]
 	uint8_t battery_num_cells;  //
 	BatteryChemistry_t batt_chem;  // set the type of battery
@@ -309,11 +342,9 @@ typedef struct _VehicleParameters_t {
 	float mass;  // [kg]
 	float torque;  // torque due to drag [N / (m/s)]
 	float drag;  // drag on the vehicle [N]
-	float cruise_speed;  // [m/s]
-
-	/* -- */
-	uint8_t unused[12];  // place holder for future parameters
-	/* need to adjust memory param table if need more space */
+	/* :RadioType radio_type # set the type of radio used on serial port */
+	uint8_t unused[21];  // place holder for future parameters
+	/* need to adjust param.h if need more space */
 
 #ifdef __cplusplus
 	_VehicleParameters_t() {
@@ -322,25 +353,27 @@ typedef struct _VehicleParameters_t {
 		for (_i = 0; _i < 16; ++_i)
 			name[_i] = 0;
 
+		flight_time = 0.0;
+		standard_bank = 0.0;
+		cruise_speed = 0.0;
 		battery_cap = 0.0;
 		battery_num_cells = 0;
 		num_rotors = 0;
 		mass = 0.0;
 		torque = 0.0;
 		drag = 0.0;
-		cruise_speed = 0.0;
 
-		for (_i = 0; _i < 12; ++_i)
+		for (_i = 0; _i < 21; ++_i)
 			unused[_i] = 0;
 	}
 #endif
 } __attribute__ ((packed)) VehicleParameters_t;
 
 #ifdef __cplusplus
-} /* namespace multicopter */
+} /* namespace tailsitter */
 
 } /* namespace comms */
 } /* namespace bst */
 #endif
 
-#endif /* _MULTICOPTER_H_ */
+#endif /* _TAILSITTER_H_ */

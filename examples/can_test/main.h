@@ -16,20 +16,27 @@
 |                                                                              |
 |                                                                              |
 \*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*/
-#ifndef _TEST_HANDLER_H_
-#define _TEST_HANDLER_H_
+#ifndef _MAIN_H_
+#define _MAIN_H_
 
-#include <inttypes.h>
-#include "bst_packet.h"
+#include "bst_protocol.h"
+#define NUM_COMM_INTERFACES 1
 
-extern volatile SensorType_t calibration_requested;
-extern volatile PacketTypes_t orientation_requested;
-extern volatile PacketAction_t orientation_action;
+extern bool big_endian;
+extern bool running;
 
-void sendCalibrate(SensorType_t sensor);
-void requestPowerOn(void);
-void requestOrientation(PacketTypes_t type);
-void setOrientation(PacketTypes_t type, AxisMapping_t * axis_mapping);
-bool updateCommunications(void);
+extern CommunicationsProtocol * comm_handler;
+
+void printHelp();
+
+void setupTime();
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+float getElapsedTime();
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -40,6 +40,12 @@ namespace comms {
 namespace payload {
 #endif
 
+/*--------[ Actuators ]--------*/
+
+#define NUM_PAYLOAD_CHANNELS 8
+
+#define NUM_PAYLOAD_DATA_CHANNELS 8
+
 /*--------[ Controller ]--------*/
 
 typedef enum {
@@ -49,7 +55,42 @@ typedef enum {
 
 	/* Command Interface */
 	CMD_PAYLOAD_CONTROL=35,
+	/* Gimbal Control */
+	CMD_LOOK_AT=36,
 }  __attribute__ ((packed)) CommandID_t;
+
+/*--------[ Input ]--------*/
+
+typedef enum {
+	INTERFACE_UNKNOWN,
+	INTERFACE_BST_PROTOCOL,
+	INTERFACE_UBLOX_GPS,
+	INTERFACE_NMEA_GPS,
+	INTERFACE_MAVLINK,
+	INTERFACE_PAYLOAD_PASSTHRU,
+	INTERFACE_HWIL,
+}  __attribute__ ((packed)) PayloadInterface_t;
+
+typedef enum {
+	UNKNOWN_TYPE,
+	DISCRETE_IO,
+	PWM_50HZ,
+	PWM_300HZ,
+	FALLING_EDGE_TRIGGER,
+	RISING_EDGE_TRIGGER,
+	CONTINUOUS_TRIGGER,
+	CONTINUOUS_TRIGGER_LOW,
+}  __attribute__ ((packed)) PayloadSignal_t;
+
+typedef enum {
+	PAYLOAD_TYPE_CAMERA,
+	PAYLOAD_TYPE_DOOR,
+	PAYLOAD_TYPE_POWER,
+	PAYLOAD_TYPE_PITCH,
+	PAYLOAD_TYPE_ROLL,
+	PAYLOAD_TYPE_YAW,
+	PAYLOAD_TYPE_UNUSED,
+}  __attribute__ ((packed)) PayloadType_t;
 
 /*--------[ PAYLOAD ]--------*/
 
@@ -62,6 +103,16 @@ typedef enum {
 	PAYLOAD_CTRL_ERROR,
 	PAYLOAD_CTRL_INVALID,
 }  __attribute__ ((packed)) PayloadControl_t;
+
+typedef enum {
+	PAYLOAD_STATE_OPEN,
+	PAYLOAD_STATE_CLOSED,
+	PAYLOAD_STATE_AUTO,
+	PAYLOAD_STATE_ON,
+	PAYLOAD_STATE_OFF,
+	PAYLOAD_STATE_MANUAL,
+	PAYLOAD_STATE_UNKNOWN,
+}  __attribute__ ((packed)) PayloadState_t;
 
 /*--------[ Payload Sensors ]--------*/
 
@@ -253,18 +304,21 @@ typedef struct _TelemetryPayload_t {
 /*--------[ Payload ]--------*/
 
 typedef enum {
-	PAYLOAD_UNKNOWN,
-	PAYLOAD_QX1,
-	PAYLOAD_A6000,
-	PAYLOAD_FLIR_TAU2,
-	PAYLOAD_TETRACAM_ADC_LITE,
-	PAYLOAD_A5100,
-	PAYLOAD_MAPIR_KERNEL,
-	PAYLOAD_FLIR_VUE_PRO,
-	PAYLOAD_MICASENSE_REDEDGE,
-	PAYLOAD_PARTICLES_PLUS,
-	PAYLOAD_K30,
-	PAYLOAD_MINIGAS,
+	PAYLOAD_UNKNOWN=192,
+	PAYLOAD_QX1=193,
+	PAYLOAD_A6000=194,
+	PAYLOAD_FLIR_TAU2=195,
+	PAYLOAD_TETRACAM_ADC_LITE=196,
+	PAYLOAD_A5100=197,
+	PAYLOAD_MAPIR_KERNEL=198,
+	PAYLOAD_FLIR_VUE_PRO=199,
+	PAYLOAD_MICASENSE_REDEDGE=200,
+	PAYLOAD_PARTICLES_PLUS=201,
+	PAYLOAD_K30=202,
+	PAYLOAD_MINIGAS=203,
+	PAYLOAD_TRACE_GAS=204,
+	PAYLOAD_LICOR=205,
+	PAYLOAD_SPECTROMETER=206,
 }  __attribute__ ((packed)) PayloadID_t;
 
 typedef struct _NDVI_t {
@@ -288,22 +342,43 @@ typedef struct _NDVI_t {
 } __attribute__ ((packed)) NDVI_t;
 
 typedef struct _PayloadParam_t {
-	uint8_t channel;  // [0 or 1]
+	uint8_t channel;  // [0-15]
+	char channelName[32];
 	float deltaD;  // [m]
-	float deltaT;  // [s]
 	float pulse;  // [s]
-	float cruise_speed;  // [m/s] speed to execute mission
+	float powerUp;  // [s]
+	float powerDown;  // [s]
+	PayloadType_t payloadType;
+	PayloadSignal_t payloadSignal;
+	PayloadState_t payloadState;
 
 #ifdef __cplusplus
 	_PayloadParam_t() {
+		uint8_t _i;
+
 		channel = 0;
+
+		for (_i = 0; _i < 32; ++_i)
+			channelName[_i] = 0;
+
 		deltaD = 0.0;
-		deltaT = 0.0;
 		pulse = 0.0;
-		cruise_speed = 0.0;
+		powerUp = 0.0;
+		powerDown = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) PayloadParam_t;
+
+typedef struct _PayloadSerial_t {
+	uint32_t baudRate;
+	PayloadInterface_t payloadInterface;
+
+#ifdef __cplusplus
+	_PayloadSerial_t() {
+		baudRate = 0;
+	}
+#endif
+} __attribute__ ((packed)) PayloadSerial_t;
 
 typedef struct _PayloadTrigger_t {
 	double latitude;  // [deg]
@@ -312,6 +387,7 @@ typedef struct _PayloadTrigger_t {
 	float q[4];
 	uint8_t percent;
 	uint16_t id;  // [#] trigger (photo) number
+	uint8_t channel;  // [#] payload channel
 
 #ifdef __cplusplus
 	_PayloadTrigger_t() {
@@ -326,6 +402,7 @@ typedef struct _PayloadTrigger_t {
 
 		percent = 0;
 		id = 0;
+		channel = 0;
 	}
 #endif
 } __attribute__ ((packed)) PayloadTrigger_t;

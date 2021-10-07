@@ -49,6 +49,7 @@ CalibrateSensor_t * calibration_data;
 
 State_t estimator_data;
 SingleValueSensor_t agl_data;
+DubinsPath_t dubins_path;
 
 volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
 
@@ -68,7 +69,7 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case SENSORS_AGL:
 			memcpy(&agl_data,data,sizeof(SingleValueSensor_t));
 			if(show_telemetry)
-				printf("\tLaser:\t:0.02f\n",agl_data.value);
+				printf("\tLaser:\t:%0.02f\n",agl_data.value);
 			break;
 
 		case SENSORS_CALIBRATE:
@@ -100,6 +101,43 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case CONTROL_PID:
 		case CONTROL_FLIGHT_PARAMS:
 		case CONTROL_FILTER_PARAMS:
+
+		case DUBIN_PATH:
+			memcpy(&dubins_path,data,sizeof(DubinsPath_t));
+			printf("DUBIN_PATH\n");
+			printf("  xc0 <%0.02f %0.02f %0.02f> xc2 <%0.02f %0.02f %0.02f>\n"
+					   "  t0 [%0.02f,%0.02f] t1 [%0.02f,%0.02f] t2 [%0.02f,%0.02f]\n"
+					   "  a %0.02f b %0.02f c [%0.02f %0.02f %0.02f]\n"
+					   "  x0 %0.02f y0 %0.02f z0 [%0.02f %0.02f %0.02f]\n"
+					   "  R %0.02f (%0.02f %0.02f)\n"
+					   "  %u\n",
+						 dubins_path.xc0_x,
+						 dubins_path.xc0_y,
+						 dubins_path.xc1_x,
+						 dubins_path.xc1_y,
+						 dubins_path.xc2_x,
+						 dubins_path.xc2_y,
+						 dubins_path.t0_i,
+						 dubins_path.t0_f,
+						 dubins_path.t1_i,
+						 dubins_path.t1_f,
+						 dubins_path.t2_i,
+						 dubins_path.t2_f,
+						 dubins_path.a,
+						 dubins_path.b,
+						 dubins_path.c0,
+						 dubins_path.c1,
+						 dubins_path.c2,
+						 dubins_path.x0,
+						 dubins_path.y0,
+						 dubins_path.z00,
+						 dubins_path.z01,
+						 dubins_path.z02,
+						 dubins_path.big_r,
+						 dubins_path.origin_lat,
+						 dubins_path.origin_lon,
+						 dubins_path.path_type);
+			break;
 
 			/* ACTUATORS */
 		case ACTUATORS_VALUES:
@@ -222,8 +260,8 @@ uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * pa
 
 void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void * parameter)
 {
-    printf("receiveReply: type=%u\n", type);
-    ack ? fprintf(stderr,"--> ACK\n") : fprintf(stderr,"--> NACK\n");
+	printf("receiveReply: type=%u\n", type);
+	ack ? fprintf(stderr,"--> ACK\n") : fprintf(stderr,"--> NACK\n");
 
 	Command_t * tmp_command = (Command_t *) data;
 
@@ -299,6 +337,12 @@ void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void
 					if(ack) printf(" successful\n");
 					else printf(" failed (CMD_VRATE)\n");
 					break;
+				case CMD_YAW:
+					printf("Setting heading to %0.01f", tmp_command->value * 180.0/M_PI);
+					if(ack) printf(" successful\n");
+					else printf(" failed (CMD_YAW)\n");
+					break;
+
 			}
 	}
 }

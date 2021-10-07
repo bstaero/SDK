@@ -22,28 +22,53 @@
 #                                                                              #
 # *#=+--+=#=+--                 --+=#=+--+=#=+--                 --+=#=+--+=#* #
 
-from bstpacket import BSTPacket
+from .comm_packets.comm_packets import *
+from .comm_packets.payload import *
+from .comm_packets.fixedwing import *
+from .comm_packets.canpackets import *
 
-from comm_packets.comm_packets import PacketTypes
-from comm_packets.canpackets import CAN_GNSS_LLA
+packet_mapping = {
+    PacketTypes.TELEMETRY_CONTROL.value: TelemetryControl(),
+    PacketTypes.TELEMETRY_ORIENTATION.value: TelemetryOrientation(),
+    PacketTypes.TELEMETRY_POSITION.value: TelemetryPosition(),
+    PacketTypes.TELEMETRY_PRESSURE.value: TelemetryPressure(),
+    PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem(),
+    PacketTypes.TELEMETRY_PAYLOAD.value: TelemetryPayload(),
+    PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload()
+}
 
-def parse_stream(data, handler, addressing=True):
-    pkt = BSTPacket()
-    pkt.set_addressing(addressing)
+can_actuators = CAN_Actuator()
 
-    i = 0
-    result = None
-    num_bytes = len(data)
 
-    while i < num_bytes:
-        if pkt.parse(data[i:]):
-            if pkt.CAN_PKT_SIZE:
-                result = handler.simulated_can_handler(pkt)
-            else:
-                result = handler.standard_handler(pkt)
-
-            i = i + pkt.SIZE + pkt.OVERHEAD
+def simulated_can_handler(pkt):
+    if pkt.TYPE is PacketTypes.HWIL_CAN:
+        if pkt.PKT_ID == CAN_PacketTypes.CAN_PKT_ACTUATOR:
+            try:
+                can_actuators.parse(pkt.DATA)
+                return can_actuators
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
         else:
-            i = i + 1
+            # TODO: Add parsing for other CAN packets
+            pass
 
-    return result
+
+def standard_handler(pkt):
+    if (pkt.FROM & 0xFF000000) == 0x41000000:
+        packet_data = None
+
+        if pkt.TYPE.value not in packet_mapping:
+            print('Packet type ',pkt.TYPE.value,' not yet set up for parsing')
+            return None
+
+        try:
+            if pkt.TYPE.value >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
+                packet_mapping[pkt.TYPE.value].buffer = [None] * 64
+
+            print(pkt.DATA)
+            packet_mapping[pkt.TYPE.value].parse(pkt.DATA)
+            packet_data = packet_mapping[pkt.TYPE.value]
+        except BufferError as ErrorMessage:
+            print(ErrorMessage)
+
+        return packet_data

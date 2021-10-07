@@ -6,8 +6,15 @@ test/test
 test/replay_log_file
 mhp/c/test
 gazebo_test/test
+examples/can_test/test
+examples/mhp/test
 examples/gazebo/test
 examples/payload/test
 examples/mhp/test
 .idea/
 venv/
+
+# Python library
+*.egg-info/
+build/
+dist/

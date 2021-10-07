@@ -73,6 +73,18 @@ typedef enum {
 	ACT_PAYLOAD_2,
 	ACT_PAYLOAD_3,
 	ACT_PAYLOAD_4,
+	ACT_PAYLOAD_5,
+	ACT_PAYLOAD_6,
+	ACT_PAYLOAD_7,
+	ACT_PAYLOAD_8,
+	ACT_PAYLOAD_9,
+	ACT_PAYLOAD_10,
+	ACT_PAYLOAD_11,
+	ACT_PAYLOAD_12,
+	ACT_PAYLOAD_13,
+	ACT_PAYLOAD_14,
+	ACT_PAYLOAD_15,
+	ACT_PAYLOAD_16,
 	ACT_INVALID,
 }  __attribute__ ((packed)) ActuatorFunction_t;
 
@@ -100,6 +112,18 @@ typedef enum {
 	PAYLOAD_2,
 	PAYLOAD_3,
 	PAYLOAD_4,
+	PAYLOAD_5,
+	PAYLOAD_6,
+	PAYLOAD_7,
+	PAYLOAD_8,
+	PAYLOAD_9,
+	PAYLOAD_10,
+	PAYLOAD_11,
+	PAYLOAD_12,
+	PAYLOAD_13,
+	PAYLOAD_14,
+	PAYLOAD_15,
+	PAYLOAD_16,
 	INVALID_SURFACE,
 }  __attribute__ ((packed)) SurfaceCommand_t;
 
@@ -152,6 +176,16 @@ typedef enum {
 	SENSORS_GNSS_ORIENTATION=12,
 	SENSORS_MHP=13,
 	SENSORS_GNSS_RTCM=14,
+	SENSORS_MHP_SENSORS=15,
+	SENSORS_MHP_9H_SENSORS=23,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MHP_9H_TIMING=24,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_DYNP_CALIBRATION=25,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_GYRO_CALIBRATION=26,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MAG_CALIBRATION=27,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MAG_CURRENT_CAL=28,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_ADSB=29,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MHP_GNSS=30,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_MHP_TIMING=31,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 
 	/* STATE */
 	STATE_STATE=16,  // ONLY USED INTERNALLY
@@ -230,15 +264,16 @@ typedef enum {
 	PAYLOAD_CONTROL=228,
 	PAYLOAD_CAMERA_TAG=229,
 	PAYLOAD_STATUS=230,
+	PAYLOAD_SERIAL=231,
 
-	PAYLOAD_CHANNEL_0=232,
-	PAYLOAD_CHANNEL_1=233,
-	PAYLOAD_CHANNEL_2=234,
-	PAYLOAD_CHANNEL_3=235,
-	PAYLOAD_CHANNEL_4=236,
-	PAYLOAD_CHANNEL_5=237,
-	PAYLOAD_CHANNEL_6=238,
-	PAYLOAD_CHANNEL_7=239,
+	PAYLOAD_DATA_CHANNEL_0=232,
+	PAYLOAD_DATA_CHANNEL_1=233,
+	PAYLOAD_DATA_CHANNEL_2=234,
+	PAYLOAD_DATA_CHANNEL_3=235,
+	PAYLOAD_DATA_CHANNEL_4=236,
+	PAYLOAD_DATA_CHANNEL_5=237,
+	PAYLOAD_DATA_CHANNEL_6=238,
+	PAYLOAD_DATA_CHANNEL_7=239,
 
 	/* ERRORS */
 	INVALID_PACKET=255,
@@ -246,7 +281,7 @@ typedef enum {
 
 /*--------[ Configuration ]--------*/
 
-#define COMMS_VERSION 3140
+#define COMMS_VERSION 3160
 
 #define MAX_ALTITUDE 20000
 
@@ -304,6 +339,8 @@ typedef struct _State_t {
 	float vx;
 	float vy;
 	float agl;  // [m]
+	float tas;  // [m/s]
+	float wind[3];  // [m/s]
 
 #ifdef __cplusplus
 	_State_t() {
@@ -326,6 +363,10 @@ typedef struct _State_t {
 		vx = 0.0;
 		vy = 0.0;
 		agl = 0.0;
+		tas = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			wind[_i] = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) State_t;
@@ -342,15 +383,19 @@ typedef struct _State_t {
 
 #define LAUNCH_WAYPOINT 113
 
+#define LOOK_AT_POINT 120
+
 #define LOST_COMM_WAYPOINT 119
+
+#define MAX_LOOK_AT_POINTS 10
 
 #define MAX_USER_WAYPOINTS 100
 
-#define MAX_WAYPOINTS 120
+#define MAX_WAYPOINTS 130
 
 #define VIRTUAL_WAYPOINT 114
 
-#define WAYPOINT_MAP_SIZE 16
+#define WAYPOINT_MAP_SIZE 17
 
 typedef enum {
 	RSR,
@@ -471,7 +516,7 @@ typedef struct _DubinsPath_t {
 
 typedef struct _FlightPlanMap_t {
 	FPMapMode_t mode;
-	uint8_t map[16];
+	uint8_t map[17];
 
 #ifdef __cplusplus
 	_FlightPlanMap_t() {
@@ -479,7 +524,7 @@ typedef struct _FlightPlanMap_t {
 
 		mode = NONE;
 
-		for (_i = 0; _i < 16; ++_i)
+		for (_i = 0; _i < 17; ++_i)
 			map[_i] = 0;
 	}
 #endif
@@ -494,6 +539,56 @@ typedef enum {
 }  __attribute__ ((packed)) MissionInitialization_t;
 
 /*--------[ Sensors ]--------*/
+
+#define FLAGS_BARO_VALID 256
+
+#define FLAGS_SIMULATED 64
+
+#define FLAGS_SOURCE_UAT 32767
+
+#define FLAGS_VALID_ALTITUDE 2
+
+#define FLAGS_VALID_CALLSIGN 16
+
+#define FLAGS_VALID_COORDS 1
+
+#define FLAGS_VALID_HEADING 4
+
+#define FLAGS_VALID_SQUAWK 32
+
+#define FLAGS_VALID_VELOCITY 8
+
+#define FLAGS_VERTICAL_VELOCITY_VALID 128
+
+typedef enum {
+	/* Altitude reported from a Baro source using QNH reference */
+	ALTITUDE_TYPE_PRESSURE_QNH,
+	/* Altitude reported from a GNSS source */
+	ALTITUDE_TYPE_GEOMETRIC,
+}  __attribute__ ((packed)) ADSB_Altitude_t;
+
+typedef enum {
+	EMITTER_TYPE_NO_INFO,
+	EMITTER_TYPE_LIGHT,
+	EMITTER_TYPE_SMALL,
+	EMITTER_TYPE_LARGE,
+	EMITTER_TYPE_HIGH_VORTEX_LARGE,
+	EMITTER_TYPE_HEAVY,
+	EMITTER_TYPE_HIGHLY_MANUV,
+	EMITTER_TYPE_ROTOCRAFT,
+	EMITTER_TYPE_UNASSIGNED,
+	EMITTER_TYPE_GLIDER,
+	EMITTER_TYPE_LIGHTER_AIR,
+	EMITTER_TYPE_PARACHUTE,
+	EMITTER_TYPE_ULTRA_LIGHT,
+	EMITTER_TYPE_UNASSIGNED2,
+	EMITTER_TYPE_UAV,
+	EMITTER_TYPE_SPACE,
+	EMITTER_TYPE_UNASSGINED3,
+	EMITTER_TYPE_EMERGENCY_SURFACE,
+	EMITTER_TYPE_SERVICE_SURFACE,
+	EMITTER_TYPE_POINT_OBSTACLE,
+}  __attribute__ ((packed)) ADSB_Emitter_t;
 
 typedef enum {
 	CAL_UNKNOWN,
@@ -545,27 +640,113 @@ typedef struct _AxisMapping_t {
 } __attribute__ ((packed)) AxisMapping_t;
 
 typedef struct _MHP_t {
-	uint8_t error_code;
 	float system_time;  // [s]
+	float alpha;  // [rad]
+	float beta;  // [rad]
+	float q;  // [m/s]
+	float ias;  // [m/s]
+	float tas;  // [m/s]
+	float wind[3];  // [m/s]
+	float quaternion[4];
+
+#ifdef __cplusplus
+	_MHP_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		alpha = 0.0;
+		beta = 0.0;
+		q = 0.0;
+		ias = 0.0;
+		tas = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			wind[_i] = 0.0;
+
+		for (_i = 0; _i < 4; ++_i)
+			quaternion[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHP_t;
+
+typedef struct _MHP9HSensors_t {
+	float system_time;  // [s]
+	uint8_t error_code;
+	float static_pressure;  // [Pa]
+	float dynamic_pressure[9];  // [Pa]
+	float air_temperature;  // [deg C]
+	float humidity;  // [%]
+	float gyroscope[3];  // [rad/s]
+	float accelerometer[3];  // [g]
+
+#ifdef __cplusplus
+	_MHP9HSensors_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		error_code = 0;
+		static_pressure = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			dynamic_pressure[_i] = 0.0;
+
+		air_temperature = 0.0;
+		humidity = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			gyroscope[_i] = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			accelerometer[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHP9HSensors_t;
+
+typedef struct _MHP9HTiming_t {
+	float system_time;  // [s]
+	float static_pressure_time;  // [s]
+	float dynamic_pressure_time[9];  // [s]
+	float air_temperature_time;  // [s]
+	float humidity_time;  // [s]
+	float imu_time;  // [s]
+	float magnetometer_time;  // [s]
+	float gps_time;  // [s]
+
+#ifdef __cplusplus
+	_MHP9HTiming_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		static_pressure_time = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			dynamic_pressure_time[_i] = 0.0;
+
+		air_temperature_time = 0.0;
+		humidity_time = 0.0;
+		imu_time = 0.0;
+		magnetometer_time = 0.0;
+		gps_time = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHP9HTiming_t;
+
+typedef struct _MHPSensors_t {
+	float system_time;  // [s]
+	uint8_t error_code;
 	float static_pressure;  // [Pa]
 	float dynamic_pressure[5];  // [Pa]
 	float air_temperature;  // [deg C]
 	float humidity;  // [%]
 	float gyroscope[3];  // [rad/s]
 	float accelerometer[3];  // [g]
-	float magnetometer[3];  // [uT]
-	float alpha;  // [rad]
-	float beta;  // [rad]
-	float q;  // [m/s]
-	float ias;  // [m/s]
-	float tas;  // [m/s]
 
 #ifdef __cplusplus
-	_MHP_t() {
+	_MHPSensors_t() {
 		uint8_t _i;
 
-		error_code = 0;
 		system_time = 0.0;
+		error_code = 0;
 		static_pressure = 0.0;
 
 		for (_i = 0; _i < 5; ++_i)
@@ -579,18 +760,76 @@ typedef struct _MHP_t {
 
 		for (_i = 0; _i < 3; ++_i)
 			accelerometer[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHPSensors_t;
+
+typedef struct _MHPSensorsGNSS_t {
+	float system_time;  // [s]
+	float magnetometer[3];  // [uT]
+	uint16_t week;
+	uint8_t hour;
+	uint8_t minute;
+	float seconds;
+	double latitude;  // [deg]
+	double longitude;  // [deg]
+	float altitude;  // [m]
+	float velocity[3];  // [m/s]
+	float pdop;
+
+#ifdef __cplusplus
+	_MHPSensorsGNSS_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
 
 		for (_i = 0; _i < 3; ++_i)
 			magnetometer[_i] = 0.0;
 
-		alpha = 0.0;
-		beta = 0.0;
-		q = 0.0;
-		ias = 0.0;
-		tas = 0.0;
+		week = 0;
+		hour = 0;
+		minute = 0;
+		seconds = 0.0;
+		latitude = 0.0;
+		longitude = 0.0;
+		altitude = 0.0;
+
+		for (_i = 0; _i < 3; ++_i)
+			velocity[_i] = 0.0;
+
+		pdop = 0.0;
 	}
 #endif
-} __attribute__ ((packed)) MHP_t;
+} __attribute__ ((packed)) MHPSensorsGNSS_t;
+
+typedef struct _MHPTiming_t {
+	float system_time;  // [s]
+	float static_pressure_time;  // [s]
+	float dynamic_pressure_time[5];  // [s]
+	float air_temperature_time;  // [s]
+	float humidity_time;  // [s]
+	float imu_time;  // [s]
+	float magnetometer_time;  // [s]
+	float gps_time;  // [s]
+
+#ifdef __cplusplus
+	_MHPTiming_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		static_pressure_time = 0.0;
+
+		for (_i = 0; _i < 5; ++_i)
+			dynamic_pressure_time[_i] = 0.0;
+
+		air_temperature_time = 0.0;
+		humidity_time = 0.0;
+		imu_time = 0.0;
+		magnetometer_time = 0.0;
+		gps_time = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) MHPTiming_t;
 
 typedef struct _Pressure_t {
 	float system_time;
@@ -648,6 +887,18 @@ typedef struct _SensorOffsets_t {
 #endif
 } __attribute__ ((packed)) SensorOffsets_t;
 
+typedef struct _SingleAxisSensorCalibration_t {
+	float b;  // Offset Bias
+	float m;  // Scale Factor
+
+#ifdef __cplusplus
+	_SingleAxisSensorCalibration_t() {
+		b = 0.0;
+		m = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) SingleAxisSensorCalibration_t;
+
 typedef struct _SingleValue_t {
 	float value;
 
@@ -685,6 +936,62 @@ typedef struct _ThreeAxisSensor_t {
 	}
 #endif
 } __attribute__ ((packed)) ThreeAxisSensor_t;
+
+typedef struct _ThreeAxisSensorCalibration_t {
+	float b[3];  // Offset Bias
+	float m[9];  // Homography (transformation) Matrix
+
+#ifdef __cplusplus
+	_ThreeAxisSensorCalibration_t() {
+		uint8_t _i;
+
+		for (_i = 0; _i < 3; ++_i)
+			b[_i] = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			m[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) ThreeAxisSensorCalibration_t;
+
+typedef struct _ADSB_t {
+	float system_time;
+	uint32_t icao_address;
+	double latitude;
+	double longitude;
+	ADSB_Altitude_t altitude_type;
+	float altitude;
+	float heading;
+	float horizontal_velocity;
+	float vertical_velocity;
+	char callsign[9];
+	ADSB_Emitter_t emitter_type;
+	uint8_t tslc;
+	uint16_t flags;
+	uint16_t squawk;
+
+#ifdef __cplusplus
+	_ADSB_t() {
+		uint8_t _i;
+
+		system_time = 0.0;
+		icao_address = 0;
+		latitude = 0.0;
+		longitude = 0.0;
+		altitude = 0.0;
+		heading = 0.0;
+		horizontal_velocity = 0.0;
+		vertical_velocity = 0.0;
+
+		for (_i = 0; _i < 9; ++_i)
+			callsign[_i] = 0;
+
+		tslc = 0;
+		flags = 0;
+		squawk = 0;
+	}
+#endif
+} __attribute__ ((packed)) ADSB_t;
 
 typedef struct _CalibrateSensor_t {
 	SensorType_t sensor;
@@ -747,6 +1054,30 @@ typedef struct _IMU_t {
 	}
 #endif
 } __attribute__ ((packed)) IMU_t;
+
+typedef struct _ThreeAxisFirstOrderCorrection_t {
+	SensorType_t sensor;
+	float x[2];
+	float y[2];
+	float z[2];
+
+#ifdef __cplusplus
+	_ThreeAxisFirstOrderCorrection_t() {
+		uint8_t _i;
+
+		sensor = UNKNOWN_SENSOR;
+
+		for (_i = 0; _i < 2; ++_i)
+			x[_i] = 0.0;
+
+		for (_i = 0; _i < 2; ++_i)
+			y[_i] = 0.0;
+
+		for (_i = 0; _i < 2; ++_i)
+			z[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) ThreeAxisFirstOrderCorrection_t;
 
 typedef struct _Sensors_t {
 	IMU_t imu;
@@ -892,6 +1223,8 @@ typedef enum {
 	MULTI_COPTER,
 	GCS,
 	PAYLOAD_NODE,
+	TAIL_SITTER,
+	VTOL,
 }  __attribute__ ((packed)) VehicleType_t;
 
 typedef struct _HardwareError_t {
@@ -1037,6 +1370,18 @@ typedef enum {
 	HS_FUNC_PAYLOAD_2,
 	HS_FUNC_PAYLOAD_3,
 	HS_FUNC_PAYLOAD_4,
+	HS_FUNC_PAYLOAD_5,
+	HS_FUNC_PAYLOAD_6,
+	HS_FUNC_PAYLOAD_7,
+	HS_FUNC_PAYLOAD_8,
+	HS_FUNC_PAYLOAD_9,
+	HS_FUNC_PAYLOAD_10,
+	HS_FUNC_PAYLOAD_11,
+	HS_FUNC_PAYLOAD_12,
+	HS_FUNC_PAYLOAD_13,
+	HS_FUNC_PAYLOAD_14,
+	HS_FUNC_PAYLOAD_15,
+	HS_FUNC_PAYLOAD_16,
 
 	HS_FUNC_ROLL,
 	HS_FUNC_PITCH,
@@ -1169,7 +1514,9 @@ typedef enum {
 	FLIGHT_MODE_CALIBRATE,
 	FLIGHT_MODE_LAUNCH,
 	FLIGHT_MODE_CLIMBOUT,
+	FLIGHT_MODE_TRANSITION_TO_FORWARD,
 	FLIGHT_MODE_FLYING,
+	FLIGHT_MODE_TRANSITION_TO_HOVER,
 	FLIGHT_MODE_LANDING,
 	FLIGHT_MODE_LANDED,
 	FLIGHT_MODE_POSTFLIGHT,
@@ -1309,6 +1656,7 @@ typedef struct _TelemetryControl_t {
 	float vrate;
 	float altitude;
 	uint8_t waypoint;
+	uint8_t look_at_point;
 	LateralControlMode_t lat_mode;
 	AltitudeControlMode_t alt_mode;
 	NavigationControllerMode_t nav_mode;
@@ -1330,6 +1678,7 @@ typedef struct _TelemetryControl_t {
 		vrate = 0.0;
 		altitude = 0.0;
 		waypoint = 0;
+		look_at_point = 0;
 		lat_mode = LAT_MODE_INVALID;
 		alt_mode = ALT_MODE_INVALID;
 		nav_mode = NAV_INVALID;

@@ -52,6 +52,8 @@ PayloadControl_t payload_current_state = PAYLOAD_CTRL_OFF;
 Command_t set_command;
 volatile bool set_command_ack;
 
+static float cmd_yaw = 0;
+
 // Calibration
 volatile bool waiting_on_calibrate = false;
 extern volatile SensorType_t calibration_requested;
@@ -78,11 +80,14 @@ void printTestHelp() {
     printf("\n");
     printf("  u   : Send vrate=1\n");
     printf("  d   : Send vrate=-1\n");
+    printf("  y   : Send heading += 90 degrees\n");
+    printf("  Y   : Disable heading control\n");
     printf("\n");
     printf("  f   : Send simple flight plan consisting of waypoint 80\n");
     printf("  F   : Send a four point flight plan consisting of waypoint 80\n");
     printf("  w   : Command aircraft to go to waypoint 80\n");
     printf("  D   : Delete flight plan consisting of waypoint 80\n");
+    printf("  b   : Request Dubin's path information\n");
     printf("\n");
     printf("  p   : print this help\n");
 }
@@ -305,6 +310,26 @@ void updateTest() {
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
                 break;
 
+            case 'y':
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+
+                printf("Sending heading command\n");
+                command.id = CMD_YAW;
+								cmd_yaw = cmd_yaw+M_PI/2;
+								if(cmd_yaw >= 2*M_PI) cmd_yaw = 0;
+                command.value = cmd_yaw;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+                break;
+
+            case 'Y':
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+
+                printf("Sending heading command\n");
+                command.id = CMD_YAW;
+                command.value = NAN;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+                break;
+
             // Send flight plan consisting of one orbit waypoint
             case 'f':
                 printf("Sending a single waypoint\n");
@@ -390,6 +415,13 @@ void updateTest() {
                 flight_plan_map.mode = DELETE;
 
                 comm_handler->sendCommand(FLIGHT_PLAN, (uint8_t *)temp_waypoints, num_points, &flight_plan_map);
+                break;
+							
+            // Request Dubin's path 
+            case 'b':
+                printf("Requesting current Dubin's path\n");
+
+								comm_handler->request(DUBIN_PATH, 0);
                 break;
 
             // Send vehicle to waypoint 80
