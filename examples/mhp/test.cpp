@@ -189,6 +189,10 @@ void updateTest() {
 					//temp_axis_mapping.axis[1] = -1;
 					//temp_axis_mapping.axis[2] = 3;
 
+					// new aeropod mount
+					temp_axis_mapping.axis[0] = -2;
+					temp_axis_mapping.axis[1] = 1;
+					temp_axis_mapping.axis[2] = 3;
 
 					printf("Setting GNSS orietation to [%i,%i,%i].. ",
 							temp_axis_mapping.axis[0],

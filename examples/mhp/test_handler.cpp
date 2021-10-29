@@ -26,6 +26,8 @@
 #include "main.h"
 #include "structs.h"
 
+#include "bridge.h"
+
 /*<---Global Variables---->*/
 Packet rx_packet;
 Packet tx_packet;
@@ -76,6 +78,14 @@ void handlePacket(uint8_t type, uint8_t action, const void * data)
 	PowerOn_t * power_on_data;
 	CalibrateSensor_t * calibration_data;
 	AxisMapping_t * axis_mapping;
+
+
+	uint32_t id;
+	uint8_t size;
+	uint16_t ptr = 0;
+
+	const uint8_t * data_ptr = (uint8_t *)data;
+
 
 	static bool first_run = true;
 	char out[2048];
@@ -545,6 +555,13 @@ void handlePacket(uint8_t type, uint8_t action, const void * data)
 								power_on_data->serial_num,
 								power_on_data->comms_rev
 								);
+						break;
+
+		case HWIL_CAN:
+
+						memcpy(&id,(void *)(data_ptr + ptr),4); ptr += 4;
+						memcpy(&size,(void *)(data_ptr + ptr),1); ptr += 1;
+						BRIDGE_Arbiter(id,(void *)(data_ptr + ptr), size); ptr += size;
 						break;
 
 						/* ERRORS */
