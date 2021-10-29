@@ -96,14 +96,89 @@ extern uint8_t can_gps_sensor; // implemented elsewhere
 
 extern uint8_t can_pwm_in; // implemented elsewhere
 
-void updateActuatorValues(uint16_t * values); // implemented elsewhere
-void updatePWMIn(float system_time, uint16_t * usec); // implemented elsewhere
+// ---
+// All of the values in the update functions should be referenced to
+// the autopilot frame, defined by the PCB
+// ---
+void updateDynamicPressure(float system_time,
+		float pressure, float temperature); // [hPa, deg C]
+
+void updateStaticPressure(float system_time,
+		float pressure, float temperature); // [hPa, deg C]
+
+void updateTemperature(float system_time,
+		float temperature); // [deg C]
+
+void updateHumidity(float system_time,
+		float humidity); // [%]
+
+void updateMHPSensors(float system_time,
+		float static_pressure,
+		float dynamic_pressure[5],
+		float temperature,
+		float humidity,
+		float gyroscope[3],
+		float accelerometer[3]);
+
+void updateMHPProducts(float system_time,
+		float alpha,
+		float beta,
+		float ias,
+		float tas);
+
+void updateWind(float system_time, float u, float v, float w); // [m/s]
+
+void updateIMU(float system_time, 
+		float ax, float ay, float az, 
+		float gx, float gy, float gz, 
+		float mx, float my, float mz);
+
+void updateAccelerometer(float system_time,
+		float ax, float ay, float az); // [m/s^2]
+
+void updateGyroscope(float system_time,
+		float gx, float gy, float gz); // [rad/s]
+
+void updateMagnetometer(float system_time,
+		float mx, float my, float mz); // [uT]
+
+void updateMagValues(
+		float ts,
+		float mag_x,
+		float mag_y,
+		float mag_z);
+
+void updateOrientation(float system_time,
+		float q[4]);
 
 void updateGPS(
 		float system_time, uint16_t week, uint8_t hour, uint8_t minute, float seconds,
 		double latitude, double longitude, float altitude,
 		float vel_n, float vel_e, float vel_d,
 		float course, float speed,
+		float pdop, uint8_t satellites, uint8_t fix_type);
+
+void updateGPSValues(
+		float ts, int16_t w, uint8_t h, uint8_t m, float s,
+		double latitude, double longitude, float altitude,
+		float vel_n, float vel_e, float vel_d,
+		float course, float sog,
+		float pdop, uint8_t satellites, uint8_t fix_type);
+
+void updateGPSUTCValues(
+		float ts, uint16_t w, uint8_t h, uint8_t m, float s);
+
+void updateGPSLLAValues(
+		float ts,
+		double latitude, double longitude, float altitude);
+
+void updateGPSVelValues(
+		float ts,
+		float course, float sog,
+		float vel_n, float vel_e, float vel_d);
+
+void updateGPSHealthValues(
+		float ts,
 		float pdop, uint8_t satellites, uint8_t fix_type);
 
 void updateGPSRTCM(float system_time, uint8_t size, uint8_t * data);
@@ -115,52 +190,11 @@ void updateGPSSVIN(
 		float accuracy_minimum,
 		uint8_t flags);
 
-// ---
-// All of the values in the update functions should be referenced to
-// the autopilot frame, defined by the PCB
-// ---
-void updateAccelerometer(float system_time,
-		float ax, float ay, float az); // [m/s^2]
-
-void updateGyroscope(float system_time,
-		float gx, float gy, float gz); // [rad/s]
-
-void updateMagnetometer(float system_time,
-		float mx, float my, float mz); // [uT]
-
-void updateIMU(float system_time, 
-		float ax, float ay, float az, 
-		float gx, float gy, float gz, 
-		float mx, float my, float mz);
-
-void updateDynamicPressure(float system_time,
-		float pressure, float temperature); // [hPa, deg C]
-
-void updateStaticPressure(float system_time,
-		float pressure, float temperature); // [hPa, deg C]
-
-void updateMHPSensors(float system_time,
-		float static_pressure,
-		float dynamic_pressure[5],
-		float temperature,
-		float humidity,
-		float gyroscope[3],
-		float accelerometer[3]);
-
 void updateAGL(float system_time,
 		float distance); // [m]
 
 void updateProximity(float system_time,
 		float distance); // [m]
-
-void updateTemperature(float system_time,
-		float temperature); // [deg C]
-
-void updateHumidity(float system_time,
-		float humidity); // [%]
-
-void updateSupply(float system_time,
-		float voltage, float current, float coulomb_count, float temperature); // [V, A, mAh, deg c]
 
 void updateADSB(float system_time,
 		uint32_t icao_address,
@@ -177,14 +211,26 @@ void updateADSB(float system_time,
 		uint16_t flags,
 		uint16_t squawk);
 
+void updateCalibration(CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state);
+
+void updateBoardAxis(int8_t axis[3]);
+
+void updateGNSSAxis(int8_t axis[3]);
+
+void updateActuatorValues(uint16_t * values); // implemented elsewhere
+
+void updatePWMIn(float system_time, uint16_t * usec); // implemented elsewhere
+
+void updateSupply(float system_time,
+		float voltage, float current, float coulomb_count, float temperature); // [V, A, mAh, deg c]
+
+void updatePowerOn (uint16_t comms_rev, uint32_t serial_num);
+
+void handleNDVI(float ts, uint8_t id, float red, float near_ir, float ir_ambient, float ir_object);
+
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel);
-
-void updateMHPProducts(float system_time,
-		float alpha,
-		float beta,
-		float ias,
-		float tas);
 
 /** @addtogroup Low_Level
  * @{
@@ -314,36 +360,6 @@ void BRIDGE_HandleNDVIPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleTriggerPkt(uint8_t *byte,uint8_t size);
 
 
-void updateGPSValues(
-		float ts, int16_t w, uint8_t h, uint8_t m, float s,
-		double latitude, double longitude, float altitude,
-		float vel_n, float vel_e, float vel_d,
-		float course, float sog,
-		float pdop, uint8_t satellites, uint8_t fix_type);
-
-void updateGPSUTCValues(
-		float ts, uint16_t w, uint8_t h, uint8_t m, float s);
-
-void updateGPSLLAValues(
-		float ts,
-		double latitude, double longitude, float altitude);
-
-void updateGPSVelValues(
-		float ts,
-		float course, float sog,
-		float vel_n, float vel_e, float vel_d);
-
-void updateGPSHealthValues(
-		float ts,
-		float pdop, uint8_t satellites, uint8_t fix_type);
-
-void updateMagValues(
-		float ts,
-		float mag_x,
-		float mag_y,
-		float mag_z);
-
-void handleNDVI(float ts, uint8_t id, float red, float near_ir, float ir_ambient, float ir_object);
 
 
 /**
@@ -655,10 +671,10 @@ void BRIDGE_HandleWindPkt(uint8_t *byte,uint8_t size) {
 
 	float t0 = getElapsedTime();
 
-	/*updateWind(t0,
+	updateWind(t0,
 			data->u,
 			data->v,
-			data->w);*/
+			data->w);
 
 	pmesg(VERBOSE_CAN, "WIND : <%+.1f, %+.1f, %+.1f> [m/s]\n",
 			data->u, data->v, data->w);
@@ -862,8 +878,7 @@ void BRIDGE_HandleOrientationPkt(uint8_t *byte,uint8_t size) {
 
 	float t0 = getElapsedTime();
 
-	/*updateOrientation(t0,
-			data->q);*/
+	updateOrientation(t0, data->q);
 
 	pmesg(VERBOSE_CAN, "ORIENTATION : <%+.1f, %+.1f, %+.1f, %+.1f>\n",
 			data->q[0] , data->q[1], data->q[2], data->q[3]);
@@ -1386,11 +1401,10 @@ void BRIDGE_HandlePowerOnPkt(uint8_t *byte,uint8_t size) {
 
 	float t0 = getElapsedTime();
 
-	/*updateOrientation(t0,
-			data->q);
+	updatePowerOn(data->comms_rev,data->serial_num);
 
-	pmesg(VERBOSE_CAN, "ORIENTATION : <%+.1f, %+.1f, %+.1f, %+.1f>\n",
-			data->q[0] , data->q[1], data->q[2], data->q[3]);*/
+	pmesg(VERBOSE_CAN, "POWER ON : %06u 0x%x\n",
+			data->comms_rev , data->serial_num);
 
 	//----- packet specific code -----//
 
@@ -1633,11 +1647,49 @@ void BRIDGE_HandleCalibratePkt(uint8_t *byte,uint8_t size) {
 
 	float t0 = getElapsedTime();
 
-	/*updateOrientation(t0,
-			data->q);
+	updateCalibration(data->sensor,data->state);
 
-	pmesg(VERBOSE_CAN, "ORIENTATION : <%+.1f, %+.1f, %+.1f, %+.1f>\n",
-			data->q[0] , data->q[1], data->q[2], data->q[3]);*/
+#ifdef DEBUG
+	char sensor_str[32], state_str[32];
+
+	switch(data->sensor) {
+		case CAN_ACCELEROMETER:     sprintf(sensor_str,"CAN_ACCELEROMETER"); break;
+		case CAN_GYROSCOPE:         sprintf(sensor_str,"CAN_GYROSCOPE"); break;
+		case CAN_MAGNETOMETER:      sprintf(sensor_str,"CAN_MAGNETOMETER"); break;
+		case CAN_DYNAMIC_PRESSURE:  sprintf(sensor_str,"CAN_DYNAMIC_PRESSURE");
+																break;
+		case CAN_STATIC_PRESSURE:   sprintf(sensor_str,"CAN_STATIC_PRESSURE");
+																break;
+		case CAN_TEMPERATURE:       sprintf(sensor_str,"CAN_TEMPERATURE"); break;
+		case CAN_HUMIDITY:          sprintf(sensor_str,"CAN_HUMIDITY"); break;
+		case CAN_AGL:               sprintf(sensor_str,"CAN_AGL"); break;
+		case CAN_GPS:               sprintf(sensor_str,"CAN_GPS"); break;
+		case CAN_SENSOR_PAYLOAD_1:  sprintf(sensor_str,"CAN_SENSOR_PAYLOAD_1");
+																break;
+		case CAN_SENSOR_PAYLOAD_2:  sprintf(sensor_str,"CAN_SENSOR_PAYLOAD_2");
+																break;
+		case CAN_SENSOR_PAYLOAD_3:  sprintf(sensor_str,"CAN_SENSOR_PAYLOAD_3");
+																break;
+		case CAN_SENSOR_PAYLOAD_4:  sprintf(sensor_str,"CAN_SENSOR_PAYLOAD_4");
+																break;
+		case CAN_SENSOR_PAYLOAD_5:  sprintf(sensor_str,"CAN_SENSOR_PAYLOAD_5");
+																break;
+		case CAN_UNKNOWN_SENSOR:
+		default:                    sprintf(sensor_str,"CAN_UNKNOWN_SENSOR");
+																break;
+	}
+
+	switch(data->state_str) {
+		case CAN_REQUESTED:         sprintf(state_str,"CAN_REQUESTED"); break;
+		case CAN_SENT:              sprintf(state_str,"CAN_SENT"); break;
+		case CAN_CALIBRATED:        sprintf(state_str,"CAN_CALIBRATED"); break;
+		case CAN_CAL_UNKNOWN:
+		default:                    sprintf(state_str,"CAN_CAL_UNKNOWN"); break;
+	}
+
+	pmesg(VERBOSE_CAN, "CALIBRATION : %s %s\n",
+			sensor_str, state_str);
+#endif
 
 	//----- packet specific code -----//
 
@@ -1667,11 +1719,10 @@ void BRIDGE_HandleBoardOrientationPkt(uint8_t *byte,uint8_t size) {
 
 	float t0 = getElapsedTime();
 
-	/*updateOrientation(t0,
-			data->q);
+	updateBoardAxis(data->axis);
 
-	pmesg(VERBOSE_CAN, "ORIENTATION : <%+.1f, %+.1f, %+.1f, %+.1f>\n",
-			data->q[0] , data->q[1], data->q[2], data->q[3]);*/
+	pmesg(VERBOSE_CAN, "BOARD AXIS : <%+i, %+i, %+i>\n",
+			data->axis[0] , data->axis[1], data->axis[2]);
 
 	//----- packet specific code -----//
 
@@ -1701,11 +1752,10 @@ void BRIDGE_HandleGNSSOrientationPkt(uint8_t *byte,uint8_t size) {
 
 	float t0 = getElapsedTime();
 
-	/*updateOrientation(t0,
-			data->q);
+	updateGNSSAxis(data->axis);
 
-	pmesg(VERBOSE_CAN, "ORIENTATION : <%+.1f, %+.1f, %+.1f, %+.1f>\n",
-			data->q[0] , data->q[1], data->q[2], data->q[3]);*/
+	pmesg(VERBOSE_CAN, "GNSS AXIS : <%+i, %+i, %+i>\n",
+			data->axis[0] , data->axis[1], data->axis[2]);
 
 	//----- packet specific code -----//
 
