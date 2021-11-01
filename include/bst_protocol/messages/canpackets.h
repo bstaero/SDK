@@ -160,8 +160,9 @@ typedef enum {
 	CAN_PKT_PRESSURE=16,
 	CAN_PKT_AIR_DATA=17,
 	CAN_PKT_MHP=18,
-	CAN_PKT_MHP_PRODUCTS=19,
-	CAN_PKT_WIND=20,
+	CAN_PKT_MHP_RAW=19,
+	CAN_PKT_MHP_PRODUCTS=20,
+	CAN_PKT_WIND=21,
 	CAN_PKT_IMU=32,
 	CAN_PKT_ACCEL=33,
 	CAN_PKT_GYRO=34,
@@ -596,6 +597,27 @@ typedef struct _CAN_MHP_Products_t {
 #endif
 } __attribute__ ((packed)) CAN_MHP_Products_t;
 
+typedef struct _CAN_MHP_Raw_t {
+	uint8_t startByte;
+
+	float differential_pressure[5];  // [Pa]
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_MHP_Raw_t() {
+		uint8_t _i;
+
+		startByte = 0;
+
+		for (_i = 0; _i < 5; ++_i)
+			differential_pressure[_i] = 0.0;
+
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_MHP_Raw_t;
+
 typedef struct _CAN_Magnetometer_t {
 	uint8_t startByte;
 
@@ -769,26 +791,40 @@ typedef enum {
 }  __attribute__ ((packed)) CAN_SensorType_t;
 
 typedef struct _CAN_AxisMapping_t {
+	uint8_t startByte;
+
 	int8_t axis[3];
+
+	uint16_t chk;
 
 #ifdef __cplusplus
 	_CAN_AxisMapping_t() {
 		uint8_t _i;
 
+		startByte = 0;
+
 		for (_i = 0; _i < 3; ++_i)
 			axis[_i] = 0;
+
+		chk = 0;
 	}
 #endif
 } __attribute__ ((packed)) CAN_AxisMapping_t;
 
 typedef struct _CAN_CalibrateSensor_t {
+	uint8_t startByte;
+
 	CAN_SensorType_t sensor;
 	CAN_CalibrationState_t state;
 
+	uint16_t chk;
+
 #ifdef __cplusplus
 	_CAN_CalibrateSensor_t() {
+		startByte = 0;
 		sensor = CAN_UNKNOWN_SENSOR;
 		state = CAN_CAL_UNKNOWN;
+		chk = 0;
 	}
 #endif
 } __attribute__ ((packed)) CAN_CalibrateSensor_t;
@@ -796,13 +832,19 @@ typedef struct _CAN_CalibrateSensor_t {
 /*--------[ System ]--------*/
 
 typedef struct _CAN_PowerOn_t {
+	uint8_t startByte;
+
 	uint16_t comms_rev;  // comms packet version
 	uint32_t serial_num;  // serial number of vehicle
 
+	uint16_t chk;
+
 #ifdef __cplusplus
 	_CAN_PowerOn_t() {
+		startByte = 0;
 		comms_rev = 0;
 		serial_num = 0;
+		chk = 0;
 	}
 #endif
 } __attribute__ ((packed)) CAN_PowerOn_t;

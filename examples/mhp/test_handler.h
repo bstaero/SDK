@@ -32,4 +32,6 @@ void requestOrientation(PacketTypes_t type);
 void setOrientation(PacketTypes_t type, AxisMapping_t * axis_mapping);
 bool updateCommunications(void);
 
+void printMHPData(void);
+
 #endif
