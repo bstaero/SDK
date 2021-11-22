@@ -153,12 +153,12 @@ void updateTest() {
 					if(waiting_on_orientation) break;
 					waiting_on_orientation = true;
 
-					// mount on top
+					// mount pointing up
 					//temp_axis_mapping.axis[0] = 2;
 					//temp_axis_mapping.axis[1] = -1;
 					//temp_axis_mapping.axis[2] = 3;
 					
-					// mount on bottom
+					// mount pointing down
 					temp_axis_mapping.axis[0] = -2;
 					temp_axis_mapping.axis[1] = 1;
 					temp_axis_mapping.axis[2] = 3;
@@ -180,14 +180,20 @@ void updateTest() {
 					if(waiting_on_orientation) break;
 					waiting_on_orientation = true;
 
-					temp_axis_mapping.axis[0] = 1;
-					temp_axis_mapping.axis[1] = 2;
-					temp_axis_mapping.axis[2] = 3;
+					// board silk
+					//temp_axis_mapping.axis[0] = 1;
+					//temp_axis_mapping.axis[1] = 2;
+					//temp_axis_mapping.axis[2] = 3;
 
 					// aeropod mount
 					//temp_axis_mapping.axis[0] = 2;
 					//temp_axis_mapping.axis[1] = -1;
 					//temp_axis_mapping.axis[2] = 3;
+					
+					// cable to the back
+					temp_axis_mapping.axis[0] = -2;
+					temp_axis_mapping.axis[1] = 1;
+					temp_axis_mapping.axis[2] = 3;
 
 
 					printf("Setting GNSS orietation to [%i,%i,%i].. ",
