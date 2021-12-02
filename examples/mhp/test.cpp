@@ -153,10 +153,10 @@ void updateTest() {
 					if(waiting_on_orientation) break;
 					waiting_on_orientation = true;
 
-					// mount pointing up
-					//temp_axis_mapping.axis[0] = 2;
+					// mount pointing up - aeropods
+					//temp_axis_mapping.axis[0] = -2;
 					//temp_axis_mapping.axis[1] = -1;
-					//temp_axis_mapping.axis[2] = 3;
+					//temp_axis_mapping.axis[2] = -3;
 					
 					// mount pointing down
 					temp_axis_mapping.axis[0] = -2;
