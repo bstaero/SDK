@@ -74,15 +74,19 @@ void printTestHelp() {
     printf("  t   : Send launch / land comannd \n");
     printf("\n");
     printf("  i   : Send vel_x=1\n");
-    printf("  k   : Send vel_x=-1\n");
+    printf("  k   : Send vel_x=0 vel_y=0\n");
+    printf("  ,   : Send vel_x=-1\n");
     printf("  j   : Send vel_y=-1\n");
     printf("  l   : Send vel_y=1\n");
     printf("\n");
     printf("  u   : Send vrate=1\n");
+    printf("  g   : Send vrate=0\n");
     printf("  d   : Send vrate=-1\n");
     printf("  y   : Send heading += 90 degrees\n");
     printf("  Y   : Disable heading control\n");
     printf("\n");
+	printf("  v   : Send command to go to velocity based flight mode\n");
+    printf("  V   : Send command to go to position hold flight mode\n");
     printf("  f   : Send simple flight plan consisting of waypoint 80\n");
     printf("  F   : Send a four point flight plan consisting of waypoint 80\n");
     printf("  w   : Command aircraft to go to waypoint 80\n");
@@ -251,6 +255,12 @@ void updateTest() {
                 break;
 
             case 'i':
+				if (telemetry_control.nav_mode != NAV_PILOT_BODY && telemetry_control.nav_mode != NAV_PILOT_WORLD) {
+					printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('v' command): mode=%u\n", telemetry_control.nav_mode);
+					break;
+				}
+
+
                 sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
@@ -259,7 +269,31 @@ void updateTest() {
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
                 break;
 
-            case 'k':
+			case 'k':
+                if (telemetry_control.nav_mode != NAV_PILOT_BODY && telemetry_control.nav_mode != NAV_PILOT_WORLD) {
+                    printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('v' command): mode=%u\n", telemetry_control.nav_mode);
+                    break;
+                }
+
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+
+                printf("Sending horizontal stop command\n");
+                command.id = CMD_X_VEL;
+                command.value = 0.0;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+
+                command.id = CMD_Y_VEL;
+                command.value = 0.0;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+
+                break;
+
+            case ',':
+				if (telemetry_control.nav_mode != NAV_PILOT_BODY && telemetry_control.nav_mode != NAV_PILOT_WORLD) {
+                    printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('v' command): mode=%u\n", telemetry_control.nav_mode);
+                    break;
+                }
+
                 sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
@@ -269,6 +303,11 @@ void updateTest() {
                 break;
 
             case 'j':
+				if (telemetry_control.nav_mode != NAV_PILOT_BODY && telemetry_control.nav_mode != NAV_PILOT_WORLD) {
+                    printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('v' command): mode=%u\n", telemetry_control.nav_mode);
+                    break;
+                }
+
                 sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
@@ -278,6 +317,11 @@ void updateTest() {
                 break;
 
             case 'l':
+				if (telemetry_control.nav_mode != NAV_PILOT_BODY && telemetry_control.nav_mode != NAV_PILOT_WORLD) {
+                    printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('v' command): mode=%u\n", telemetry_control.nav_mode);
+                    break;
+                }
+
                 sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
@@ -295,6 +339,18 @@ void updateTest() {
                 printf("Sending velocity command\n");
                 command.id = CMD_VRATE;
                 command.value = 1.0;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+                break;
+
+            case 'g':
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                command.id = CMD_ALT_MODE;
+                command.value = ALT_MODE_RATE;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+
+                printf("Sending velocity command\n");
+                command.id = CMD_VRATE;
+                command.value = 0.0;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
                 break;
 
@@ -329,6 +385,27 @@ void updateTest() {
                 command.value = NAN;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
                 break;
+
+			case 'v':
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                command.id = CMD_NAV_MODE;
+                command.value = NAV_PILOT_WORLD;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+
+                printf("Sending velocity flight mode command\n");
+                break;
+
+            case 'V':
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+
+                command.id = CMD_NAV_MODE;
+                command.value = NAV_POS;
+                comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
+
+                printf("Sending position hold flight mode command\n");
+                break;
+
+
 
             // Send flight plan consisting of one orbit waypoint
             case 'f':
