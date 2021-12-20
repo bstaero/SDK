@@ -72,6 +72,7 @@ void printTestHelp() {
     printf("\n");
     printf("  z   : Zero gyros (required for launch)\n");
     printf("  t   : Send launch / land comannd \n");
+    printf("  c   : Send payload active control comannd \n");
     printf("\n");
     printf("  i   : Send vel_x=1\n");
     printf("  k   : Send vel_x=0 vel_y=0\n");
@@ -199,8 +200,11 @@ void updateTest() {
                     }
                 }
 
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+
                 if (telemetry_system.flight_mode == FLIGHT_MODE_PREFLIGHT || telemetry_system.flight_mode == FLIGHT_MODE_LAUNCH) {
                     printf(" Launching vehicle\n");
+
 
                     if (telemetry_system.flight_mode == FLIGHT_MODE_PREFLIGHT) {
                         printf(" Switching to Launch Mode ...");
@@ -254,6 +258,10 @@ void updateTest() {
 
                 break;
 
+            case 'c':
+                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                break;
+
             case 'i':
 				if (telemetry_control.nav_mode != NAV_PILOT_BODY && telemetry_control.nav_mode != NAV_PILOT_WORLD) {
 					printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('v' command): mode=%u\n", telemetry_control.nav_mode);
@@ -261,7 +269,7 @@ void updateTest() {
 				}
 
 
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
                 command.id = CMD_X_VEL;
@@ -275,7 +283,7 @@ void updateTest() {
                     break;
                 }
 
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending horizontal stop command\n");
                 command.id = CMD_X_VEL;
@@ -294,7 +302,7 @@ void updateTest() {
                     break;
                 }
 
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
                 command.id = CMD_X_VEL;
@@ -308,7 +316,7 @@ void updateTest() {
                     break;
                 }
 
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
                 command.id = CMD_Y_VEL;
@@ -322,7 +330,7 @@ void updateTest() {
                     break;
                 }
 
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending velocity command\n");
                 command.id = CMD_Y_VEL;
@@ -331,7 +339,7 @@ void updateTest() {
                 break;
 
             case 'u':
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
                 command.id = CMD_ALT_MODE;
                 command.value = ALT_MODE_RATE;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
@@ -343,7 +351,7 @@ void updateTest() {
                 break;
 
             case 'g':
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
                 command.id = CMD_ALT_MODE;
                 command.value = ALT_MODE_RATE;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
@@ -355,7 +363,7 @@ void updateTest() {
                 break;
 
             case 'd':
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
                 command.id = CMD_ALT_MODE;
                 command.value = ALT_MODE_RATE;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
@@ -367,7 +375,7 @@ void updateTest() {
                 break;
 
             case 'y':
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending heading command\n");
                 command.id = CMD_YAW;
@@ -378,7 +386,7 @@ void updateTest() {
                 break;
 
             case 'Y':
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 printf("Sending heading command\n");
                 command.id = CMD_YAW;
@@ -387,7 +395,7 @@ void updateTest() {
                 break;
 
 			case 'v':
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
                 command.id = CMD_NAV_MODE;
                 command.value = NAV_PILOT_WORLD;
                 comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
@@ -396,7 +404,7 @@ void updateTest() {
                 break;
 
             case 'V':
-                sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
+                //sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 
                 command.id = CMD_NAV_MODE;
                 command.value = NAV_POS;
