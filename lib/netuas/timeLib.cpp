@@ -373,7 +373,7 @@ IntervalTimer::~IntervalTimer()
 	// set timer to original settings 
 	setitimer(ITIMER_REAL, &old_itimer, &itimer);
 #else
-	if( timer >= 0 ) {
+	if( timer != NULL ) {
 		stop();
 		timer_delete(timer);
 	}
@@ -397,7 +397,7 @@ void IntervalTimer::stop()
 	itimer.it_value.tv_sec = 0;
 	itimer.it_value.tv_nsec = 0;
 
-	if( timer < 0 )
+	if( timer != NULL )
 		return;
 	else if( timer_settime(timer, 0, &itimer, NULL) < 0)
 		perror("IntervalTimer::stop - timer_settime");
@@ -422,7 +422,7 @@ void IntervalTimer::start()
 	itimer.it_value.tv_sec 		= sec;
 	itimer.it_value.tv_nsec 	= usec * 1000;
 
-	if( timer < 0 )
+	if( timer != NULL )
 		printf("IntervalTimer::start - timer has not been created");
 	else if( timer_settime(timer, 0, &itimer, NULL) < 0)
 		perror("IntervalTimer::start - timer_settime");
