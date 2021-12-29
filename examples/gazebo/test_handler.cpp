@@ -92,7 +92,7 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 		case STATE_ESTIMATOR_PARAM:
 			if(show_telemetry)
-				printf("STATE_ESTIMATOR_PARAM\n");
+				printf("[%.2f] STATE_ESTIMATOR_PARAM\n", getElapsedTime() );
 			memcpy(&estimator_data,data,sizeof(State_t));
 			break;
 
@@ -162,12 +162,12 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 			/* TELEMETRY */
 		case TELEMETRY_HEARTBEAT:
 			if(show_telemetry)
-				printf("TELEMETRY_HEARTBEAT\n");
+				printf("[%.2f] TELEMETRY_HEARTBEAT\n", getElapsedTime() );
 			break;
 
 		case TELEMETRY_POSITION:
 			if(show_telemetry) {
-				printf("TELEMETRY_POSITION\n");
+				printf("[%.2f] TELEMETRY_POSITION\n", getElapsedTime() );
 				printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
 				printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
 				printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);
@@ -177,29 +177,29 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 		case TELEMETRY_ORIENTATION:
 			if(show_telemetry)
-				printf("TELEMETRY_ORIENTATION\n");
+				printf("[%.2f] TELEMETRY_ORIENTATION\n", getElapsedTime() );
 			break;
 		case TELEMETRY_PRESSURE:
 			if(show_telemetry)
-				printf("TELEMETRY_PRESSURE\n");
+				printf("[%.2f] TELEMETRY_PRESSURE\n", getElapsedTime() );
 			break;
 		case TELEMETRY_CONTROL:
 			if(show_telemetry)
-				printf("TELEMETRY_CONTROL\n");
+				printf("[%.2f] TELEMETRY_CONTROL\n", getElapsedTime() );
 			memcpy(&telemetry_control,data,sizeof(TelemetryControl_t));
 			break;
 		case TELEMETRY_SYSTEM:
 			if(show_telemetry)
-				printf("TELEMETRY_SYSTEM\n");
+				printf("[%.2f] TELEMETRY_SYSTEM\n", getElapsedTime() );
 			memcpy(&telemetry_system,data,sizeof(TelemetrySystem_t));
 			break;
 		case TELEMETRY_GCS:
 			if(show_telemetry)
-				printf("TELEMETRY_GCS\n");
+				printf("[%.2f] TELEMETRY_GCS\n", getElapsedTime() );
 			break;
 		case TELEMETRY_GCS_LOCATION:
 			if(show_telemetry)
-				printf("TELEMETRY_GCS_LOCATION\n");
+				printf("[%.2f] TELEMETRY_GCS_LOCATION\n", getElapsedTime() );
 			break;
 
 			/* ERRORS */
