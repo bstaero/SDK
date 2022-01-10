@@ -54,9 +54,10 @@ void printTestHelp() {
 	printf("  m   : Request magnetometer calibration\n");
 	printf("\n");
 	printf("  u   : Request imu orientation\n");
-	printf("  U   : Set imu orientation\n");
+	printf("  U   : Set imu orientation with mount above probe\n");
+	printf("  B   : Set imu orientation with mount below probe\n");
 	printf("  n   : Request GNSS orientation\n");
-	printf("  N   : Set GNSS orientation\n");
+	printf("  N   : Set GNSS orientation with cable facing back\n");
 	printf("\n");
 	printf("  s   : Request serial number and comms revision\n");
 	printf("\n");
@@ -154,9 +155,22 @@ void updateTest() {
 					waiting_on_orientation = true;
 
 					// mount pointing up - aeropods
-					//temp_axis_mapping.axis[0] = -2;
-					//temp_axis_mapping.axis[1] = -1;
-					//temp_axis_mapping.axis[2] = -3;
+					temp_axis_mapping.axis[0] = -2;
+					temp_axis_mapping.axis[1] = -1;
+					temp_axis_mapping.axis[2] = -3;
+
+					printf("Setting IMU orietation to [%i,%i,%i].. ",
+							temp_axis_mapping.axis[0],
+							temp_axis_mapping.axis[1],
+							temp_axis_mapping.axis[2]);
+					fflush(stdout);
+
+					setOrientation(SENSORS_BOARD_ORIENTATION, &temp_axis_mapping);
+					break;
+
+				case 'B':
+					if(waiting_on_orientation) break;
+					waiting_on_orientation = true;
 					
 					// mount pointing down
 					temp_axis_mapping.axis[0] = -2;
