@@ -73,12 +73,15 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 			break;
 
 		case SENSORS_CALIBRATE:
+			printf(" Sensor calibration ");
 			calibration_data = (CalibrateSensor_t *)data;
-			if(calibration_data->state == CALIBRATED)
+			if(calibration_data->state == CALIBRATED) {
 				if(calibration_data->sensor == calibration_requested) {
 					printf(" Success: Sensor calibrated\n");
 					calibration_requested = UNKNOWN_SENSOR;
 				}
+			} else
+				printf(" failed\n");
 			break;
 
 #ifdef VEHICLE_FIXEDWING
@@ -260,10 +263,11 @@ uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * pa
 
 void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void * parameter)
 {
-	printf("receiveReply: type=%u\n", type);
-	ack ? fprintf(stderr,"--> ACK\n") : fprintf(stderr,"--> NACK\n");
 
 	Command_t * tmp_command = (Command_t *) data;
+
+	printf("receiveReply: type=%u\n", type);
+	ack ? fprintf(stderr,"--> ACK [%i, %i]\n", set_command.id, tmp_command->id) : fprintf(stderr,"--> NACK[%i, %i]\n", set_command.id, tmp_command->id);
 
 	if(set_command.id == tmp_command->id) {
 		//if (set_command.value == tmp_command->value) {
@@ -355,7 +359,7 @@ void request(uint8_t type, uint8_t value)
 
 bool publish(uint8_t type, uint8_t param)
 {
-	//printf("publish: type=%u\n", type);
+	printf("publish: type=%u\n", type);
 
 	// do some with status request
 	switch(type) {
