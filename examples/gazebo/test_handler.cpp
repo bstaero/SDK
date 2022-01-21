@@ -269,7 +269,7 @@ void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void
 	printf("receiveReply: type=%u\n", type);
 	ack ? fprintf(stderr,"--> ACK [%i, %i]\n", set_command.id, tmp_command->id) : fprintf(stderr,"--> NACK[%i, %i]\n", set_command.id, tmp_command->id);
 
-	if(set_command.id == tmp_command->id) {
+	if(set_command.id == tmp_command->id || (tmp_command->id == 255 && type == set_command.id) ) {
 		//if (set_command.value == tmp_command->value) {
 			set_command_ack = ack;
 		//}
