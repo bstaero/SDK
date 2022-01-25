@@ -59,6 +59,9 @@ class BSTModuleFlightPlan : public BSTCommunicationsModule {
 		FlightPlanMap_t rx_fp_map;
 		FlightPlanMap_t tx_fp_map;
 
+		//FIXME -- implement this better, shouldn't need the exta memory, just use rx_temp_plan more intelligently
+		Waypoint_t temp_plan[MAX_WAYPOINTS];
+
 		FPSendState_t fp_send_state;
 		float last_wpt_received;
 		float last_waypoint_req;
