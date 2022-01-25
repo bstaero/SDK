@@ -155,14 +155,14 @@ double latitude_diff, longitude_diff, altitude_diff;
         case eZERO_GYROS_ST:
             if( getElapsedTime() > waiting_tout + 1  )
             {
-                printf("* Gyroscope Pressure Calibration Requested ...\n");
+                printf("* Gyroscope Pressure Calibration Requested ...");
                 sendCalibrate(GYROSCOPE);
                 fsm_test_state = eWAIT_CALIB_ST;
                 waiting_tout = getElapsedTime();                  
             }
             break;
         case eWAIT_CALIB_ST:
-            if( getElapsedTime() > waiting_tout + 5 )
+            if( getElapsedTime() > waiting_tout + 10 || (calibration_requested == UNKNOWN_SENSOR && getElapsedTime() > waiting_tout + 1)) 
             {
                 fsm_test_state = eTAKE_OFF_ST;
                 waiting_tout = getElapsedTime();

@@ -77,11 +77,11 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 			break;
 
 		case SENSORS_CALIBRATE:
-			printf(" Sensor calibration ");
+			//printf(" Sensor calibration ...");
 			calibration_data = (CalibrateSensor_t *)data;
 			if(calibration_data->state == CALIBRATED) {
 				if(calibration_data->sensor == calibration_requested) {
-					printf(" Success: Sensor calibrated\n");
+					printf(" calibrated\n");
 					calibration_requested = UNKNOWN_SENSOR;
 				}
 			} else
