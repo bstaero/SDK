@@ -41,6 +41,8 @@ enum FSM_TEST_STATE
     eWAITING_TAKEOFF_ST,
     eSEND_WP_ST,
     eCMD_AIRCRAFT_ST,
+    eCMD_LAND_ST,
+    eCMD_LANDING_ST,
     eFINISH_ST
 };
 
@@ -54,50 +56,6 @@ static const double STEP_METER_INCREMENT = 5.0;
 static float cmd_yaw = 0;
 
 static FSM_TEST_STATE fsm_test_state = eINIT_STATE;
-
-void printTestHelp() {
-    printf("Keys:\n");
-    printf("  T   : Show telmetry\n");
-    printf("\n");
-    printf("  h   : Send payload heartbeat\n");
-    printf("  r   : Send payload ready comannd \n");
-    printf("  o   : Send payload off comannd \n");
-    printf("  s   : Send payload shutdown comannd \n");
-    printf("\n");
-    printf("  z   : Zero gyros (required for launch)\n");
-    printf("  t   : Send launch / land comannd \n");
-    printf("\n");
-    printf("  i   : Send vel_x=1\n");
-    printf("  k   : Send vel_x=-1\n");
-    printf("  j   : Send vel_y=-1\n");
-    printf("  l   : Send vel_y=1\n");
-    printf("\n");
-    printf("  u   : Send vrate=1\n");
-    printf("  d   : Send vrate=-1\n");
-    printf("  y   : Send heading += 90 degrees\n");
-    printf("  Y   : Disable heading control\n");
-    printf("\n");
-    printf("  f   : Send simple flight plan consisting of waypoint 80\n");
-    printf("  F   : Send a four point flight plan consisting of waypoint 80\n");
-    printf("  w   : Command aircraft to go to waypoint 80\n");
-    printf("  D   : Delete flight plan consisting of waypoint 80\n");
-    printf("  b   : Request Dubin's path information\n");
-    printf("\n");
-    printf("  p   : print this help\n");
-}
-
-bool inputAvailable() {
-    // check for input on terminal
-    struct timeval tv;
-    fd_set fds;
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-    FD_ZERO(&fds);
-    FD_SET(STDIN_FILENO, &fds);
-    select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
-
-    return (FD_ISSET(0, &fds));
-}
 
 int updateCalibration() 
 {
@@ -135,7 +93,7 @@ static double send_wp_altitude = 0.0;
 	author:		Adolfo Diaz		
 	purpose:	Implements issue test related with sending multiple WP
 ***************************************************************************/
-size_t sendMultipleWP( void )
+size_t sendMultipleWP( int num_to_send )
 {
 //std::thread tRX_messages;
 static int calibrated = 0;
@@ -172,22 +130,30 @@ double latitude_diff, longitude_diff, altitude_diff;
             break;
 
         case eSEND_PAYLOAD_READY_ST:
-            if( getElapsedTime() > waiting_tout + 5  )
+            if( getElapsedTime() > waiting_tout + 2  )
             {
                 // validate payload interface is in ready state
                 if ( payload_current_state  != PAYLOAD_CTRL_READY) {
-                    printf("* Sending payload ready command mode ...\n");
-                    sendPayloadControlMode(PAYLOAD_CTRL_READY);   
+                    printf("* Sending payload ready command mode ...");
+                    if( !sendPayloadControlMode(PAYLOAD_CTRL_READY)) {
+                        printf(" failed\n");
+                        exitTest();   
+                    }
                 }
                 // validate payload interface is in active state
-                else if( validate_payload_control() )
+                else if( validate_payload_control() ) {
+                    printf(" done\n");
                     fsm_test_state = eZERO_GYROS_ST;
+                } else {
+                    printf(" failed\n");
+                    exitTest();   
+                }
 
                 waiting_tout = getElapsedTime();
             }
             break;
         case eZERO_GYROS_ST:
-            if( getElapsedTime() > waiting_tout + 5  )
+            if( getElapsedTime() > waiting_tout + 1  )
             {
                 printf("* Gyroscope Pressure Calibration Requested ...\n");
                 sendCalibrate(GYROSCOPE);
@@ -208,72 +174,58 @@ double latitude_diff, longitude_diff, altitude_diff;
                 break;
             }
 
-            printf("* Launch / Land command ...\n");
-            if (telemetry_system.flight_mode == FLIGHT_MODE_INVALID_MODE || telemetry_system.flight_mode == FLIGHT_MODE_LANDED) 
-            {                
-                if (!setCommandValue(CMD_FLIGHT_MODE, FLIGHT_MODE_PREFLIGHT)) 
-                {
-                    printf("    * Not in Valid Mode!!!\n");
-                    exitTest();            
-                    break;
+            printf("* Launch command ...\n");
+
+            if (telemetry_system.flight_mode == FLIGHT_MODE_PREFLIGHT || telemetry_system.flight_mode == FLIGHT_MODE_LAUNCH) {
+                // change to launch mode from preflight mode 
+                if (telemetry_system.flight_mode == FLIGHT_MODE_PREFLIGHT) {
+
+                    printf("** Switching to Launch Mode ...");
+                    if (!setCheckCommandValue(CMD_FLIGHT_MODE, FLIGHT_MODE_LAUNCH, (uint8_t*)&telemetry_system.flight_mode, FLIGHT_MODE_LAUNCH, 1.0)) {
+                        printf(" failed\n");
+                        exitTest();
+                        break;
+                    } else
+                        printf(" done\n");
                 }
-            }
-            if (telemetry_system.flight_mode == FLIGHT_MODE_PREFLIGHT || telemetry_system.flight_mode == FLIGHT_MODE_LAUNCH) 
-            {
-                printf("    * Launching vehicle\n");
-                if (telemetry_system.flight_mode == FLIGHT_MODE_PREFLIGHT) 
-                {
-                    printf("    * Switching to Launch Mode ...");
-                    if (setCommandValue(CMD_FLIGHT_MODE, FLIGHT_MODE_LAUNCH)) 
-                    {
-                        printf("    * done\n");
-                    }
-                    else 
-                    {
-                        printf("    * failed(2)!!!\n");
+
+                // enable engine and launch 
+                if (telemetry_system.flight_mode == FLIGHT_MODE_LAUNCH) {
+                    printf("** Enabling Engine ...");
+                    if (!setCheckCommandValue(CMD_ENGINE_KILL, 0, (uint8_t*)&telemetry_system.engine_on, 1, 1.0)) {
+                        printf(" failed\n");
                         exitTest();
                         break;
                     }
-                }
-                while( telemetry_system.flight_mode != FLIGHT_MODE_LAUNCH ) 
-                {
-                    usleep(1000);
-                    comm_handler->update();
-                }
-                printf("    * Enabling Engine ...");
-                if (setCommandValue(CMD_ENGINE_KILL, 0)) 
-                {
-                    printf("    * done\n");
-                } 
-                else 
-                {
-                    printf("    * failed!!!\n");
-                    exitTest();
-                    break;
-                }
-                printf("    * Launching...");
-                if (setCommandValue(CMD_LAUNCH, 0)) 
-                {
-                    printf("    * done\n");
-                } 
-                else 
-                {
-                    printf("    * failed!!!\n");
-                    exitTest();
-                    break;
+                    else printf(" done\n");
+
+                    printf("** Launching ...");
+                    if (!setCheckCommandValue(CMD_LAUNCH, 0, (uint8_t*)&telemetry_system.flight_mode, FLIGHT_MODE_CLIMBOUT, 1.0)) {
+                        printf(" failed\n");
+                        exitTest();
+                        break;
+                    }
+                    else printf(" launched\n");
                 }
             }
+
             fsm_test_state = eWAITING_TAKEOFF_ST;
             waiting_tout = getElapsedTime();
             break;
+
         case eWAITING_TAKEOFF_ST:
-            if( getElapsedTime() > waiting_tout + 15  )
+            if (telemetry_system.flight_mode != FLIGHT_MODE_FLYING)
+                waiting_tout = getElapsedTime();
+
+            // after 5s of flying, start sending waypoints
+            if( getElapsedTime() > waiting_tout + 5  )
             {                
                 //show_telemetry = true;
                 fsm_test_state = eSEND_WP_ST;
                 waiting_tout = getElapsedTime();
             }
             break;
+
         case eSEND_WP_ST:  
             if( getElapsedTime() > waiting_tout + (stepTime/1000.0)  )
             {   
@@ -290,11 +242,11 @@ double latitude_diff, longitude_diff, altitude_diff;
                 theoric_test_step++;
 
                  // Set the waypoint to send into the plan
-                if( ( abs( latitude_diff ) < 2.0 &&  abs( longitude_diff ) < 2.0 &&  abs( altitude_diff ) < 2.0) || test_step == 0 )
-                {                    
-                    // Increment way plan latitude for next iteration
-                    test_step++;               
-                }   
+                // if( ( abs( latitude_diff ) < 2.0 &&  abs( longitude_diff ) < 2.0 &&  abs( altitude_diff ) < 2.0) || test_step == 0 )
+                // {                    
+                //     // Increment way plan latitude for next iteration
+                //     test_step++;               
+                // }   
 
                 local_step = test_step % 4;
                 flight_plan.reset();    
@@ -344,6 +296,8 @@ double latitude_diff, longitude_diff, altitude_diff;
                 // Sending vehicle to waypoint configured
                 if( !sendFlightPlan((uint8_t *)temp_waypoints, num_points, &flight_plan_map) )
                     printf(" Command to send waypiont flightplan failed\n");
+                else // Increment step for next iteration
+                    test_step++;               
                       
                 //printf("\n***  1.Sending WP --- step: %zu  th_step: %zu lat: %f  long: %f  alt: %f ***\n", test_step, theoric_test_step, temp_waypoint.latitude, temp_waypoint.longitude, temp_waypoint.altitude);    
                 //printf("***  2.Telemetry WP --- lat: %f  long: %f  alt: %f ***\n", telemetry_position.latitude, telemetry_position.longitude, telemetry_position.altitude);    
@@ -352,9 +306,48 @@ double latitude_diff, longitude_diff, altitude_diff;
 
                 if( !isFirstWPExecuted )            
                     fsm_test_state = eCMD_AIRCRAFT_ST;
+
+                if( num_to_send <= test_step )
+                    fsm_test_state = eCMD_LAND_ST;
+
                 waiting_tout = getElapsedTime();                                 
             }
             break;
+        case eCMD_LAND_ST:
+                // validate payload interface is in good state
+                if( !validate_payload_control() )
+                    break;
+
+                printf("* Landing command ...\n");
+
+                // is the system in flying mode, to trigger landing
+                if (telemetry_system.flight_mode == FLIGHT_MODE_FLYING) {
+
+                    printf("** Commanding landing mode ...");
+                    if (!setCheckCommandValue(CMD_LAND, 1, (uint8_t*)&telemetry_system.flight_mode, FLIGHT_MODE_LANDING, 2.0)) {
+                        printf(" failed\n");
+                        exitTest();
+                        break;
+                    } else {
+                        printf(" done\n");
+                        printf("** Landing ...");
+                    }
+                } else if (telemetry_system.flight_mode != FLIGHT_MODE_LANDING) {
+                    printf(" not in valid flight mode\n");
+                    exitTest();
+                }
+                fsm_test_state = eCMD_LANDING_ST;
+                waiting_tout = getElapsedTime();                                 
+ 
+            break;
+
+        case eCMD_LANDING_ST:
+            if (telemetry_system.flight_mode == FLIGHT_MODE_LANDED) {
+                printf(" LANDED !!\n");
+                exitTest();
+            }
+            break;
+
         case eCMD_AIRCRAFT_ST:
             if( getElapsedTime() > waiting_tout + 2  )
             {                

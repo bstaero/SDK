@@ -21,7 +21,6 @@
 
 #include <inttypes.h>
 
-void printTestHelp(void);
-size_t sendMultipleWP(void);
+size_t sendMultipleWP(int n);
 
 #endif

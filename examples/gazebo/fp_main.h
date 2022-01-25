@@ -40,6 +40,7 @@ void setupTime();
 void initializeTest(void);
 void reset_term();
 void exitTest(void);
+bool inputAvailable();
 
 #ifdef __cplusplus
 extern "C" {

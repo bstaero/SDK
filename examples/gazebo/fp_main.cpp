@@ -153,14 +153,29 @@ size_t steps = 0;
 	
 	initializeTest();		
 	 
-	while(comm_interface->isConnected() && running && steps < numWPs ) 
+	while(comm_interface->isConnected() && running ) 
 	{			
 		// Update communications
 		comm_handler->update(); 
 	
 		// Perform user functions
-		steps = sendMultipleWP();	
+		steps = sendMultipleWP(numWPs);	
+
+		if (inputAvailable()) {
+			char input = getchar();
+			if (input > 0) {
+				switch (input) {
+				case 3: // <CTRL-C> allow flowthrough
+				case 'q':
+					printf("Keyboard caught exit signal ...\n");
+					running = false;
+					break;
+				}
+			}
+		}
+ 
 		usleep(1000);
+
 	}
 	printf("isConnected: %d running: %d steps: %ld numWPs: %ld\n", comm_interface->isConnected(), running , steps , numWPs );
 
@@ -242,4 +257,17 @@ void reset_term() {
 void exitTest() {
 	printf("-- STOPPING TEST\n");
 	running = false;
+}
+
+bool inputAvailable() {
+    // check for input on terminal
+    struct timeval tv;
+    fd_set fds;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
+
+    return (FD_ISSET(0, &fds));
 }
