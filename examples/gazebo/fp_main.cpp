@@ -162,12 +162,13 @@ size_t steps = 0;
 		steps = sendMultipleWP();	
 		usleep(1000);
 	}
-	 printf("isConnected: %d running: %d steps: %ld numWPs: %ld\n", comm_interface->isConnected(), running , steps , numWPs );
+	printf("isConnected: %d running: %d steps: %ld numWPs: %ld\n", comm_interface->isConnected(), running , steps , numWPs );
 
 	comm_handler->getInterface()->close();
 
 	reset_term();
-	printf("Disconnected, exiting.\n\n");
+
+	printf("goodbye!\n\n");
 }
 
 void printHelp() {
@@ -239,5 +240,6 @@ void reset_term() {
 }
 
 void exitTest() {
+	printf("-- STOPPING TEST\n");
 	running = false;
 }

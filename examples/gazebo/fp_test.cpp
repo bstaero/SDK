@@ -204,7 +204,6 @@ double latitude_diff, longitude_diff, altitude_diff;
             break;
         case eTAKE_OFF_ST:            
             if( !validate_payload_control() ) {
-                printf("ERROR - payload lost control\n");
                 exitTest();            
                 break;
             }
@@ -280,7 +279,6 @@ double latitude_diff, longitude_diff, altitude_diff;
             {   
                 // validate payload mode
                 if( !validate_payload_control() ) {
-                    printf("ERROR - payload lost control\n");
                     exitTest();            
                     break;
                 }
@@ -362,7 +360,6 @@ double latitude_diff, longitude_diff, altitude_diff;
             {                
                 // validate payload mode
                 if( !validate_payload_control() ) {
-                    printf("ERROR - payload lost control\n");
                     exitTest();            
                     break;
                 }
