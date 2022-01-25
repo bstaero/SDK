@@ -22,56 +22,13 @@
 #include <termios.h>
 
 #include "test.h"
+#include "test_handler.h"
 #include "main.h"
-#include "structs.h"
-
-#include "flight_plan.h"
-
-// Setting / Configuration
-#define CMD_ACK_TIMEOUT   20.0f    // [s] how long to wait for message ACK
-#define HEARTBEAT_INTERVAL 0.5f   // [s] time between heartbeat
-#define CONTROL_INTERVAL   0.05f  // [s]
-
-// functional definitions
-bool waitForACK();
-bool setCommandValue(bst::comms::CommandID_t id, float value);
-bool setCheckCommandValue(uint8_t id, int value, uint8_t* check, uint8_t check_value, float timeout );
-
-bool sendFlightPlan(uint8_t *temp_waypoints, uint8_t num_points, FlightPlanMap_t *flight_plan_map);
-bool sendPayloadControlMode(PayloadControl_t control_value);
-bool sendCalibrate(SensorType_t sensor);
-void send_hb();
-
-
-bool validate_alt_rate_mode();
-bool validate_payload_control();
-bool validate_nav_mode();
 
 // packet for transmision
-Packet tx_packet;
-
-SystemInitialize_t system_init;
-
-extern TelemetrySystem_t telemetry_system;
-extern TelemetryControl_t telemetry_control;
-
-volatile bool show_telemetry = false;
-
-volatile bool received_reply = false;
-
-// Payload state
-PayloadControl_t payload_current_request = PAYLOAD_CTRL_OFF;
-PayloadControl_t payload_current_state = PAYLOAD_CTRL_OFF;
-
-// Commands
-Command_t set_command;
-volatile bool set_command_ack;
+//Packet tx_packet;
 
 static float cmd_yaw = 0;
-
-// Calibration
-volatile bool waiting_on_calibrate = false;
-extern volatile SensorType_t calibration_requested;
 
 // for command line (terminal) input
 struct termios initial_settings, new_settings;
@@ -147,201 +104,6 @@ void initializeTest() {
     system_init.serial_num = 0x1234;
 }
 
-//---- Heartbeat Interface
-static float last_heartbeat = 0.0;
-static float last_ctrl = 0.0;
-
-void send_hb()
-{
-    // send heartbeat
-    float now = getElapsedTime();
-
-    /** Update heartbeat */
-    if (now - last_heartbeat > HEARTBEAT_INTERVAL) {
-        last_heartbeat = now;
-        comm_handler->send(TELEMETRY_HEARTBEAT, NULL, 0, NULL);
-    }
-}
-
-//---- Wait for message ACK 
-// Must set these two variables before calling
-//    set_command_ack = false;
-//    received_reply = false;
-
-bool waitForACK() 
-{
-    float sent_time = getElapsedTime();
-    while (!received_reply && getElapsedTime() - sent_time < CMD_ACK_TIMEOUT) {
-        usleep(1000);
-        comm_handler->update();
-        send_hb();
-    }
-
-    if (!received_reply) {
-        printf(" Failed: no response!\n");
-        return false;
-    }
-
-    received_reply = false;
-
-    if (!set_command_ack) {
-        printf(" Failed: got NACK!\n");
-        return false;
-    }
-
-    return true;
-}
-
-
-//---- Send command and wait for ACK
-bool setCommandValue(bst::comms::CommandID_t id, float value) {
-    set_command.id = id;
-    set_command.value = value;
-
-    set_command_ack = false;
-    received_reply = false;
-
-    comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&set_command, sizeof(Command_t), NULL);
-
-    return waitForACK();
-}
-
-//---- Send command and wait for valid ACK and a value to change
-// This function waits for both the ACK from the command, and for a specific
-// value to change. This function is setup for validating uint8_t types at this time.
-// The timeout value is how long to wait for the value to change. It does not control the 
-// timeout waiting for the ACK 
-bool setCheckCommandValue(uint8_t id, int value, uint8_t* check, uint8_t check_value, float timeout ) {
-
-    if (!setCommandValue((bst::comms::CommandID_t) id, value)) {
-        printf(" setCheckCommandValue - command failed\n");
-        return false;
-    }
-
-    float sent_time = getElapsedTime();
-    while (*check != check_value && getElapsedTime() - sent_time < timeout) {
-        usleep(1000);
-        comm_handler->update();
-        send_hb();
-    }
-    if (*check != check_value) {
-        printf(" setCheckCommandValue - validation failed\n");
-        return false;
-    }
-    return true;
-
-}
-
-//---- Send flight plan and wait for ACK
-bool sendFlightPlan(uint8_t *temp_waypoints, uint8_t num_points, FlightPlanMap_t *flight_plan_map)
-{
-    set_command_ack = false;
-    received_reply = false;
-    set_command.id = FLIGHT_PLAN;
-
-    comm_handler->sendCommand(FLIGHT_PLAN, (uint8_t *)temp_waypoints, num_points, flight_plan_map);
-
-    return waitForACK();
-}
-
-bool sendPayloadControlMode(PayloadControl_t control_value) {
-    Command_t command;
-
-    // maintain our requested state
-    payload_current_request = control_value;
-
-    return setCommandValue((bst::comms::CommandID_t) CMD_PAYLOAD_CONTROL, control_value);
-
-    // command.id = CMD_PAYLOAD_CONTROL;
-    // command.value = control_value;
-    // comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
-
-    // return true;
-}
-
-bool sendCalibrate(SensorType_t sensor) {
-    if (calibration_requested != UNKNOWN_SENSOR) {
-        printf(" Failed: Pending request!\n");
-        return false;
-    }
-
-    CalibrateSensor_t calibrate_pkt;
-
-    switch (sensor) {
-        case GYROSCOPE:
-            break;
-        default:
-            printf(" Failed: Can only currently zero gyroscopes!\n");
-            return false;
-    }
-
-    calibration_requested = sensor;
-    calibrate_pkt.sensor = sensor;
-    calibrate_pkt.state = SENT;
-
-    set_command_ack = false;
-    received_reply = false;
-    waiting_on_calibrate = true;
-    set_command.id = SENSORS_CALIBRATE;
-
-    printf("sending calibration packet\n");
-    comm_handler->sendCommand(SENSORS_CALIBRATE, (uint8_t *)&calibrate_pkt, sizeof(CalibrateSensor_t), NULL);
-
-    return waitForACK();
-}
-
-//---- Validate the payload state is in ACTIVE state
-// Active state is required to control the vehicle from the SDK
-bool validate_payload_control() 
-{
-    // validate payload interface is in good state
-    if ( payload_current_state != PAYLOAD_CTRL_ACTIVE && payload_current_state != PAYLOAD_CTRL_READY) {
-        printf("PAYLOAD IS NOT IN ACTIVE OR READY MODE!\n");
-        return false;
-    }
-
-    // Go to active payload control if needed
-    if (payload_current_state != PAYLOAD_CTRL_ACTIVE) {
-        printf(" Activating payload control ...");
-
-        if (!setCheckCommandValue(CMD_PAYLOAD_CONTROL, PAYLOAD_CTRL_ACTIVE, (uint8_t*)&payload_current_state, PAYLOAD_CTRL_ACTIVE, 10.0)) {
-            printf(" Command to activate payload control failed\n");
-            return false;
-        }
-    }
-
-    return true;
-}
-
-//---- Validate the navigation mode is in a PILOT mode for SDK control
-bool validate_nav_mode() 
-{
-    // validate payload interface is in good state
-    if( !validate_payload_control() )
-        return false;
-
-    if (telemetry_control.nav_mode != NAV_PILOT_BODY && telemetry_control.nav_mode != NAV_PILOT_WORLD) {
-        printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('v' command): mode=%u\n", telemetry_control.nav_mode);
-        return false;
-    }
-
-    return true;
-}
-
-//---- Validate the altitude mode is in RATE mode for SDK control
-bool validate_alt_rate_mode() 
-{
-    // validate payload interface is in good state
-    if( !validate_payload_control() )
-        return false;
-
-    if (telemetry_control.alt_mode != ALT_MODE_RATE ) {
-        printf("YOU NEED TO CHANGE TO ALTITUDE RATE CONTROL MODE ('A' command): mode=%u\n", telemetry_control.alt_mode);
-        return false;
-    }
-
-    return true;
-}
 
 //---- Update loop 
 void updateTest() {
@@ -789,6 +551,7 @@ void updateTest() {
     send_hb();
 
     /** Update control interval */
+    static float last_ctrl = 0.0;
     float now = getElapsedTime();
     if (now - last_ctrl > CONTROL_INTERVAL) {
         last_ctrl = now;
