@@ -62,6 +62,7 @@ void BSTModuleFlightPlan::update() {
 }
 
 void BSTModuleFlightPlan::sendCommand(uint8_t type, uint8_t * data, uint16_t size, const void * parameter) {
+	pmesg(VERBOSE_FP, "sendCommand - state=%u\n", fp_send_state);
 	switch(type) {
 		case FLIGHT_PLAN:
 			send_action = PKT_ACTION_COMMAND;
@@ -186,23 +187,15 @@ void BSTModuleFlightPlan::validateReceivedPlan()
 	if(getElapsedTime() - last_flight_plan_sent > waypoint_timeout) {
 		//pmesg(VERBOSE_FP, "validateReceviedPlan\n");
 
-		//FIXME -- implement this better, shouldn't need the exta memory, 
-		// just use rx_temp_plan more intelligently
-		uint8_t counter = 0;
-		for(uint8_t i=0; i<MAX_WAYPOINTS; i++) {
-			if(rx_temp_plan[i].num != INVALID_WAYPOINT) {
-				memcpy(&temp_plan[counter++],&rx_temp_plan[i],sizeof(Waypoint_t));
-			}
-		}
-
 		// make sure mode is ADD 
 		rx_fp_map.mode = ADD;
 
-		if(receiveCommand_function(FLIGHT_PLAN,(uint8_t *)temp_plan,counter*sizeof(Waypoint_t),&rx_fp_map)) {
-			pmesg(VERBOSE_FP, "Navigation accepted plan, sending ACK\n");
+		if(receiveCommand_function(FLIGHT_PLAN,(uint8_t *)rx_temp_plan,MAX_WAYPOINTS*sizeof(Waypoint_t),&rx_fp_map)) 
+		{
+			pmesg(VERBOSE_INFO, "Navigation accepted plan, sending ACK\n");
 			parent->write(FLIGHT_PLAN_MAP,PKT_ACTION_ACK,(uint8_t *)&rx_fp_map,sizeof(FlightPlanMap_t),NULL);
 		} else {
-			pmesg(VERBOSE_FP, "Navigation didn't accept plan, sending NACK\n");
+			pmesg(VERBOSE_WARN, "Navigation didn't accept plan, sending NACK\n");
 			parent->write(FLIGHT_PLAN_MAP,PKT_ACTION_NACK,(uint8_t *)&rx_fp_map,sizeof(FlightPlanMap_t),NULL);
 		}
 
@@ -296,7 +289,7 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 						num_waypoints++;
 					}
 
-					pmesg(VERBOSE_FP, "Sending %u waypoints\n",num_waypoints);
+					pmesg(VERBOSE_INFO, "Sending %u waypoints\n",num_waypoints);
 
 #ifdef VERBOSE
 					switch(tx_fp_map.mode) {
@@ -308,7 +301,7 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 					}
 #endif
 
-					pmesg(VERBOSE_FP, "FLIGHT PLAN MAP SIZE ---- %u\n", sizeof(_FlightPlanMap_t));
+					pmesg(VERBOSE_PACKETS, "FLIGHT PLAN MAP SIZE ---- %u\n", sizeof(_FlightPlanMap_t));
 
 					// send flight plan map
 					parent->write(FLIGHT_PLAN_MAP, send_action, (uint8_t *)&tx_fp_map, sizeof(FlightPlanMap_t), NULL);
@@ -480,6 +473,11 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 				switch(action) {
 					case PKT_ACTION_COMMAND:
 
+						if( fp_send_state != WAITING ) {
+							pmesg(VERBOSE_ERROR,"FLIGHT PLAN MODULE IS NOT IN READY STATE - RESETTING\n");
+							reset();
+						}
+
 						// copy to rx map
 						pmesg(VERBOSE_FP,"FLIGHT_PLAN_MAP:PKT_ACTION_COMMAND - mode=%u\n", ((FlightPlanMap_t*)data)->mode);
 						memcpy((uint8_t *)&rx_fp_map, data, sizeof(FlightPlanMap_t));
@@ -497,6 +495,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 								all_waypoints_received = false;
 
 								pmesg(VERBOSE_FP,"WAITING_FOR_WAYPOINTS\n");
+								pmesg(VERBOSE_INFO,"Recieving new flight plan update\n");
 
 								parent->write(type,PKT_ACTION_ACK,data,size,NULL);
 								break;
@@ -559,7 +558,8 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 										break;
 
 									case WAITING_FOR_FINAL_MAP:
-										pmesg(VERBOSE_FP,"Got final FP MAP, transmission success\n");
+										//pmesg(VERBOSE_FP,"Got final FP MAP, transmission success\n");
+										pmesg(VERBOSE_FP, "Flight plan successfully sent\n");
 
 										//receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
 
@@ -576,7 +576,8 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 							case DELETE:
 								pmesg(VERBOSE_FP,"   ACK DEL_FLIGHT_PLAN\n");
-								pmesg(VERBOSE_FP, "Got final FP MAP, transmission success\n");
+								//pmesg(VERBOSE_FP, "Got final FP MAP, transmission success\n");
+								pmesg(VERBOSE_FP, "Flight plan successfully deleted\n");
 
 								receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
 
@@ -585,6 +586,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 							case FINISH:
 								pmesg(VERBOSE_FP,"FLIGHT_PLAN : ACK - Got final FP MAP ACK, transmission success\n");
+								pmesg(VERBOSE_INFO, "Flight plan update completed\n");
 
 								receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
 
@@ -635,7 +637,8 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 									case SENDING_WAYPOINTS:
 										break;
 									case WAITING_FOR_FINAL_MAP:
-										pmesg(VERBOSE_FP, "Got final FP MAP, transmission success\n");
+										//pmesg(VERBOSE_FP, "Got final FP MAP, transmission success\n");
+										pmesg(VERBOSE_INFO, "Flight plan successfully updated\n");
 
 										receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
 
@@ -656,7 +659,8 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 						break;
 					case PKT_ACTION_NACK:
 						// TODO
-						pmesg(VERBOSE_WARN,"FLIGHT_PLAN_MAP:PKT_ACTION_NACK - mode=%u\n", ((FlightPlanMap_t*)data)->mode);
+						//pmesg(VERBOSE_WARN,"FLIGHT_PLAN_MAP:PKT_ACTION_NACK - mode=%u\n", ((FlightPlanMap_t*)data)->mode);
+						pmesg(VERBOSE_WARN,"Flight plan update was rejected (mode=%u)\n", ((FlightPlanMap_t*)data)->mode);
 						break;
 
 					case PKT_ACTION_STATUS:
