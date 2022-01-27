@@ -40,6 +40,7 @@ void printTestHelp() {
     printf("\n");
     printf("  h   : Send payload heartbeat\n");
     printf("  r   : Send payload ready comannd \n");
+    printf("  c   : Send payload active comannd \n");
     printf("  o   : Send payload off comannd \n");
     printf("  s   : Send payload shutdown comannd \n");
     printf("\n");
