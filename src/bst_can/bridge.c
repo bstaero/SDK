@@ -31,29 +31,27 @@
 using namespace bst::comms::canpackets;
 #endif
 
-#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx
+#ifndef ARCH_stm32f1
   #include "helper_functions.h"
   #include "simulated_can.h"
 #endif
 
 #include "debug.h"
 
-#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx
-  #if ! defined STM32F413xx && ! defined STM32F405xx
-    #include "can.h"
-    #include "led.h" // DEBUG
-  #else
-uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
-	return 0;
-}
+#if defined ARCH_stm32f4 || defined ARCH_stm32f1
+  #include "can.h"
+  #include "led.h" // DEBUG
+
+  #if defined _SP_RECEIVER || defined _SP_FUTABA
+    #include "clock.h"
   #endif
 
-  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx
+  #if defined ARCH_stm32f1
     uint8_t checkFletcher16(uint8_t * data, uint8_t size);
     void setFletcher16 (uint8_t * data, uint8_t size);
   #endif
 #else
-	uint8_t CAN_Read(uint8_t p) {return simulatedCANRead();}
+	uint8_t CAN_Read(uint8_t p) {return simulatedCANRead(p);}
 	uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
 		return simulatedCANWrite(p, id, data, size);
 	}
@@ -65,8 +63,10 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
 #endif
 
 #if defined BOARD_core && defined IMPLEMENTATION_firmware
- #include "uart.h"
- #include "clock.h"
+  #if (HW_VERSION == 2030) || (HW_VERSION == 2040)
+    #include "uart.h"
+    #include "clock.h"
+  #endif
 #endif
 
 #ifdef BOARD_pro_arbiter
@@ -77,6 +77,9 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
  #include "dip.h"
 #endif
 
+#if defined IMPLEMENTATION_swil
+extern uint8_t p_new_gps_data;
+#endif
 /** @addtogroup Source
  * @{
  */ 
@@ -95,6 +98,7 @@ extern uint8_t can_gps_sensor; // implemented elsewhere
 extern uint8_t can_pwm_in; // implemented elsewhere
 
 void updateActuatorValues(uint16_t * values); // implemented elsewhere
+void updateActuator(uint16_t value); // implemented elsewhere
 void updatePWMIn(float system_time, uint16_t * usec); // implemented elsewhere
 
 void updateGPS(
@@ -124,6 +128,9 @@ void updateGyroscope(float system_time,
 		float gx, float gy, float gz); // [rad/s]
 
 void updateMagnetometer(float system_time,
+		float mx, float my, float mz); // [uT]
+
+void updateMagnetometerID(uint8_t id, float system_time,
 		float mx, float my, float mz); // [uT]
 
 void updateIMU(float system_time, 
@@ -274,7 +281,7 @@ void BRIDGE_HandleMHPPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleIMUPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleAccelPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGyroPkt(uint8_t *byte,uint8_t size);
-void BRIDGE_HandleMagPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleMagPkt(uint8_t node_id,uint8_t *byte,uint8_t size);
 void BRIDGE_HandleActuatorPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte,uint8_t size);
@@ -350,8 +357,9 @@ float getElapsedTime(void);
 void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 {
 	uint8_t * data = (uint8_t *) data_ptr;
+	uint8_t node_id = (uint8_t)(id >> 8);
 
-	switch(id)
+	switch(id) // only last 9 bits are for ID
 	{
 		case CAN_PKT_RECEIVER:   BRIDGE_HandleReceiverPkt(data,size); break;
 		case CAN_PKT_PRESSURE:   BRIDGE_HandlePressurePkt(data,size); break;
@@ -360,7 +368,10 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_IMU:        BRIDGE_HandleIMUPkt(data,size); break;
 		case CAN_PKT_ACCEL:      BRIDGE_HandleAccelPkt(data,size); break;
 		case CAN_PKT_GYRO:       BRIDGE_HandleGyroPkt(data,size); break;
-		case CAN_PKT_MAG:        BRIDGE_HandleMagPkt(data,size); break;
+#if defined CAN_NODE_ID
+		case ((0x0100) | CAN_PKT_MAG):
+#endif
+		case CAN_PKT_MAG:        BRIDGE_HandleMagPkt(node_id,data,size); break;
 		case CAN_PKT_ACTUATOR:   BRIDGE_HandleActuatorPkt(data,size); break;
 		case CAN_PKT_GNSS:       BRIDGE_HandleGNSSPkt(data,size); break;
 		case CAN_PKT_GNSS_UTC:   BRIDGE_HandleGNSSUTCPkt(data,size); break;
@@ -701,7 +712,7 @@ void BRIDGE_HandleGyroPkt(uint8_t *byte, uint8_t size)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleMagPkt(uint8_t *byte, uint8_t size)
+void BRIDGE_HandleMagPkt(uint8_t node_id, uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_Magnetometer_t);
@@ -726,8 +737,15 @@ void BRIDGE_HandleMagPkt(uint8_t *byte, uint8_t size)
 			data->mx, data->my, data->mz);
 	//mag_count++;
 #else
-	updateMagnetometer(t0, 
-			data->mx, data->my, data->mz);
+	if(node_id == 0) {
+		updateMagnetometer(t0, 
+				data->mx, data->my, data->mz);
+	} else {
+#if defined CAN_NODE_ID
+		updateMagnetometerID(node_id,t0,
+				data->mx, data->my, data->mz);
+#endif
+	}
 	//mag_count++;
 #endif
 
@@ -885,6 +903,8 @@ void BRIDGE_HandleGNSSPkt(uint8_t *byte, uint8_t size)
 			data->vx, data->vy, data->vz,
 			data->heading, data->speed,
 			data->pdop, data->satellites, data->fix_type);
+
+	p_new_gps_data = 1;
 #ifndef ARCH_stm32f1
 	gps_count++;
 #endif
@@ -1708,6 +1728,19 @@ uint8_t BRIDGE_SendGyroPkt(uint8_t p, float gx, float gy, float gz, float temp)
  */
 uint8_t BRIDGE_SendMagPkt(uint8_t p, float mx, float my, float mz)
 {
+	return BRIDGE_SendMagPkt_ID(p, CAN_DEVICE_0, mx, my, mz);
+}
+
+/**
+ * @brief	Send Magnetometer packet
+ * @param	p CAN peripheral ID
+ * @param	mx Magnetic field strength value along x-axis [uT]
+ * @param	my Magnetic field strength value along y-axis [uT]
+ * @param	mz Magnetic field strength value along z-axis [uT]
+ * @retval None
+ */
+uint8_t BRIDGE_SendMagPkt_ID(uint8_t p, uint8_t node_id, float mx, float my, float mz)
+{
 	CAN_Magnetometer_t data;
 
 	// fill packet
@@ -1717,7 +1750,9 @@ uint8_t BRIDGE_SendMagPkt(uint8_t p, float mx, float my, float mz)
 	data.mz = mz;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Magnetometer_t));
 
-	return CAN_Write(p, CAN_PKT_MAG, &data, sizeof(CAN_Magnetometer_t));
+	uint32_t id = ((uint32_t)node_id << 8) | (uint32_t)CAN_PKT_MAG;
+
+	return CAN_Write(p, id, &data, sizeof(CAN_Magnetometer_t));
 }
 
 /**
@@ -2081,7 +2116,7 @@ __inline uint32_t BRIDGE_GetPktDrop(void)
 	return BRIDGE_pktDrops;
 }
 
-#if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx
+#ifdef ARCH_stm32f1
 uint8_t checkFletcher16(uint8_t * data, uint8_t size) {
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;

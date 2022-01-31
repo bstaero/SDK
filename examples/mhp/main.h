@@ -33,6 +33,9 @@ bool writeFile(uint8_t * data, uint16_t num);
 void printHelp();
 
 void setupTime();
-float getElapsedTime();
+
+extern "C" {
+	float getElapsedTime();
+}
 
 #endif
