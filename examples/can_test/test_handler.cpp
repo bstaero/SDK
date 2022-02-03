@@ -45,6 +45,8 @@ uint32_t mag_cnt;
 
 uint32_t stat_p_cnt;
 
+uint8_t p_new_gps_data;
+
 
 void updateActuatorValues(uint16_t * values) {}
 void updatePWMIn(float system_time, uint16_t * usec) {}

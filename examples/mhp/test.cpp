@@ -199,6 +199,11 @@ void updateTest() {
 					//temp_axis_mapping.axis[1] = 2;
 					//temp_axis_mapping.axis[2] = 3;
 
+					// cable to the back & upside down
+					//temp_axis_mapping.axis[0] = -2;
+					//temp_axis_mapping.axis[1] = -1;
+					//temp_axis_mapping.axis[2] = -3;
+
 					// aeropod mount
 					//temp_axis_mapping.axis[0] = 2;
 					//temp_axis_mapping.axis[1] = -1;
