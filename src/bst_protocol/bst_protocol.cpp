@@ -42,7 +42,8 @@ uint16_t BSTProtocol::update() {
 		}
 	}
 
-	if(rx_queue.size() > 0) {
+	uint8_t cnt = 0;
+	while(rx_queue.size() > 0 && ++cnt <= 3) {
 		temp_packet = rx_queue.front();
 		rx_queue.pop();
 		for(uint8_t i =0; i< num_modules; i++) { if(modules[i] && modules[i]->handles(temp_packet.getType())) {
