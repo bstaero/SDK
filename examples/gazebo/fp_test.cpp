@@ -130,7 +130,7 @@ double latitude_diff, longitude_diff, altitude_diff;
             break;
 
         case eSEND_PAYLOAD_READY_ST:
-            if( getElapsedTime() > waiting_tout + 2  )
+            if( getElapsedTime() > waiting_tout + 2 )
             {
                 // validate payload interface is in ready state
                 if ( payload_current_state  != PAYLOAD_CTRL_READY) {
@@ -144,6 +144,7 @@ double latitude_diff, longitude_diff, altitude_diff;
                 else if( validate_payload_control() ) {
                     printf(" done\n");
                     fsm_test_state = eZERO_GYROS_ST;
+                    //fsm_test_state = eSEND_WP_ST;
                 } else {
                     printf(" failed\n");
                     exitTest();   
@@ -249,11 +250,14 @@ double latitude_diff, longitude_diff, altitude_diff;
                 // }   
 
                 local_step = test_step % 4;
+                flight_plan.clear();
                 flight_plan.reset();    
 
                 // Add a waypoint to the plan 
                 temp_waypoint.num = 80;
                 temp_waypoint.next = 80;
+                // temp_waypoint.num = test_step;
+                // temp_waypoint.next = test_step;               
                
                 switch( local_step )
                 {
@@ -293,22 +297,35 @@ double latitude_diff, longitude_diff, altitude_diff;
                 memcpy(&flight_plan_map, flight_plan.getMap(), sizeof(FlightPlanMap_t));
                 flight_plan_map.mode = ADD;
 
+                float fp_sent =  getElapsedTime();
+                printf("%lu,%.4f", test_step, fp_sent);
+
                 // Sending vehicle to waypoint configured
                 if( !sendFlightPlan((uint8_t *)temp_waypoints, num_points, &flight_plan_map) )
                     printf(" Command to send waypiont flightplan failed\n");
-                else // Increment step for next iteration
+                else { 
+                    // Increment step for next iteration
                     test_step++;               
+
+                    float now = getElapsedTime();
+                    printf(",%.4f,%.4f\n", now, now-fp_sent);
+                    if( now - fp_sent > 0.5 )
+                        printf("SLOW FLIGHT PLAN: %4.f\n", now-fp_sent);
+                }
                       
                 //printf("\n***  1.Sending WP --- step: %zu  th_step: %zu lat: %f  long: %f  alt: %f ***\n", test_step, theoric_test_step, temp_waypoint.latitude, temp_waypoint.longitude, temp_waypoint.altitude);    
                 //printf("***  2.Telemetry WP --- lat: %f  long: %f  alt: %f ***\n", telemetry_position.latitude, telemetry_position.longitude, telemetry_position.altitude);    
                 //printf("***  3.latitude_diff: %f  longitude_diff: %f  altitude_diff: %f  ***\n", latitude_diff, longitude_diff, altitude_diff);      
-                printf("\n***  1.Sending WP --- step: %zu  th_step: %zu send_lat: %f  actual_lat: %f diff_lat:%f send_long: %f actual_long: %f diff_long:%f --- ***\n", test_step, theoric_test_step, temp_waypoint.latitude, telemetry_position.latitude, latitude_diff, temp_waypoint.longitude, telemetry_position.longitude, longitude_diff);    
+                //printf("\n***  1.Sending WP --- step: %zu  th_step: %zu send_lat: %f  actual_lat: %f diff_lat:%f send_long: %f actual_long: %f diff_long:%f --- ***\n", test_step, theoric_test_step, temp_waypoint.latitude, telemetry_position.latitude, latitude_diff, temp_waypoint.longitude, telemetry_position.longitude, longitude_diff);    
 
                 if( !isFirstWPExecuted )            
                     fsm_test_state = eCMD_AIRCRAFT_ST;
 
-                if( num_to_send <= test_step )
+                if( num_to_send <= test_step ){
+                    // printf(" exiting test\n");
+                    // exitTest();
                     fsm_test_state = eCMD_LAND_ST;
+                }
 
                 waiting_tout = getElapsedTime();                                 
             }

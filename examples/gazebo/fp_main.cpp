@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 {
 size_t steps = 0;
 #ifdef VERBOSE
-	verbose = VERBOSE_INFO;
+	verbose = VERBOSE_WARN;
 #endif
 
 	uint16_t temp = 0x0100;
