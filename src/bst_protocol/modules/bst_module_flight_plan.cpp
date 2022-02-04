@@ -37,19 +37,12 @@ BSTModuleFlightPlan::BSTModuleFlightPlan() : BSTCommunicationsModule () {
 }
 
 void BSTModuleFlightPlan::update() {
-	float now = getElapsedTime();
-
-	// check sending state
-	if(fp_send_state != WAITING && fp_send_state != WAITING_FOR_WAYPOINTS && fp_send_state != WAITING_FOR_FINAL_MAP_RX)  {
-		finishSend(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,0,&tx_fp_map);
-	}
 
 	// check receiving state
 	if(fp_send_state == WAITING_FOR_WAYPOINTS || fp_send_state == WAITING_FOR_FINAL_MAP_RX) {
 
-		now = getElapsedTime();
 		// send termination if we have all waypoints
-		if( fp_send_state == WAITING_FOR_FINAL_MAP_RX && (now - last_fpmap_tx) >= waypoint_timeout ) {
+		if( fp_send_state == WAITING_FOR_FINAL_MAP_RX ) {
 			sendTermination();
 		} else {
 			if( ! all_waypoints_received )
@@ -59,6 +52,12 @@ void BSTModuleFlightPlan::update() {
 		}
 
 	}
+
+	// check sending state
+	else if(fp_send_state != WAITING ) {
+		finishSend(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,0,&tx_fp_map);
+	}
+
 }
 
 void BSTModuleFlightPlan::sendCommand(uint8_t type, uint8_t * data, uint16_t size, const void * parameter) {
@@ -204,6 +203,7 @@ void BSTModuleFlightPlan::validateReceivedPlan()
 
 		pmesg(VERBOSE_FP, "FLIGHT_PLAN : FINAL MAP\n");
 
+		last_fpmap_tx = 0;
 		last_flight_plan_sent = getElapsedTime();
 	}
 
@@ -246,6 +246,9 @@ void BSTModuleFlightPlan::sendTermination() {
 
 		return;
 	}
+
+	if( getElapsedTime() - last_fpmap_tx < waypoint_timeout ) 
+		return;
 
 	// Send termination
 	rx_fp_map.mode = FINISH;
@@ -408,6 +411,7 @@ void BSTModuleFlightPlan::finishSend(uint8_t type, uint8_t * data, uint16_t size
 								fp_send_state = WAITING_FOR_FINAL_MAP;
 								//last_flight_plan_sent = getElapsedTime() - waypoint_timeout + (waypoint_timeout/20.0);
 
+								last_flight_plan_sent = getElapsedTime();
 								pmesg(VERBOSE_FP,"WAITING_FOR_FINAL_MAP\n");
 							}
 						}
@@ -463,6 +467,9 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 		case FLIGHT_PLAN_MAP:
 			pmesg(VERBOSE_FP,"-> FLIGHT_PLAN_MAP\n");
 
+			// we received a MAP, so we can update the next map
+			last_flight_plan_sent = 0;
+
 			// check for action of packet
 			if(action != PKT_ACTION_REQUEST) {
 
@@ -486,6 +493,9 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 							case ADD:
 								pmesg(VERBOSE_FP,"   ADD_FLIGHT_PLAN\n");
 
+								pmesg(VERBOSE_FP,"   <- PKT_ACTION_ACK\n");
+								parent->write(type,PKT_ACTION_ACK,data,size,NULL);
+
 								bzero(rx_temp_plan, sizeof(Waypoint_t) * MAX_WAYPOINTS);
 								for(uint16_t i=0; i<MAX_WAYPOINTS; i++)
 									rx_temp_plan[i].num = INVALID_WAYPOINT;
@@ -494,10 +504,9 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 								fp_send_state = WAITING_FOR_WAYPOINTS;
 								all_waypoints_received = false;
 
-								pmesg(VERBOSE_FP,"WAITING_FOR_WAYPOINTS\n");
+								pmesg(VERBOSE_FP,"   WAITING_FOR_WAYPOINTS\n");
 								pmesg(VERBOSE_INFO,"Recieving new flight plan update\n");
 
-								parent->write(type,PKT_ACTION_ACK,data,size,NULL);
 								break;
 
 							case DELETE:
@@ -534,21 +543,20 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 										break;
 
 									case SENT_FP_MAP:
-										pmesg(VERBOSE_FP,"   SENT_FP_MAP\n");
+										//pmesg(VERBOSE_FP,"   SENT_FP_MAP\n");
 
 										if(memcmp(&tx_fp_map,&rx_fp_map,sizeof(FlightPlanMap_t)) == 0) {
 											if(num_waypoints == 0) {
 												fp_send_state = WAITING_FOR_FINAL_MAP;
 
-												pmesg(VERBOSE_FP,"WAITING_FOR_FINAL_MAP\n");
+												pmesg(VERBOSE_FP,"   WAITING_FOR_FINAL_MAP\n");
 
-												//last_flight_plan_sent = getElapsedTime() - waypoint_timeout + (waypoint_timeout/20.0);
+												last_flight_plan_sent = getElapsedTime();
 											} else {
 												fp_send_state = SENDING_WAYPOINTS;
-												pmesg(VERBOSE_FP,"SENDING_WAYPOINTS\n");
+												pmesg(VERBOSE_FP,"   SENDING_WAYPOINTS\n");
 
-												last_waypoint_sent = getElapsedTime() - (waypoint_timeout/20.0);
-												if(last_waypoint_sent < 0.0) last_waypoint_sent = 0.0;
+												last_waypoint_sent = 0;
 											}
 
 										}
@@ -588,8 +596,6 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 								pmesg(VERBOSE_FP,"FLIGHT_PLAN : ACK - Got final FP MAP ACK, transmission success\n");
 								pmesg(VERBOSE_INFO, "Flight plan update completed\n");
 
-								receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
-
 								switch( fp_send_state ) {
 									case WAITING_FOR_FINAL_MAP:
 										parent->write(type,PKT_ACTION_ACK,data,size,NULL);
@@ -603,6 +609,8 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 									default:
 										break;
 								}
+
+								receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
 
 								reset();
 
@@ -623,14 +631,13 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 												pmesg(VERBOSE_FP, "WAITING_FOR_FINAL_MAP\n");
 
-												//last_flight_plan_sent = getElapsedTime() - waypoint_timeout + (waypoint_timeout/20.0);
+												last_flight_plan_sent = getElapsedTime();
 											} else {
 												fp_send_state = SENDING_WAYPOINTS;
 												pmesg(VERBOSE_FP, "SENDING_WAYPOINTS\n");
-											}
 
-											last_waypoint_sent = getElapsedTime() - (waypoint_timeout/20.0);
-											if(last_waypoint_sent < 0.0) last_waypoint_sent = 0.0;
+												last_waypoint_sent = 0;
+											}
 
 										}
 										break;
@@ -725,6 +732,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 									all_waypoints_received = true;
 									requesting_missing_points = false;
 									//last_flight_plan_sent = getElapsedTime() - waypoint_timeout + (waypoint_timeout/20.0);
+									last_flight_plan_sent = 0;
 									validateReceivedPlan();
 								}
 							}
@@ -734,9 +742,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 						last_waypoint_sent = getElapsedTime() - (waypoint_timeout/20.0);
 						if(last_waypoint_sent < 0.0) last_waypoint_sent = 0.0;
 
-#ifdef VERBOSE
 						pmesg(VERBOSE_FP,"-> FLIGHT_PLAN_WAYPOINT ACK %u\n",((Waypoint_t *)data)->num);
-#endif
 
 						//receiveReply_function(type,data,size,true,NULL);
 
@@ -762,7 +768,6 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 				}
 
 			}
-
 
 			break;
 

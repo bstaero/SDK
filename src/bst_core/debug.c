@@ -59,7 +59,7 @@ void pmesg(VerboseLevel_t level, const char* format, ...) {
 				break;
 
 			case VERBOSE_FP:
-				fprintf(stdout, FG_GRAY " %.2f [FP] " FG_RESET, getElapsedTime());
+				fprintf(stdout, FG_GRAY " %.3f [FP] " FG_RESET, getElapsedTime());
 				break;
 
 			case VERBOSE_PARAM:
