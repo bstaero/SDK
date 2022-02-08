@@ -521,13 +521,13 @@ void updateTest() {
                 if( !validate_payload_control() )
                     break;
 
-                if (telemetry_control.nav_mode != NAV_WPT) {
-                    printf("Setting vehicle to waypoint nav ...");
-                    if (!setCheckCommandValue(CMD_NAV_MODE, NAV_WPT, (uint8_t*)&telemetry_control.nav_mode, NAV_WPT, 2.0)) {
-                        printf(" failed\n");
-                    } else
-                        printf(" done\n");
-                }
+                // if (telemetry_control.nav_mode != NAV_WPT) {
+                //     printf("Setting vehicle to waypoint nav ...");
+                //     if (!setCheckCommandValue(CMD_NAV_MODE, NAV_WPT, (uint8_t*)&telemetry_control.nav_mode, NAV_WPT, 2.0)) {
+                //         printf(" failed\n");
+                //     } else
+                //         printf(" done\n");
+                // }
 
                 printf("Sending vehicle to waypoint 80\n");
                 if( !setCommandValue(CMD_WAYPOINT, 80) )
