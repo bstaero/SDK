@@ -29,10 +29,6 @@ int8_t verbose = VERBOSE_NONE; /* the higher, the more messages... */
 char str_val[MAX_OUT_STR];
 #endif
 
-extern "C" {
-	float getElapsedTime(); // defined elsewhere
-}
-
 void pmesg(VerboseLevel_t level, const char* format, ...) {
 	/* Empty body, so a good compiler will optimise calls to pmesg away */
 
@@ -59,7 +55,7 @@ void pmesg(VerboseLevel_t level, const char* format, ...) {
 				break;
 
 			case VERBOSE_FP:
-				fprintf(stdout, FG_GRAY " %.3f [FP] " FG_RESET, getElapsedTime());
+				fprintf(stdout, FG_GRAY "    [FP] " FG_RESET);
 				break;
 
 			case VERBOSE_PARAM:

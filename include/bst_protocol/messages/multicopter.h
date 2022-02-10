@@ -51,7 +51,10 @@ typedef enum {
 	/* contained in the parent folder */
 	/*  */
 
-	/* position */
+	/* Composite */
+	CMD_VEL_CTRL=26,
+
+	/* Position */
 	CMD_X_POS=27,
 	CMD_Y_POS=28,
 	CMD_X_VEL=29,

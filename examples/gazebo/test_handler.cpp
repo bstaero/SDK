@@ -569,7 +569,7 @@ bool validate_nav_mode()
         return false;
 
     if (telemetry_control.nav_mode != NAV_PILOT_BODY && telemetry_control.nav_mode != NAV_PILOT_WORLD) {
-        printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('v' command): mode=%u\n", telemetry_control.nav_mode);
+        printf("YOU NEED TO CHANGE TO VELOCITY CONTROL MODE ('V' command): mode=%u\n", telemetry_control.nav_mode);
         return false;
     }
 
