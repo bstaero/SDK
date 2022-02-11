@@ -254,13 +254,12 @@ void updateTest() {
 						break;
 
 					// call the sendCommand directly since we do not/should not wait for ACK
-					printf("Sending horizontal stop command\n");
-					command.id = CMD_X_VEL;
-					command.value = 0.0;
-					comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
-
-					command.id = CMD_Y_VEL;
-					command.value = 0.0;
+					printf("Sending stop command\n");
+					command.id = CMD_VEL_CTRL;
+					command.value = 0;
+					buff[0] = (int8_t)(0);
+					buff[1] = (int8_t)(0);
+					buff[2] = (int8_t)(0);
 					comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
 
 					break;
@@ -431,7 +430,7 @@ void updateTest() {
 						break;
 
 					printf("Sending position hold flight mode command ...");
-					if (!setCheckCommandValue(CMD_NAV_MODE, NAV_PILOT_WORLD, (uint8_t*)&telemetry_control.nav_mode, NAV_PILOT_WORLD, 2.0)) {
+					if (!setCheckCommandValue(CMD_NAV_MODE, NAV_POS, (uint8_t*)&telemetry_control.nav_mode, NAV_POS, 2.0)) {
 						printf(" failed\n");
 					} else
 						printf(" done\n");
