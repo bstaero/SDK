@@ -9,6 +9,7 @@ gazebo_test/test
 examples/can_test/test
 examples/mhp/test
 examples/gazebo/test
+examples/gazebo/fp_test
 examples/payload/test
 examples/mhp/test
 .idea/
