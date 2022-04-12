@@ -25,7 +25,7 @@
 import struct
 
 from .comm_packets.comm_packets import PacketTypes
-
+from .comm_packets.payload import PayloadID
 
 class BSTPacket:
     BST_MAX_PACKET_SIZE = 128
@@ -65,7 +65,10 @@ class BSTPacket:
                     self.TYPE = PacketTypes(pkt_type)
                     hwil = 'HWIL_' in self.TYPE.name
                 except ValueError:
-                    print("ERROR - No such type: " + str(pkt_type))
+                    try:
+                        self.TYPE = PayloadID(pkt_type)
+                    except ValueError:
+                        raise ValueError("No such type: " + str(pkt_type))
 
                 # PKT_ACTION
                 self.ACTION = buf[i]
@@ -157,7 +160,7 @@ class BSTPacket:
         total_size = self.OVERHEAD + self.SIZE
 
         if len(raw_data) != total_size:
-            print('Bad check size')
+            raise ValueError('Bad checksum size: ',len(raw_data),' vs ',total_size)
             return False
 
         for i in range(0, total_size):
