@@ -65,7 +65,6 @@ def standard_handler(pkt):
             if pkt.TYPE.value >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
                 packet_mapping[pkt.TYPE.value].buffer = [None] * 64
 
-            print(pkt.DATA)
             packet_mapping[pkt.TYPE.value].parse(pkt.DATA)
             packet_data = packet_mapping[pkt.TYPE.value]
         except BufferError as ErrorMessage:
