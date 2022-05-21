@@ -45,6 +45,7 @@ uint16_t BSTProtocol::update() {
 	uint8_t cnt = 0;
 	while(rx_queue.size() > 0 && ++cnt <= 3) {
 		temp_packet = rx_queue.front();
+		last_address = temp_packet.getFromAddress();
 		rx_queue.pop();
 		for(uint8_t i =0; i< num_modules; i++) { if(modules[i] && modules[i]->handles(temp_packet.getType())) {
 				modules[i]->parse(temp_packet.getType(), temp_packet.getAction(), (uint8_t *)temp_packet.getDataPtr(), temp_packet.getDataSize());
@@ -120,4 +121,8 @@ void BSTProtocol::setAddressing(bool on_off) {
 
 	rx_packet.setAddressing(on_off);
 	tx_packet.setAddressing(on_off);
+}
+
+uint32_t BSTProtocol::getLastAddress() {
+	return last_address;
 }
