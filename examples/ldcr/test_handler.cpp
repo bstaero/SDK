@@ -163,15 +163,23 @@ void requestPowerOn(void) {
 void printLDCRValues(void) {
 	static uint32_t num_readings = 0;
 	num_readings++;
+	static uint8_t counter=0;
 
-	if(display_telemetry)
+	if(ldcr_data.calibration_state == 25) {
+		counter ++;
+	} else {
+		counter = 0;
+	}
+
+	if(display_telemetry && counter > 3)
 		//printf("0x%04x %c 0x%08x %u 0x%04x %07u %02u %+010i %+010i %014lu %014lu [ %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f | %0.2f ]\n\r",
 				//ldcr_data.serial_number,
 				//ldcr_data.hw_revision,
 				//ldcr_data.sw_revision,
 				//ldcr_data.platform_type,
 				//ldcr_data.platform_serial,
-		printf("%07u %02u %+010i %+010i %014lu %014lu [ %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f | %0.2f ] %0.2f\n\r",
+		//printf("%07u %02u %+010i %+010i %016lu %016lu [ %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f | %0.2f ] %0.2f\n\r",
+		printf("%u,%u,%i,%i,%lu,%lu,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f\n\r",
 				ldcr_data.system_time,
 				ldcr_data.calibration_state,
 				ldcr_data.sum_data[0],
