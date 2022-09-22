@@ -73,10 +73,12 @@ void updateIMU(float system_time,
 		float mx, float my, float mz) {}
 
 void updateDynamicPressure(float system_time,
-		float pressure, float temperature) {}
+		float pressure, float temperature) { printf("DynP: %04.1f\n",pressure);}
 
 void updateStaticPressure(float system_time,
-		float pressure, float temperature) {stat_p_cnt++;}
+		float pressure, float temperature) {
+	stat_p_cnt++; printf("StatP: %04.1f\n",pressure);
+}
 
 void updateMHPSensors(float system_time,
 		float static_pressure,
@@ -84,10 +86,14 @@ void updateMHPSensors(float system_time,
 		float temperature,
 		float humidity,
 		float gyroscope[3],
-		float accelerometer[3]) {}
+		float accelerometer[3]) {
+	printf("MHP\n");
+}
 
 void updateHumidity(float system_time,
-		float humidity) {}
+		float humidity) {
+	printf("RH: %03.1f\n",humidity);
+}
 
 void updateAGL(float system_time,
 		float distance) {}
@@ -96,7 +102,7 @@ void updateProximity(float system_time,
 		float distance) {}
 
 void updateTemperature(float system_time,
-		float temperature) {}
+		float temperature) {printf("Temp: %02.1f\n",temperature);}
 
 void updateSupply(float system_time,
 		float voltage, float current, float coulomb_count, float temperature) {}
