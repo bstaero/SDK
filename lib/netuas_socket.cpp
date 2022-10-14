@@ -43,13 +43,17 @@ bool NetuasSocket::initialize(const char * hostname, const char * port, const ch
 		comm_type = CommunicationsInterface::SOCKET_TCP;
 		mode_type = Socket::CLIENT;
 	} else {
+#ifdef DEBUG
 		printf("NetuasSocket::ERROR -- invalid socket type requested\n");
+#endif
 		return false;
 	}
 
 	sock_ptr = new Socket(host_str.c_str(), port_str.c_str(), sock_type);
 	if( sock_ptr == NULL ) {
+#ifdef DEBUG
 		printf("NetuasSocket::ERROR -- could not create socket\n");
+#endif
 		return false;
 	}
 
