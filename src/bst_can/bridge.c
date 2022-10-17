@@ -63,7 +63,7 @@ using namespace bst::comms::canpackets;
 #endif
 
 #if defined BOARD_core && defined IMPLEMENTATION_firmware
-  #if (HW_VERSION == 2030) || (HW_VERSION == 2040)
+  #if (HW_VERSION == 2030) || (HW_VERSION == 2040) || (HW_VERSION == 2050)
     #include "uart.h"
     #include "clock.h"
   #endif
