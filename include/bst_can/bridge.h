@@ -51,6 +51,8 @@
 /** @defgroup BRIDGE_Private_Defines
 * @{
 */ 
+#define CAN_DEVICE_0 0
+#define CAN_DEVICE_1 1
 	  
 /**
 * @}
@@ -93,7 +95,9 @@ uint8_t BRIDGE_SendAccelPkt(uint8_t p,
 		float ax, float ay, float az, float temp);
 uint8_t BRIDGE_SendGyroPkt(uint8_t p, 
 		float gx, float gy, float gz, float temp);
-uint8_t BRIDGE_SendMagPkt(uint8_t p, 
+uint8_t BRIDGE_SendMagPkt(uint8_t p,
+		float mx, float my, float mz);
+uint8_t BRIDGE_SendMagPkt_ID(uint8_t p, uint8_t node_id,
 		float mx, float my, float mz);
 uint8_t BRIDGE_SendActuatorPkt(uint8_t p, uint16_t *usec);
 uint8_t BRIDGE_SendGNSSPkt(uint8_t p, 

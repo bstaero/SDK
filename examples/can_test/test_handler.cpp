@@ -84,6 +84,17 @@ void updateMHPSensors(float system_time,
 		float gyroscope[3],
 		float accelerometer[3]) {}
 
+void updateMHPRaw(float system_time,
+		float differential_pressure[5]) {}
+
+void updateMHPProducts(float system_time,
+		float alpha,
+		float beta,
+		float ias,
+		float tas) {}
+
+void updateWind(float system_time, float u, float v, float w) {}
+
 void updateHumidity(float system_time,
 		float humidity) {}
 
@@ -129,6 +140,9 @@ void updateMagValues(
 		float mag_x,
 		float mag_y,
 		float mag_z) {}
+
+void updateOrientation(float system_time,
+		float q[4]) {}
 
 void handleNDVI(float ts, uint8_t id, float red, float near_ir, float ir_ambient, float ir_object) {}
 

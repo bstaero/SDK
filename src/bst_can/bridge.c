@@ -67,8 +67,10 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
 #endif
 
 #if defined BOARD_core && defined IMPLEMENTATION_firmware
- #include "uart.h"
- #include "clock.h"
+  #if (HW_VERSION == 2030) || (HW_VERSION == 2040) || (HW_VERSION == 2050)
+    #include "uart.h"
+    #include "clock.h"
+  #endif
 #endif
 
 #ifdef BOARD_pro_arbiter
@@ -96,72 +98,9 @@ extern uint8_t can_gps_sensor; // implemented elsewhere
 
 extern uint8_t can_pwm_in; // implemented elsewhere
 
-// ---
-// All of the values in the update functions should be referenced to
-// the autopilot frame, defined by the PCB
-// ---
-#ifdef __cplusplus
-  extern "C" {
-#endif
-void updateDynamicPressure(float system_time,
-		float pressure, float temperature); // [hPa, deg C]
-
-void updateStaticPressure(float system_time,
-		float pressure, float temperature); // [hPa, deg C]
-
-void updateTemperature(float system_time,
-		float temperature); // [deg C]
-
-void updateHumidity(float system_time,
-		float humidity); // [%]
-
-void updateAirData(float system_time,
-		float static_pressure, // [Pa]
-		float dynamic_pressure, // [Pa]
-		float air_temperature, // [deg C]
-		float humidity); // [%]
-
-void updateMHPSensors(float system_time,
-		float static_pressure,
-		float dynamic_pressure[5],
-		float temperature,
-		float humidity,
-		float gyroscope[3],
-		float accelerometer[3]);
-
-void updateMHPRaw(float system_time,
-		float differential_pressure[5]);
-
-void updateMHPProducts(float system_time,
-		float alpha,
-		float beta,
-		float ias,
-		float tas);
-
-void updateWind(float system_time, float u, float v, float w); // [m/s]
-
-void updateIMU(float system_time, 
-		float ax, float ay, float az, 
-		float gx, float gy, float gz, 
-		float mx, float my, float mz);
-
-void updateAccelerometer(float system_time,
-		float ax, float ay, float az); // [m/s^2]
-
-void updateGyroscope(float system_time,
-		float gx, float gy, float gz); // [rad/s]
-
-void updateMagnetometer(float system_time,
-		float mx, float my, float mz); // [uT]
-
-void updateMagValues(
-		float ts,
-		float mag_x,
-		float mag_y,
-		float mag_z);
-
-void updateOrientation(float system_time,
-		float q[4]);
+void updateActuatorValues(uint16_t * values); // implemented elsewhere
+void updateActuator(uint16_t value); // implemented elsewhere
+void updatePWMIn(float system_time, uint16_t * usec); // implemented elsewhere
 
 void updateGPS(
 		float system_time, uint16_t week, uint8_t hour, uint8_t minute, float seconds,
@@ -201,6 +140,73 @@ void updateGPSSVIN(
 		float accuracy,
 		float accuracy_minimum,
 		uint8_t flags);
+
+// ---
+// All of the values in the update functions should be referenced to
+// the autopilot frame, defined by the PCB
+// ---
+void updateAccelerometer(float system_time,
+		float ax, float ay, float az); // [m/s^2]
+
+void updateGyroscope(float system_time,
+		float gx, float gy, float gz); // [rad/s]
+
+void updateMagnetometer(float system_time,
+		float mx, float my, float mz); // [uT]
+
+void updateMagnetometerID(uint8_t id, float system_time,
+		float mx, float my, float mz); // [uT]
+																	 //
+void updateMagValues(
+		float ts,
+		float mag_x,
+		float mag_y,
+		float mag_z);
+
+void updateOrientation(float system_time,
+		float q[4]);
+
+void updateIMU(float system_time, 
+		float ax, float ay, float az, 
+		float gx, float gy, float gz, 
+		float mx, float my, float mz);
+
+void updateDynamicPressure(float system_time,
+		float pressure, float temperature); // [hPa, deg C]
+
+void updateStaticPressure(float system_time,
+		float pressure, float temperature); // [hPa, deg C]
+																				//
+void updateTemperature(float system_time,
+		float temperature); // [deg C]
+
+void updateHumidity(float system_time,
+		float humidity); // [%]
+
+void updateAirData(float system_time,
+		float static_pressure, // [Pa]
+		float dynamic_pressure, // [Pa]
+		float air_temperature, // [deg C]
+		float humidity); // [%]
+
+void updateMHPSensors(float system_time,
+		float static_pressure,
+		float dynamic_pressure[5],
+		float temperature,
+		float humidity,
+		float gyroscope[3],
+		float accelerometer[3]);
+
+void updateMHPRaw(float system_time,
+		float differential_pressure[5]);
+
+void updateMHPProducts(float system_time,
+		float alpha,
+		float beta,
+		float ias,
+		float tas);
+
+void updateWind(float system_time, float u, float v, float w); // [m/s]
 
 void updateAGL(float system_time,
 		float distance); // [m]
@@ -243,9 +249,6 @@ void handleNDVI(float ts, uint8_t id, float red, float near_ir, float ir_ambient
 
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel);
-#ifdef __cplusplus
-}
-#endif
 
 /** @addtogroup Low_Level
  * @{
@@ -345,8 +348,9 @@ void BRIDGE_HandleWindPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleIMUPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleAccelPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGyroPkt(uint8_t *byte,uint8_t size);
-void BRIDGE_HandleMagPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleMagPkt(uint8_t node_id,uint8_t *byte,uint8_t size);
 void BRIDGE_HandleOrientationPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleActuatorPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte,uint8_t size);
@@ -398,8 +402,9 @@ float getElapsedTime(void);
 void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 {
 	uint8_t * data = (uint8_t *) data_ptr;
+	uint8_t node_id = (uint8_t)(id >> 8);
 
-	switch(id)
+	switch(id) // only last 9 bits are for ID
 	{
 		case CAN_PKT_PRESSURE:   BRIDGE_HandlePressurePkt(data,size); break;
 		case CAN_PKT_AIR_DATA:   BRIDGE_HandleAirDataPkt(data,size); break;
@@ -410,8 +415,10 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_IMU:        BRIDGE_HandleIMUPkt(data,size); break;
 		case CAN_PKT_ACCEL:      BRIDGE_HandleAccelPkt(data,size); break;
 		case CAN_PKT_GYRO:       BRIDGE_HandleGyroPkt(data,size); break;
-		case CAN_PKT_MAG:        BRIDGE_HandleMagPkt(data,size); break;
-		case CAN_PKT_ORIENTATION: BRIDGE_HandleOrientationPkt(data,size); break;
+#if defined CAN_NODE_ID
+		case ((0x0100) | CAN_PKT_MAG):
+#endif
+		case CAN_PKT_MAG:        BRIDGE_HandleMagPkt(node_id,data,size); break;
 		case CAN_PKT_GNSS:       BRIDGE_HandleGNSSPkt(data,size); break;
 		case CAN_PKT_GNSS_UTC:   BRIDGE_HandleGNSSUTCPkt(data,size); break;
 		case CAN_PKT_GNSS_UTC_W: BRIDGE_HandleGNSSUTCWPkt(data,size); break;
@@ -886,7 +893,7 @@ void BRIDGE_HandleGyroPkt(uint8_t *byte, uint8_t size)
  * @param	byte Pointer to the byte of data
  * @retval None
  */
-void BRIDGE_HandleMagPkt(uint8_t *byte, uint8_t size)
+void BRIDGE_HandleMagPkt(uint8_t node_id, uint8_t *byte, uint8_t size)
 {
 #if defined BOARD_core || defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_Magnetometer_t);
@@ -911,8 +918,15 @@ void BRIDGE_HandleMagPkt(uint8_t *byte, uint8_t size)
 			data->mx, data->my, data->mz);
 	//mag_count++;
 #else
-	updateMagnetometer(t0, 
-			data->mx, data->my, data->mz);
+	if(node_id == 0) {
+		updateMagnetometer(t0, 
+				data->mx, data->my, data->mz);
+	} else {
+#if defined CAN_NODE_ID
+		updateMagnetometerID(node_id,t0,
+				data->mx, data->my, data->mz);
+#endif
+	}
 	//mag_count++;
 #endif
 
@@ -2090,6 +2104,19 @@ uint8_t BRIDGE_SendGyroPkt(uint8_t p, float gx, float gy, float gz, float temp)
  */
 uint8_t BRIDGE_SendMagPkt(uint8_t p, float mx, float my, float mz)
 {
+	return BRIDGE_SendMagPkt_ID(p, CAN_DEVICE_0, mx, my, mz);
+}
+
+/**
+ * @brief	Send Magnetometer packet
+ * @param	p CAN peripheral ID
+ * @param	mx Magnetic field strength value along x-axis [uT]
+ * @param	my Magnetic field strength value along y-axis [uT]
+ * @param	mz Magnetic field strength value along z-axis [uT]
+ * @retval None
+ */
+uint8_t BRIDGE_SendMagPkt_ID(uint8_t p, uint8_t node_id, float mx, float my, float mz)
+{
 	CAN_Magnetometer_t data;
 
 	// fill packet
@@ -2099,7 +2126,9 @@ uint8_t BRIDGE_SendMagPkt(uint8_t p, float mx, float my, float mz)
 	data.mz = mz;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Magnetometer_t));
 
-	return CAN_Write(p, CAN_PKT_MAG, &data, sizeof(CAN_Magnetometer_t));
+	uint32_t id = ((uint32_t)node_id << 8) | (uint32_t)CAN_PKT_MAG;
+
+	return CAN_Write(p, id, &data, sizeof(CAN_Magnetometer_t));
 }
 
 /**
