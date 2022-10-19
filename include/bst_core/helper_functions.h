@@ -37,6 +37,11 @@
 #define SIGN(x) ( ((x) >= 0) - ((x) <= 0) )
 #endif
 
+// This one outputs 1 for x == 0
+#ifndef SIGN1
+#define SIGN1(x) ( ((x) >= 0) - ((x) < 0) )
+#endif
+
 static inline float deltaT(float _time, float _now) {
 
 	// first check for properly initialized values
@@ -59,6 +64,7 @@ static inline float deltaT(float _time, float _now) {
 #ifdef __cplusplus
 float checkLimit(float value, const Limit_t * const limit); 
 float checkLimit(float value, float limit_val);
+float checkLimit(float value, float limit_min, float limit_max);
 #endif
 
 /*-----[ Types ]--------*/
@@ -82,7 +88,6 @@ float checkLimit(float value, float limit_val);
 #define LON_TO_M(d_LON,LAT)  ((d_LON) / 0.000009 * cosf((LAT)*DEG_TO_RAD))
 #define M_TO_LON(METERS,LAT) ((METERS) * 0.000009 / (cosf((LAT)*DEG_TO_RAD)))
 
-#define FT_TO_M 0.3048f
 #define INHG_TO_PA 3386.85f
 #define INHG_TO_HPA 33.8685f
 #define INHG_TO_KPA 3.38685f
@@ -90,8 +95,12 @@ float checkLimit(float value, float limit_val);
 #define PSF_TO_PA 47.88020833333f
 #define PSI_TO_PA 4136.85438f
 
+#define FT_TO_M 0.3048f
+#define NMI_TO_M 1852.0f
+
 #define MPH_TO_MPS 0.44704f
 #define KTS_TO_MPS 0.514444444f
+#define FPM_TO_MPS 0.00508f
 
 #define LBF_TO_N 4.448222f
 #define LB_TO_KG 0.45359237f

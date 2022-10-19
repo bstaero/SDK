@@ -109,7 +109,9 @@ SerialPort::SerialPort( const char *dev, const char *br)
 
 SerialPort::~SerialPort()
 {
+#ifdef DEBUG
 	//printf("~SerialPort()\n"); fflush(stdout);
+#endif
 
 	if(Sd != -1)
 		if( !close() )
@@ -140,8 +142,11 @@ SerialPort::StatusVal SerialPort::init()
 
 	// close open port
 	if(Sd != -1)
-		if( !close() )
+		if( !close() ) {
+#ifdef DEBUG
 			cout << "SerialPort::init - error closing already open port" << endl;
+#endif
+		}
 
 	// reset Status of Serial
 	//Status = Ok;
@@ -149,15 +154,20 @@ SerialPort::StatusVal SerialPort::init()
 	Sd = ::open(DevName, O_RDWR | O_NOCTTY | O_NONBLOCK, 0777);
 	if ( Sd == ERROR ) {
 		if (Status == Ok) {
+#ifdef DEBUG
 			cout << "SerialPort::init - error opening " <<  DevName << endl;
 			perror("\topen");
+#endif
 		}
 		return Status = Error;
 	}
 
 	if(!isatty(Sd)) {
-		if (Status == Ok)
+		if (Status == Ok) {
+#ifdef DEBUG 
 			cout << "SerialPort::init - is not a tty" << endl;
+#endif
+		}
 		(void)close();
 		return Status = Error;
 	}
@@ -174,10 +184,12 @@ SerialPort::StatusVal SerialPort::init()
 
 	flushIO();
 
+#ifdef DEBUG
 	cout << "Serial " << DevName
 		<< ":" << Baud
 		<< ":" << ( blocking ? "BLOCK" : "NON-BLOCK" )
 		<< " is open for communication\n";
+#endif
 
 	// not sure if here, but for now
 	// make time stamps
@@ -203,12 +215,17 @@ bool SerialPort::open()
 void SerialPort::flushIO()
 {
 #if defined( VXWORKS )
-	if ( ioctl(Sd, FIOFLUSH, 0) == ERROR ) 
+	if ( ioctl(Sd, FIOFLUSH, 0) == ERROR )  {
+#ifdef DEBUG
 		cout << "SerialPort::flushIO - could not flush buffers" << endl;
+#endif
+	}
 #else
 	if( tcflush(Sd, TCIOFLUSH) < 0) {
+#ifdef DEBUG
 		cout << "SerialPort::flushIO - could not flush buffers" << endl;
 		perror("\ttcflush:");
+#endif
 	}
 #endif
 }
@@ -221,14 +238,18 @@ bool SerialPort::setBlocking()
 
 	// set to be nonblocking (asynchronous)
 	if ( (flags = fcntl(Sd, F_GETFL, 0) ) < 0 ){
+#ifdef DEBUG
 		perror("fcntl - could not get flags for serial port");
+#endif
 		return false;
 	}
 
 	flags &= ~O_NONBLOCK;
 
 	if (fcntl(Sd, F_SETFL, flags ) < 0 ){
+#ifdef DEBUG
 		perror("fcntl - could not set to blocking ");
+#endif
 		return false;
 	}
 #endif
@@ -245,26 +266,35 @@ bool SerialPort::setNonBlocking()
 
 	// set stdin to be nonblocking (asynchronous)
 	if ( (flags = fcntl(Sd, F_GETFL, 0) ) < 0 ){
+#ifdef DEBUG
 		perror("fcntl - could not get flags for serial port");
+#endif
 		return false;
 	}
 	flags |= O_NONBLOCK;
 
 	if (fcntl(Sd, F_SETFL, flags ) < 0 ){
+#ifdef DEBUG
 		perror("fcntl - could not set to nonblocking ");
+#endif
 		return false;
 	}
 #else
 	// set stdin to be nonblocking (asynchronous)
 	if ( (flags = ioctl(Sd, FIOGETOPTIONS, 0) ) < 0 ){
+#ifdef DEBUG
 		perror("fcntl - could not get flags for serial port");
+#endif
 		return false;
 	}
 
 	flags |= _FNDELAY | _FNBIO | _FNONBLOCK;
 
-	if ( ioctl(Sd, FIOSETOPTIONS, flags) == ERROR)
+	if ( ioctl(Sd, FIOSETOPTIONS, flags) == ERROR) {
+#ifdef DEBUG
 		perror("SerialPort::netNonBlocking");
+#endif
+	}
 #endif
 
 	blocking = false;
@@ -292,7 +322,9 @@ bool SerialPort::setOptions()
 #if defined( VXWORKS )
 
 	if ( ioctl(Sd, FIOSETOPTIONS, OPT_RAW)  == ERROR ) {
+#ifdef DEBUG
 		cout << "SerialPort::setOptions - could not set raw" << endl;
+#endif
 		return false;
 	}
 
@@ -329,7 +361,9 @@ bool SerialPort::setOptions()
 
 	struct termios config;
 	if ( tcgetattr( Sd, &config ) != 0 ) {
+#ifdef DEBUG
 		cout << "SerialPort::setOptions - Unable to poll port settings" <<  endl;
+#endif
 		return false;
 	}
 
@@ -369,18 +403,24 @@ bool SerialPort::setOptions()
 	/*
 		speed_t speed = B9600;
 		if ( cfsetispeed( &config, speed ) != 0 ) {
+#ifdef DEBUG
 		cout <<  "Problem setting input baud rate" << endl;
+#endif
 		return false;
 		}
 
 		if ( cfsetospeed( &config, speed ) != 0 ) {
+#ifdef DEBUG
 		cout <<  "Problem setting output baud rate" << endl;
+#endif
 		return false;
 		}
 		*/
 
 	if ( tcsetattr( Sd, TCSANOW, &config ) == ERROR ){
+#ifdef DEBUG
 		perror("SerialPort::setOptions - Unable to set port options");
+#endif
 		return false;
 	}
 
@@ -405,14 +445,18 @@ bool SerialPort::setRaw()
 {
 #if defined( VXWORKS )
 	if ( ioctl(Sd, FIOSETOPTIONS, OPT_RAW)  == ERROR ) {
+#ifdef DEBUG
 		cout << "SerialPort::setOptions - could not set options" << endl;
+#endif
 		return false;
 	}
 #else
 	struct termios config;
 	// set required port parameters 
 	if ( tcgetattr( Sd, &config ) != 0 ) {
+#ifdef DEBUG
 		cout << "SerialPort::setOptions - Unable to poll port settings" <<  endl;
+#endif
 		return false;
 	}
 
@@ -420,7 +464,9 @@ bool SerialPort::setRaw()
 	config.c_lflag &= ~ICANON; 	// canonical mode off
 
 	if ( tcsetattr( Sd, TCSANOW, &config ) < 0 ) {
+#ifdef DEBUG
 		perror("SerialPort::setOptions - Unable to set port settings to raw");
+#endif
 		return false;
 	}
 
@@ -436,14 +482,18 @@ bool SerialPort::setLine()
 {
 #if defined( VXWORKS )
 	if ( ioctl(Sd, FIOSETOPTIONS, OPT_LINE)  == ERROR ) {
+#ifdef DEBUG
 		cout << "SerialPort::setOptions - could not set options" << endl;
+#endif
 		return false;
 	}
 #else
 	struct termios config;
 	// set required port parameters 
 	if ( tcgetattr( Sd, &config ) != 0 ) {
+#ifdef DEBUG
 		cout << "SerialPort::setOptions - Unable to poll port settings" <<  endl;
+#endif
 		return false;
 	}
 
@@ -451,7 +501,9 @@ bool SerialPort::setLine()
 	config.c_lflag |= ICANON; 	// canonical mode on
 
 	if ( tcsetattr( Sd, TCSANOW, &config ) < 0 ) {
+#ifdef DEBUG
 		perror("SerialPort::setOptions - Unable to set line port settings");
+#endif
 		return false;
 	}
 
@@ -478,7 +530,9 @@ bool SerialPort::setLocal()
 
 	struct termios config;
 	if ( tcgetattr( Sd, &config ) != 0 ) {
+#ifdef DEBUG
 		cout << "SerialPort::setOptions - Unable to poll port settings" <<  endl;
+#endif
 		return false;
 	}
 
@@ -487,7 +541,9 @@ bool SerialPort::setLocal()
 	config.c_cflag &= ~CRTSCTS;	// hardware flow control
 
 	if ( tcsetattr( Sd, TCSANOW, &config ) == ERROR ){
+#ifdef DEBUG
 		perror("SerialPort::setOptions - Unable to set port options");
+#endif
 		return false;
 	}
 
@@ -515,7 +571,9 @@ bool SerialPort::setModem()
 
 	struct termios config;
 	if ( tcgetattr( Sd, &config ) != 0 ) {
+#ifdef DEBUG
 		cout << "SerialPort::setOptions - Unable to poll port settings" <<  endl;
+#endif
 		return false;
 	}
 
@@ -524,7 +582,9 @@ bool SerialPort::setModem()
 	config.c_cflag |= CRTSCTS;  // hardware flow control
 
 	if ( tcsetattr( Sd, TCSANOW, &config ) == ERROR ){
+#ifdef DEBUG
 		perror("SerialPort::setOptions - Unable to set port options");
+#endif
 		return false;
 	}
 
@@ -539,7 +599,9 @@ bool SerialPort::setBaud( int baud )
 #if defined( VXWORKS )
 
 	if ( ioctl(Sd, SIO_BAUD_SET, baud) == ERROR ) {
+#ifdef DEBUG
 		cout << "SerialPort::SetBaud - could not set baud to " << baud << endl;
+#endif
 		return false;
 	}
 
@@ -549,22 +611,30 @@ bool SerialPort::setBaud( int baud )
 	speed_t speed = getBaudSpeed( baud );
 
 	if ( tcgetattr( Sd, &config ) != 0 ) {
+#ifdef DEBUG
 		cout << "Unable to poll port settings" << endl;
+#endif
 		return false;
 	}
 
 	if ( cfsetispeed( &config, speed ) != 0 ) {
+#ifdef DEBUG
 		cout <<  "Problem setting input baud rate" << endl;
+#endif
 		return false;
 	}
 
 	if ( cfsetospeed( &config, speed ) != 0 ) {
+#ifdef DEBUG
 		cout <<  "Problem setting output baud rate" << endl;
+#endif
 		return false;
 	}
 
 	if ( tcsetattr( Sd, TCSANOW, &config ) != 0 ) {
+#ifdef DEBUG
 		cout <<  "Unable to set baud rate settings" << endl;
+#endif
 		return false;
 	}
 
@@ -586,9 +656,13 @@ int SerialPort::write( const char * buf, int buf_len )
 
 	// check Status of port
 	if(Status != Connected || Sd <= 0){
+#ifdef DEBUG
 		cout << "SerialPort::write - Status = error or port not open" << endl;
+#endif
 		if(init() == ERROR){
+#ifdef DEBUG
 			cout << "SerialPort::write - can't open port for writing" << endl;
+#endif
 			return ERROR;
 		} 
 	}
@@ -617,7 +691,9 @@ int SerialPort::writen( const char * buf, int buf_len )
 	while(nleft > 0) {
 		nwritten = SerialPort::write(ptr,nleft);	
 		if(nwritten < 0 && errno != EINTR && errno != EAGAIN ) {
+#ifdef DEBUG
 			cout << "SerialPort::write - returned error value " << errno << endl;
+#endif
 			return ERROR;
 		} else if ( nwritten >= 0) {
 			nleft -= nwritten;
@@ -646,9 +722,13 @@ int SerialPort::read( char * buf, int buf_len )
 
 	// check Status of port
 	if(Status != Connected || Sd <= 0){
+#ifdef DEBUG
 		cout << "SerialPort::read - Status = error or port not open" << endl;
+#endif
 		if(init() == ERROR){
+#ifdef DEBUG
 			cout << "SerialPort::read - can't open port for reading" << endl;
+#endif
 			return Status = Error;
 		} 
 	}
@@ -659,7 +739,9 @@ int SerialPort::read( char * buf, int buf_len )
 	{
 		int nBytes;
 		if( ioctl( Sd, FIONREAD, (int)&nBytes) == ERROR ) {
+#ifdef DEBUG
 			perror("SerialPort::read - ioctl");
+#endif
 			return Status = Error;
 		}
 
@@ -672,7 +754,9 @@ int SerialPort::read( char * buf, int buf_len )
 	nread = ::read(Sd, buf, buf_len);
 
 	if(nread < 0 && !(errno == EINTR || errno == EAGAIN)) {
+#ifdef DEBUG
 		cout << "SerialPort::read - read error" << endl;
+#endif
 		return ERROR;
 	}
 
@@ -772,7 +856,9 @@ SerialPort::SerialWait SerialPort::wait(long int msec)
 		} else if (errno == EINTR ) 
 			val = WAIT_INT;
 		else {
+#ifdef DEBUG
 			perror("select");
+#endif
 			val = WAIT_ERROR;
 		}
 		return val;
@@ -801,6 +887,7 @@ void SerialPort::printStats()
 	} else 
 		msec = tsStop - tsStart; //micro secs
 
+#ifdef DEBUG
 	cout << "SerialPort Stats:" << endl << "--------------------" << endl
 		<< "\tConnected=" << ( Status == Connected ? "TRUE" : "FALSE" )
 		<< "\t\tUptime=" << msec/1000000.0 << " [s]" << endl
@@ -809,6 +896,7 @@ void SerialPort::printStats()
 		<< "\tOut="  << totalBytes[1] << " [bytes]"
 		<< "\t\tRate=" << totalBytes[1]/(float)(msec/1000000.0)<<" [Bps] "<<endl
 		<< endl;
+#endif
 }
 
 
@@ -981,7 +1069,9 @@ speed_t getBaudSpeed( int baud )
 		speed = B4000000;
 #endif
 	} else {
+#ifdef DEBUG
 		cout << "Unsupported baud rate " << baud;
+#endif
 	}
 
 	return speed;

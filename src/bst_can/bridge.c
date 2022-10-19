@@ -81,6 +81,9 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
  #include "dip.h"
 #endif
 
+#if defined IMPLEMENTATION_swil
+extern uint8_t p_new_gps_data;
+#endif
 /** @addtogroup Source
  * @{
  */ 
@@ -387,7 +390,13 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte,uint8_t size);
  */ 
 
 //defined elsewhere
+#ifdef __cplusplus
+extern "C" {
+#endif
 float getElapsedTime(void);
+#ifdef __cplusplus
+}
+#endif
 
 // ==============================================================================
 // FUNCTIONS FOR HANDLING CAN-BUS PACKETS
@@ -1117,6 +1126,10 @@ void BRIDGE_HandleGNSSPkt(uint8_t *byte, uint8_t size)
 			data->vx, data->vy, data->vz,
 			data->heading, data->speed,
 			data->pdop, data->satellites, data->fix_type);
+
+#if defined IMPLEMENTATION_swil
+	p_new_gps_data = 1;
+#endif
 #ifndef ARCH_stm32f1
 	gps_count++;
 #endif

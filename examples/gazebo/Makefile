@@ -49,9 +49,12 @@ endif
 %.o: %.c
 	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES)
  
-default: bstsdklibs test
+default: bstsdklibs test fp_test
 
-test: $(OBJ)
+test: $(OBJ) ../../lib/libnetuas_lib.a ../../lib/libbstmr_lib.a
+	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lbstmr_lib -lrt
+
+fp_test: fp_main.o fp_test.o test_handler.o ../../lib/libnetuas_lib.a ../../lib/libbstmr_lib.a
 	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lbstmr_lib -lrt
 
 clean:
@@ -59,7 +62,8 @@ clean:
 	rm -f *.o
 	rm -f test
 
-bstsdklibs: ../../lib/libnetuas_lib.a ../../lib/libbstmr_lib.a
+bstsdklibs: 
+	cd ../../lib && $(MAKE)
 
 ../../lib/libnetuas_lib.a:
 	cd ../../lib && $(MAKE)

@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 
 	while(comm_interface->isConnected() && running) {
 		// Update communications
-		simulatedCANRead(0);
+		simulatedCANRead(1);
 
 		// Perform user functions
 		updateTest();

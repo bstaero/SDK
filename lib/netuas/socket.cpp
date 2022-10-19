@@ -104,7 +104,9 @@ Socket::Socket( const char * host, const char * port, SocketType connection )
 //----------------------------------------------------------
 Socket::~Socket() 
 {
+#ifdef DEBUG
 	//printf("~Socket()\n");fflush(stdout);
+#endif
 	if(sock > 0)
 		close();		// call member function close
 }
@@ -196,18 +198,26 @@ void Socket::make_client_socket ()
 		sock = socket (AF_INET, SOCK_DGRAM, 0);
 	else if( type == Socket::TCP )
 		sock = socket (AF_INET, SOCK_STREAM, 0);
-	else
+	else {
+#ifdef DEBUG
 		cout << "Socket::make_server_socket - invalid type" << endl;
+#endif
+	}
 #else
 	if( type == Socket::UDP)
 		sock = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	else if( type == Socket::TCP )
 		sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	else
+	else {
+#ifdef DEBUG
 		cout << "Socket::make_server_socket - invalid type=" << type<< endl;
 #endif
+	}
+#endif
 	if (sock <= 0) {
+#ifdef DEBUG
 		perror("Socket::make_client_socket() - socket() failed");
+#endif
 		sock = INVALID_SOCKET;
 		return;
 	}
@@ -251,7 +261,9 @@ bool Socket::connectHost()
 		if( (int)(serverAddr.sin_addr.s_addr = inet_addr((char *)hostname.c_str() ) ) == ERROR &&
 				(hp = gethostbyname( hostname.c_str())) == NULL ) 
 		{
+#ifdef DEBUG
 			perror("Socket::make_client_socket() - hostname lookup failed");
+#endif
 			this->close();
 			return false;
 		}
@@ -260,26 +272,35 @@ bool Socket::connectHost()
 		if( hp != NULL )
 			bcopy ( hp->h_addr, &(serverAddr.sin_addr.s_addr), hp->h_length);
 
+#ifdef DEBUG
 		//cout << "hp->h_addr=" << hp->h_addr << " *(hp->h_addr)=" << *(hp->h_addr) << endl;
 		//cout << "h_addr_list=" << hp->h_addr_list << " h_addr_list[1]=" << hp->h_addr_list[1] << " *h_addr_list[1]=" << *(hp->h_addr_list[1]) << endl;
 		//cout << "Socket::make_client_socket() - hostname=" 
 		//<<  (char *)hostname.c_str() << "ip=" << inet_ntoa(serverAddr.sin_addr)
 		//<< endl;
+#endif
 #else
 		if( (long)(serverAddr.sin_addr.s_addr = inet_addr((char *)hostname.c_str() ) ) == ERROR &&
 				( (long)(serverAddr.sin_addr.s_addr = hostGetByName( (char *)hostname.c_str() )) == ERROR ) ) 
 		{
+#ifdef DEBUG
 			cout << "Socket::make_client_socket() - hostname lookup failed" << endl;
+#endif
 			this->close();
 			return false;
-		} else 
+		} else  {
+#ifdef DEBUG
 			cout << "Socket::make_client_socket() - hostname=" 
 				<<  (char *)hostname.c_str() << " ip=" << inet_ntoa(serverAddr.sin_addr)
 				<< endl;
+		}
+#endif
 #endif
 		// socket is not open
 	} else { 
+#ifdef DEBUG
 		perror("Socket::connectHost - socket is not open");
+#endif
 		return false;
 	}
 
@@ -291,7 +312,9 @@ bool Socket::connectHost()
 
 			clientAddr[NUM_CLIENTS].sin_addr.s_addr = serverAddr.sin_addr.s_addr;
 		} else if( !status_out ) {
+#ifdef DEBUG
 			perror("Socket::connectHost - could not connect to host");
+#endif
 			status_out = true;
 		}
 /*
@@ -305,7 +328,9 @@ bool Socket::connectHost()
 			ifc.ifc_len = sizeof(buf);
 			ifc.ifc_buf = buf;
 			if(ioctl(sock, SIOCGIFCONF, &ifc) < 0) {
+#ifdef DEBUG
 				perror("ioctl(SIOCGIFCONF)");
+#endif
 			}
 
 			ifr         = ifc.ifc_req;
@@ -331,10 +356,12 @@ bool Socket::connectHost()
 		connected=TRUE;
 
 	if(connected) {
+#ifdef DEBUG
 		cout << "Client " YELLOW << hostname << ATTROFF
 			<< ":" GREEN << port << ATTROFF
 			<< ":" RED << (type == UDP ? "UDP" : "TCP") 
 			<< ATTROFF " is connected\n";
+#endif
 	}
 
 	return connected;
@@ -358,7 +385,9 @@ bool Socket::open( const SocketMode modeVal )
 		// Setup socket to listen on.  Set "port" before making this call. 
 		make_server_socket();
 		if ( sock == INVALID_SOCKET ) {
+#ifdef DEBUG
 			cout <<  "Socket::open - socket creation failed" << endl;
+#endif
 
 			return false;
 		}
@@ -370,22 +399,28 @@ bool Socket::open( const SocketMode modeVal )
 			// Blocking TCP
 			// Specify the maximum length of the connection queue
 			if( listen( sock, MAX_SOCKET_QUEUE ) < 0 ) {
+#ifdef DEBUG
 				perror("Socket::open - listen failed");
+#endif
 				::close(sock);
 
 				return false;
 			}
 		}
+#ifdef DEBUG
 		cout << "Server " YELLOW << hostname << ATTROFF
 			<< ":" GREEN << port << ATTROFF
 			<< ":" RED << (type == UDP ? "UDP" : "TCP") << ATTROFF
 			<< " is waiting for connection(s)\n";
+#endif
 
 	} else if ( mode == CLIENT || mode == DUPLEX_CLIENT || mode == RECEIVING_CLIENT ) {
 		// make a client side socket
 		make_client_socket();
 		if ( sock == INVALID_SOCKET ) {
+#ifdef DEBUG
 			cout <<  "Socket::open - socket creation failed" << endl;
+#endif
 			return false;
 		}
 
@@ -394,15 +429,19 @@ bool Socket::open( const SocketMode modeVal )
 			setNonBlocking();
 		} 
 
+#ifdef DEBUG
 		cout << "Client " YELLOW << hostname << ATTROFF
 			<< ":" GREEN << port << ATTROFF
 			<< ":" RED << (type == UDP ? "UDP" : "TCP") << ATTROFF
 			<< " is attempting connection(s)\n";
+#endif
 
 	} else if ( mode == DUPLEX ) {
 		make_server_socket();
 		if ( sock == INVALID_SOCKET ) {
+#ifdef DEBUG
 			cout <<  "Socket::open - socket creation failed" << endl;
+#endif
 			return false;
 		}
 
@@ -413,21 +452,27 @@ bool Socket::open( const SocketMode modeVal )
 			// Blocking TCP
 			// Specify the maximum length of the connection queue
 			if( listen( sock, MAX_SOCKET_QUEUE ) < 0 ) {
+#ifdef DEBUG
 				perror("Socket::open - listen failed");
+#endif
 				::close(sock);
 
 				return false;
 			}
 		}
 
+#ifdef DEBUG
 		cout << "Duplex " YELLOW << hostname << ATTROFF
 			<< ":" GREEN << port << ATTROFF
 			<< ":" RED << (type == UDP ? "UDP" : "TCP") << ATTROFF
 			<< " has been created\n";
+#endif
 
 
 	} else {
+#ifdef DEBUG
 		cout <<  "Socket::open - unknown mode = " << mode << endl;
+#endif
 		return false;
 	}
 
@@ -485,22 +530,32 @@ int Socket::read(int client, char *buf, int length )
 	// use the recv interface for the sockets instead of the
 	// standard read
 	if( type == UDP) {
+#ifdef DEBUG
 			cout << "UDP" << endl;
+#endif
 		if( mode == CLIENT ) {
+#ifdef DEBUG
 			cout << " CLIENT" << endl;
+#endif
 			result = recvfrom(sock, (char *)buf, length, 0,
 					(struct sockaddr *)&serverAddr, &sockAddrSize);
 		} else {
+#ifdef DEBUG
 			cout << " NON-CLIENT" << endl;
+#endif
 			result = recvfrom(sock, (char *)buf, length, 0,
 					(struct sockaddr *)&clientAddr[NUM_CLIENTS], &sockAddrSize);
 			if( result > 0 ) {
 				client = getClientFromRead();
-				if( client == -1 )
+				if( client == -1 ) {
+#ifdef DEBUG
 					printf("waiting to complete UDP connection: result=%i\n",result);
-				else {
+#endif
+				} else {
 					clientInd = (client);
+#ifdef DEBUG
 					printf("read from client=%i ind=%i result=%i addr=%s\n", client, clientInd, result, inet_ntoa(clientAddr[NUM_CLIENTS].sin_addr));
+#endif
 				}
 			}
 		}
@@ -514,8 +569,11 @@ int Socket::read(int client, char *buf, int length )
 		// record the time
 		if( clientInd < NUM_CLIENTS )
 			tsLast[clientInd].stamp();
-	} else if (result < 0 && errno != EAGAIN)
+	} else if (result < 0 && errno != EAGAIN) {
+#ifdef DEBUG
 		perror("Socket::read - recv");
+#endif
+	}
 
 	return result;
 }
@@ -538,7 +596,9 @@ int Socket::write(in_addr address, const char *buf, const int length, bool noSeq
 		return INVALID_SOCKET;
 
 	port = atoi( portStr.c_str() );
+#ifdef DEBUG
 	//cout << "sending " << length << " bytes to " << inet_ntoa(address) << endl;
+#endif
 
 	struct sockaddr_in destAddr;
 	memset(&destAddr,0,sizeof(destAddr));
@@ -553,18 +613,23 @@ int Socket::write(in_addr address, const char *buf, const int length, bool noSeq
 		if( mode == CLIENT  || mode == DUPLEX) {
 			nwritten = sendto(sock, (char *)buf, length, 0,
 					(struct sockaddr *)&destAddr, sizeof( struct sockaddr_in ));
+#ifdef DEBUG
 			//cout << "clientAddr =" << inet_ntoa(serverAddr.sin_addr) << endl
 			//<< "sock =" << sock << endl
 			//<< "length =" << length << endl
 			//<< "buf[0] =" << (int)buf[0] << endl
 			//<< "nwritten =" << nwritten << endl;
+#endif
 		}
 	}
 
 	if( nwritten > 0)
 		totalBytes[1] += nwritten;
-	else if( nwritten < 0  && errno != EAGAIN)
+	else if( nwritten < 0  && errno != EAGAIN) {
+#ifdef DEBUG
 		//perror("Socket::write - sendto");  //FIXME removed for BATMAN
+#endif
+	}
 		return 0;
 
 	return nwritten;
@@ -605,16 +670,20 @@ int Socket::write(int client, const char *buf, const int length, bool noSeq )
 		if( mode == CLIENT ) {
 			nwritten = sendto(sock, (char *)buf, length, 0,
 					(struct sockaddr *)&serverAddr, sizeof( struct sockaddr_in ));
+#ifdef DEBUG
 			//cout << "clientAddr =" << inet_ntoa(serverAddr.sin_addr) << endl
 			//<< "sock =" << sock << endl
 			//<< "length =" << length << endl
 			//<< "buf[0] =" << (int)buf[0] << endl
 			//<< "nwritten =" << nwritten << endl;
+#endif
 		} else {
+#ifdef DEBUG
 			//cout << "clientAddr =" << inet_ntoa(clientAddr[client].sin_addr) << endl
 			//<< "sock =" << sock << endl
 			//<< "length =" << length << endl
 			//<< "buf =" << buf << endl;
+#endif
 			nwritten = sendto(sock, (char *)buf, length, 0,
 					(struct sockaddr *)&(clientAddr[clientInd]), sizeof( struct sockaddr_in ));
 		}
@@ -686,6 +755,7 @@ void Socket::printStats()
 	} else 
 		usec = tsStop - tsStart; //micro secs
 
+#ifdef DEBUG
 	cout << "Socket stats: " << endl << "--------------------" << endl
 		<< "\tConnected = " << ( connected ? "TRUE" : "FALSE" )
 		<< "\tUptime = " << usec/1000000.0 << " [s]" << endl
@@ -694,6 +764,7 @@ void Socket::printStats()
 		<< "\tOut="  << totalBytes[1] << " [bytes]"
 		<< "\tRate=" << totalBytes[1]/(float)(usec/1000000.0)<<" [Bps] "<<endl
 		<< endl;
+#endif
 }
 
 
@@ -852,7 +923,9 @@ int Socket::connectClient()
 				clientIndex[client] = client;
 			}
 		} else{
+#ifdef DEBUG
 			cout << "More than " << NUM_CLIENTS << " clients have tried to connect\n";
+#endif
 			fastClose();
 			return -1;
 		}
@@ -879,11 +952,13 @@ int Socket::connectClient()
 		numClients++;
 
 		if (! goodOldBuddy ) {
+#ifdef DEBUG
 		  cout << "Connection with client id=" << client 
 		  << " from " << inet_ntoa(clientAddr[client].sin_addr)
 		  << " on " << ntohs(serverAddr.sin_port)
 		  << (goodOldBuddy ? " ==> Old Buddy" : "" )
 		  << endl;
+#endif
 	  }
 
 		tsLast[client].stamp();
@@ -961,7 +1036,8 @@ void Socket::fastClose()
 		// knows they can't connect
 		tempFD = accept(sock, 0, 0);
 
-		if(::write( tempFD, 0, sizeof(char) ))
+		char tmp;
+		if(::write( tempFD, &tmp, sizeof(char) ))
 			; // added if statement to avoid compiler warning
 		::close(tempFD);
 	}
@@ -1029,8 +1105,11 @@ Socket::SocketWait Socket::wait(long int msec)
 			return WAIT_TIMEOUT;
 		} else if( errno == EINTR ){
 			return WAIT_INT;
-		} else
+		} else {
+#ifdef DEBUG
 			perror("select");
+#endif
+		}
 
 		return WAIT_ERROR;
 	}
@@ -1095,7 +1174,9 @@ bool Socket::setopt(bool broadcast)
 	if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char *) &optionVal,
 				sizeof(optionVal)) == ERROR)
 	{
+#ifdef DEBUG
 		perror ("Socket:: setsockopt SO_REUSEADDR failed");
+#endif
 		error = true;
 	}
 
@@ -1105,7 +1186,9 @@ bool Socket::setopt(bool broadcast)
 	if (setsockopt (sock, SOL_SOCKET, SO_KEEPALIVE, (char *) &optionVal,
 				sizeof(optionVal)) == ERROR)
 	{
+#ifdef DEBUG
 		perror ("Socket:: setsockopt SO_KEEPALIVE failed");
+#endif
 		error = true;
 	}
 
@@ -1113,7 +1196,9 @@ bool Socket::setopt(bool broadcast)
 	if (setsockopt (sock, SOL_SOCKET, SO_BROADCAST, (char *) &optionVal,
 				sizeof(optionVal)) == ERROR)
 	{
+#ifdef DEBUG
 		perror ("Socket:: setsockopt SO_BROADCAST failed");
+#endif
 		error = true;
 	}
 
@@ -1130,7 +1215,9 @@ bool Socket::setopt(bool broadcast)
 		if (setsockopt (sock, IPPROTO_TCP, TCP_NODELAY, (char *) &optionVal,
 					sizeof(optionVal)) == ERROR)
 		{
+#ifdef DEBUG
 			perror ("Socket:: setsockopt TCP_NODELAY failed");
+#endif
 			error = true;
 		}
 	}
@@ -1149,7 +1236,9 @@ bool Socket::setopt(bool broadcast)
 		if (setsockopt (sock, SOL_SOCKET, SO_LINGER, (char *) &linger, 
 					sizeof (linger)) == ERROR) 
 		{
+#ifdef DEBUG
 			perror ("Socket:: setsockopt SO_LINGER failed");
+#endif
 			error = true;
 		}
 	}

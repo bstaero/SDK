@@ -143,7 +143,7 @@ void updateMHPProducts(float system_time,
 	mhp_data.ias = ias;
 	mhp_data.tas = tas;
 	
-	printMHPData();
+	printMHPValues(5);
 }
 
 void updateWind(float system_time, float u, float v, float w) {
