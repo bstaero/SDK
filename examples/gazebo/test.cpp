@@ -129,6 +129,9 @@ void initializeTest() {
 static float last_heartbeat = 0.0;
 static float last_ctrl = 0.0;
 
+FlightPlanMap_t flight_plan_map;
+FlightPlan flight_plan;
+
 void updateTest() {
     char input;
 
@@ -137,9 +140,6 @@ void updateTest() {
     uint8_t num_points = 0;
     Waypoint_t temp_waypoint;
     Waypoint_t temp_waypoints[MAX_WAYPOINTS];
-
-    FlightPlanMap_t flight_plan_map;
-    FlightPlan flight_plan;
 
     if (inputAvailable()) {
         input = getchar();
