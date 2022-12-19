@@ -109,7 +109,9 @@ void initializeTest() {
 }
 
 
-//---- Update loop 
+FlightPlanMap_t flight_plan_map;
+FlightPlan flight_plan;
+
 void updateTest() {
 	char input;
 
@@ -119,10 +121,8 @@ void updateTest() {
 	Waypoint_t temp_waypoint;
 	Waypoint_t temp_waypoints[MAX_WAYPOINTS];
 
-	FlightPlanMap_t flight_plan_map;
-	FlightPlan flight_plan;
-
-	int8_t * buff = (int8_t *)&command.value;
+    if (inputAvailable()) {
+        input = getchar();
 
 	if (inputAvailable()) {
 		input = getchar();
