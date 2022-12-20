@@ -115,18 +115,6 @@ void BSTModuleFlightPlan::requestMissingWaypoints() {
 
 					pmesg(VERBOSE_WARN, "waypoint transmission exceeded, transmission failed %i\n",i);
 
-	#if defined(VERBOSE) || defined(DEBUG)
-					switch(rx_fp_map.mode) {
-						case NONE:
-							pmesg(VERBOSE_FP,"NACK(FP_MAP[NONE]\n");
-						case ADD:
-							pmesg(VERBOSE_FP,"NACK(FP_MAP[ADD]\n");
-						case DELETE:
-							pmesg(VERBOSE_FP,"NACK(FP_MAP[DELETE]\n");
-						case FINISH:
-							pmesg(VERBOSE_FP,"NACK(FP_MAP[FINISH]\n");
-					}
-	#endif
 					parent->write(FLIGHT_PLAN_MAP,PKT_ACTION_NACK,(uint8_t *)&rx_fp_map,sizeof(FlightPlanMap_t),NULL);
 
 					reset();
@@ -384,10 +372,6 @@ void BSTModuleFlightPlan::finishSend(uint8_t type, uint8_t * data, uint16_t size
 						reset();
 						return;
 					}
-					// FIXME -- should remove and let the hardware limit this
-					if (getElapsedTime() - last_waypoint_sent >= (waypoint_timeout / 20.0))
-					{
-						pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_WAYPOINT %u \n",waypoint_i);
 
 					// FIXME -- should remove and let the hardware limit this
 					if (getElapsedTime() - last_waypoint_sent >= (waypoint_timeout / 20.0))
