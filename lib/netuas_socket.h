@@ -5,7 +5,7 @@
 
 #include "comm_interface.h"
 
-#include "netuas/socket.h"
+#include "netuas_lib/socket.h"
 
 //#define SOCKET_TIME_OUT_USEC 1000
 #define SOCKET_TIME_OUT_USEC 0

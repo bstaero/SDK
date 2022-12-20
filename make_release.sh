@@ -3,8 +3,10 @@
 #lib
 cp ../shared/devices/communications/serial/netuas_serial.cpp     ./lib/
 cp ../shared/devices/communications/serial/netuas_serial.h       ./lib/
-cp ../shared/devices/communications/netuas_lib/*.h               ./lib/netuas
-cp ../shared/devices/communications/netuas_lib/*.cpp             ./lib/netuas
+cp ../shared/devices/communications/socket/netuas_socket.cpp     ./lib/
+cp ../shared/devices/communications/socket/netuas_socket.h       ./lib/
+cp ../shared/devices/communications/netuas_lib/*.h               ./lib/netuas_lib/
+cp ../shared/devices/communications/netuas_lib/*.cpp             ./lib/netuas_lib/
 
 #inc
 cp ../shared/devices/communications/can/simulated_can.h          ./include/bst_can/

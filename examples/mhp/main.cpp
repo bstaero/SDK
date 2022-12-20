@@ -76,8 +76,8 @@ int main(int argc, char *argv[])
 	bzero(infile,132);
 	bzero(outfile,132);
 
-	char c;
-	int retval = -1;
+	int8_t c;
+	int8_t retval = -1;
 	while ((c = getopt(argc, argv, "b:d:f:i:o:p:t:x:h")) != retval) {
 		switch(c) {
 			case 'b':

@@ -116,6 +116,20 @@ float checkLimit(float value, float limit_val)
 	return value;
 }
 
+float checkLimit(float value, float limit_min, float limit_max) 
+{
+	// check for valid limit
+	if(limit_max < limit_min) 
+		return value;
+
+	if(limit_max != INFINITY && value > limit_max)
+		return limit_max;
+	else if(limit_min != -INFINITY && value < limit_min)
+		return limit_min;
+
+	return value;
+}
+
 float uniformDist(){
 	return ((float)rand() / (float)(RAND_MAX));
 }
@@ -167,6 +181,7 @@ uint64_t changeEndiannessUint64 (uint64_t value) {
 
 #include <stdio.h>
 
+#ifndef ARCH_stm32f1
 /**
  * @brief  Verify checksum using all but the last two bytes of data
  * @param  data Pointer to the data
@@ -177,7 +192,7 @@ bool checkFletcher16(const uint8_t * const data, uint8_t size) {
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;
 
-	for( int i = 0; i < size; i++ ) {
+	for( uint8_t i = 0; i < size; i++ ) {
 		sum1 = (sum1 + data[i]) % 255;
 		sum2 = (sum2 + sum1) % 255;
 	}
@@ -195,7 +210,7 @@ void setFletcher16 (uint8_t * const data, uint8_t size){
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;
 
-	for( int i = 0; i < (size-2); i++ ) {  // excludes checksum bytes
+	for( uint8_t i = 0; i < (size-2); i++ ) {  // excludes checksum bytes
 		sum1 = (sum1 + data[i]) % 255;
 		sum2 = (sum2 + sum1) % 255;
 	}
@@ -208,6 +223,7 @@ void setFletcher16 (uint8_t * const data, uint8_t size){
 
 	//return ((checksum2 << 8) | checksum1);
 }
+#endif
 
 /**
  * @brief  Convert quaternion to roll angle
