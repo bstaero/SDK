@@ -70,6 +70,7 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case SENSORS_DYNAMIC_PRESSURE:
 		case SENSORS_STATIC_PRESSURE:
 		case SENSORS_AIR_TEMPERATURE:
+			break;
 		case SENSORS_AGL:
 			memcpy(&agl_data,data,sizeof(SingleValueSensor_t));
 			if(show_telemetry)
@@ -77,7 +78,6 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 			break;
 
 		case SENSORS_CALIBRATE:
-			//printf(" Sensor calibration ...");
 			calibration_data = (CalibrateSensor_t *)data;
 			if(calibration_data->state == CALIBRATED) {
 				if(calibration_data->sensor == calibration_requested) {
@@ -108,6 +108,7 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 		case CONTROL_PID:
 		case CONTROL_FLIGHT_PARAMS:
 		case CONTROL_FILTER_PARAMS:
+			break;
 
 		case DUBIN_PATH:
 			memcpy(&dubins_path,data,sizeof(DubinsPath_t));
@@ -232,15 +233,12 @@ uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * pa
 		case CMD_PAYLOAD_CONTROL:
 
 			switch((uint8_t)command->value) {
-				case PAYLOAD_CTRL_OFF:
-					pmesg(VERBOSE_PACKETS, "CMD:PAYLOAD_CTRL_OFF\n");
-					payload_current_state = PAYLOAD_CTRL_OFF;
-					return true;
-
 				case PAYLOAD_CTRL_ACTIVE:
 					pmesg(VERBOSE_PACKETS, "CMD:PAYLOAD_CTRL_ACTIVE\n");
-					if( payload_current_state != PAYLOAD_CTRL_READY )
+					if( payload_current_state != PAYLOAD_CTRL_READY &&
+							payload_current_state != PAYLOAD_CTRL_ACTIVE ) {
 						return false;
+					}
 
 					payload_current_state = PAYLOAD_CTRL_ACTIVE;
 					return true;
@@ -291,21 +289,13 @@ void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void
 						// autopilot ack/nack payload sending off command
 						case PAYLOAD_CTRL_OFF:
 							pmesg(VERBOSE_PACKETS, "PAYLOAD_CTRL_OFF");
+							payload_current_state = PAYLOAD_CTRL_OFF;
 							break;
 
 							// autopilot ack/nack payload sending ready command
 						case PAYLOAD_CTRL_READY:
 							pmesg(VERBOSE_PACKETS, "PAYLOAD_CTRL_READY");
-							break;
-
-							// autopilot ack/nack payload sending shutdown command
-						case PAYLOAD_CTRL_SHUTDOWN:
-							pmesg(VERBOSE_PACKETS, "PAYLOAD_CTRL_SHUTDOWN");
-							break;
-
-							// autopilot ack/nack payload sending error command
-						case PAYLOAD_CTRL_ERROR:
-							pmesg(VERBOSE_PACKETS, "PAYLOAD_CTRL_ERROR");
+							payload_current_state = PAYLOAD_CTRL_READY;
 							break;
 
 						default:
@@ -324,14 +314,11 @@ void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void
 
 					break;
 
-                case CMD_ALT_MODE:
-                    printf("Setting alt mode");
-                    if (ack) {
-                        printf( " successful\n");
-                    } else {
-                        printf(" failed (CMD_ALT_MODE)\n");
-                    }
-                    break;
+				case CMD_ALT_MODE:
+					printf("Setting alt mode");
+					if (ack) printf( " successful\n");
+					else printf(" failed (CMD_ALT_MODE)\n");
+					break;
 				case CMD_X_VEL:
 					printf("Setting X velocity to %f", tmp_command->value);
 					if(ack) printf(" successful\n");
@@ -382,7 +369,7 @@ bool publish(uint8_t type, uint8_t param)
 	// do some with status request
 	switch(type) {
 		case SYSTEM_INITIALIZE:
-			//printf("publish: SYSTEM_INITIALIZE\n");
+			printf("publish: SYSTEM_INITIALIZE\n");
 
 			comm_handler->send(SYSTEM_INITIALIZE, (uint8_t *)&system_init, sizeof(SystemInitialize_t), NULL);
 			break;
@@ -496,12 +483,6 @@ bool sendPayloadControlMode(PayloadControl_t control_value) {
     payload_current_request = control_value;
 
     return setCommandValue((bst::comms::CommandID_t) CMD_PAYLOAD_CONTROL, control_value);
-
-    // command.id = CMD_PAYLOAD_CONTROL;
-    // command.value = control_value;
-    // comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&command, sizeof(Command_t), NULL);
-
-    // return true;
 }
 
 bool sendCalibrate(SensorType_t sensor) {
