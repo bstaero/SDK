@@ -8,6 +8,8 @@
 
 NetuasSerial::NetuasSerial () : CommunicationsInterface(), last_connection(0,0) 
 {
+	pmesg(VERBOSE_ALLOC, "NetuasSerial::NetuasSerial()\n");
+
 	serial_ptr = NULL;
 	comm_type = CommunicationsInterface::SERIAL;
 }
@@ -83,7 +85,7 @@ uint16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
 			else {
 				if(n == 0)
 					pmesg(VERBOSE_WARN,"read from serial returned zero bytes\n");
-				else if( errno != EWOULDBLOCK || errno != EINTR) 
+				else if( errno != EWOULDBLOCK && errno != EINTR && errno != EAGAIN) 
 					pmesg(VERBOSE_ERROR,"bad read from client\n");
 			}
 		}

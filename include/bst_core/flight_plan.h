@@ -50,14 +50,17 @@ inline void setWaypointAction(uint16_t action, Waypoint_t &wpt) {
 }
 
 inline void ClearMapBit(uint8_t *map, uint8_t ind) {
+	if(map == NULL) return;
 	map[ind/8] &= ~(0x01 << (ind % 8));
 }
 
 inline void SetMapBit(uint8_t *map, uint8_t ind) {
+	if(map == NULL) return;
 	map[ind/8] |=  (0x01 << (ind % 8));
 }
 
 inline bool CheckMapBit(uint8_t *map, uint8_t ind) {
+	if(map == NULL) return false;
 	return (map[ind/8] & (0x01 << (ind % 8))) != 0;
 }
 
@@ -70,7 +73,6 @@ class FlightPlan {
 
 		Waypoint_t plan[MAX_WAYPOINTS];
 		uint8_t i_wp, i_wpn;
-		bool is_helix;
 
 		bool resetWaypoint(const int ind);
 		void setCurrentPlanMap();
@@ -109,9 +111,13 @@ class FlightPlan {
 
 		uint8_t getAll(Waypoint_t * const waypts) const;
 		void getBounds(float * const bounds) const;
+    uint8_t getClosest(double ac_lat, double ac_lon, uint8_t closest_point) const;
 
 		inline const FlightPlanMap_t * getMap(void) const {return &fp_map;}
-		inline void setMap(const FlightPlanMap_t * const map) {memcpy(&fp_map,map,sizeof(FlightPlanMap_t));}
+		inline void setMap(const FlightPlanMap_t * const map) {
+			if(map == NULL) return;
+			memcpy(&fp_map,map,sizeof(FlightPlanMap_t));
+		}
 		void getCurrentPlanMap(FlightPlanMap_t * const map) const;
 		void getMissingWaypoints (FlightPlanMap_t * const map) const;
 

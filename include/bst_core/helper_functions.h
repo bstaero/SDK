@@ -37,6 +37,11 @@
 #define SIGN(x) ( ((x) >= 0) - ((x) <= 0) )
 #endif
 
+// This one outputs 1 for x == 0
+#ifndef SIGN1
+#define SIGN1(x) ( ((x) >= 0) - ((x) < 0) )
+#endif
+
 static inline float deltaT(float _time, float _now) {
 
 	// first check for properly initialized values
@@ -59,6 +64,7 @@ static inline float deltaT(float _time, float _now) {
 #ifdef __cplusplus
 float checkLimit(float value, const Limit_t * const limit); 
 float checkLimit(float value, float limit_val);
+float checkLimit(float value, float limit_min, float limit_max);
 #endif
 
 /*-----[ Types ]--------*/

@@ -3,7 +3,11 @@
 
 #include "netuas_socket.h"
 
+#include "debug.h"
+
 NetuasSocket::NetuasSocket () : CommunicationsInterface(), last_connection(0,0) {
+	pmesg(VERBOSE_ALLOC, "NetuasSocket::NetuasSocket()\n");
+
 	sock_ptr = NULL;
 	mode_type = Socket::SERVER;
 }
