@@ -11,14 +11,14 @@ FLAGS = $(CFLAGS) $(LDFLAGS) -DVERBOSE -DSDK
 #FLAGS = $(CFLAGS) $(LDFLAGS) -DSDK
 
 INCLUDES+=-I. \
-			    -I./netuas \
+			    -I./netuas_lib \
 			    -I../include/bst_can \
 			    -I../include/bst_core \
 			    -I../include/bst_protocol \
 			    -I../include/bst_protocol/messages \
 			    -I../include/bst_protocol/modules \
 
-VPATH+=./netuas \
+VPATH+=./netuas_lib \
 			 ../src/bst_can \
 			 ../src/bst_core \
 			 ../src/bst_protocol \

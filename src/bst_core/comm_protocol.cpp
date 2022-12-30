@@ -1,6 +1,10 @@
 #include "comm_protocol.h"
 
+#include "debug.h"
+
 CommunicationsProtocol::CommunicationsProtocol () {
+	pmesg(VERBOSE_ALLOC, "CommunicationsProtocol::CommunicationsProtocol()\n");
+
 	last_communication = 0.0f;
 }
 
