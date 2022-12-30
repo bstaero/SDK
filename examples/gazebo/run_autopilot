@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mkdir -p ~/.black_swift
-cp models/e2/param ~/.black_swift/param_mr_0x41000001.bst
+cp models/e2/param ~/.black_swift/param_mr_0x41000002.bst
 
 pkill -9 gcsDaemon
 pkill -9 gcsDaemon
