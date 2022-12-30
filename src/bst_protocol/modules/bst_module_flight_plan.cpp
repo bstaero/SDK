@@ -372,10 +372,6 @@ void BSTModuleFlightPlan::finishSend(uint8_t type, uint8_t * data, uint16_t size
 						reset();
 						return;
 					}
-					// FIXME -- should remove and let the hardware limit this
-					if (getElapsedTime() - last_waypoint_sent >= (waypoint_timeout / 20.0))
-					{
-						pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_WAYPOINT %u \n",waypoint_i);
 
 					// FIXME -- should remove and let the hardware limit this
 					if (getElapsedTime() - last_waypoint_sent >= (waypoint_timeout / 20.0))
