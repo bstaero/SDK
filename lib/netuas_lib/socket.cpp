@@ -835,6 +835,8 @@ int Socket::connectClient()
 
 	client = getClientFromRead();
 
+		printf("%i, %u %u\n",client, numClients, NUM_CLIENTS);
+
 	if( client == -1 ) {
 
 		if(numClients < NUM_CLIENTS) {
@@ -875,8 +877,7 @@ int Socket::connectClient()
 	if( tempFD != INVALID_SOCKET ) {
 		connected = TRUE;
 		//g_ptr_array_add( clientList, &(clientIndex[client]) );
-		//if( ! goodOldBuddy ) numClients++;
-		numClients++;
+		if( ! goodOldBuddy ) numClients++;
 
 		if (! goodOldBuddy ) {
 		  cout << "Connection with client id=" << client 
