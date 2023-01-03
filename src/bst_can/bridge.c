@@ -77,7 +77,7 @@ using namespace bst::comms::canpackets;
  #include "dip.h"
 #endif
 
-#if defined IMPLEMENTATION_swil
+#if defined IMPLEMENTATION_swil || defined IMPLEMENTATION_xplane
 extern uint8_t p_new_gps_data;
 #endif
 /** @addtogroup Source
