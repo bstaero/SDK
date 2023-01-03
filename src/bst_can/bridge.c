@@ -520,6 +520,9 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 		updateHumidity(t0, data->humidity);
 	}
 
+	pmesg(VERBOSE_CAN, "AIR DATA: %+.5f [Pa], %+.5f [Pa], %+.2f [deg C], %0.1f [%%]\n\r", 
+			data->static_pressure, data->dynamic_pressure, data->air_temperature, data->humidity);
+
 	//----- packet specific code -----//
 
 	BRIDGE_BUFFER_CONCLUSION
