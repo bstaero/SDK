@@ -948,7 +948,9 @@ int Socket::connectClient()
 	if( tempFD != INVALID_SOCKET ) {
 		connected = TRUE;
 		//g_ptr_array_add( clientList, &(clientIndex[client]) );
+		// FIXME - need to recognize old connections so they can be cleared out
 		//if( ! goodOldBuddy ) numClients++;
+		if(numClients < NUM_CLIENTS)
 		numClients++;
 
 		if (! goodOldBuddy ) {

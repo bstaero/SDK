@@ -48,7 +48,11 @@ uint32_t stat_p_cnt;
 uint8_t p_new_gps_data;
 
 
-void updateActuatorValues(uint16_t * values) {}
+void updateActuatorValues(uint16_t * values) { 
+	printf("Act:");
+	for(uint8_t i=0; i<16; i++) printf(" [%04u]",values[i]);
+	printf("\n");
+}
 void updatePWMIn(float system_time, uint16_t * usec) {}
 
 void updateGPS(

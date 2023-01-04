@@ -31,7 +31,8 @@ bool publish(uint8_t type, uint8_t param);
 
 
 // Setting / Configuration
-#define CMD_ACK_TIMEOUT   20.0f    // [s] how long to wait for message ACK
+#define CMD_ACK_TIMEOUT    0.02f  // [s] how long to wait for message ACK
+#define CMD_RETRIES        1      // number of retires on command
 #define HEARTBEAT_INTERVAL 0.5f   // [s] time between heartbeat
 #define CONTROL_INTERVAL   0.05f  // [s]
 

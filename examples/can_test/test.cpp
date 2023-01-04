@@ -115,6 +115,10 @@ void updateTest() {
 					}
 					break;
 
+				case 'i':
+					print_timing = !print_timing;
+					break;
+
 				case 'p':
 					printTestHelp();
 					break;

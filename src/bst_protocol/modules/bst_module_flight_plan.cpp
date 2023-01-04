@@ -17,9 +17,10 @@ extern "C" {
   float getElapsedTime(); // defined elsewhere
 }
 
-BSTModuleFlightPlan::BSTModuleFlightPlan() : BSTCommunicationsModule () {
+BSTModuleFlightPlan::BSTModuleFlightPlan(char *n) : BSTCommunicationsModule () {
 
 	pmesg(VERBOSE_ALLOC, "BSTModuleFlightPlan::BSTModuleFlightPlan()\n");
+	strncpy(name, n, 8);
 
 	max_num_data_types = 4;
 	data_types = new DataType_t[4]; 
@@ -50,7 +51,6 @@ void BSTModuleFlightPlan::update() {
 			else
 				validateReceivedPlan();
 		}
-
 	}
 
 	// check sending state
@@ -99,10 +99,10 @@ void BSTModuleFlightPlan::requestMissingWaypoints() {
 		float now = getElapsedTime();
 		if (now - last_waypoint_req < waypoint_timeout)
 			return;
-			
+				
 		// pmesg(VERBOSE_FP, "requestMissingWaypoint\n");
 		// printf("now=%f last_waypoint_req=%f last_wpt_received=%f waypoint_timeout=%f\n", now, last_waypoint_req, last_wpt_received, waypoint_timeout);
-		
+
 		for(uint8_t i=0; i<MAX_WAYPOINTS; i++) {
 			if( BITGET( rx_fp_map.map, i) && rx_temp_plan[i].num == INVALID_WAYPOINT) {
 				if(last_requested_waypoint != i) {
@@ -115,18 +115,6 @@ void BSTModuleFlightPlan::requestMissingWaypoints() {
 
 					pmesg(VERBOSE_WARN, "waypoint transmission exceeded, transmission failed %i\n",i);
 
-	#if defined(VERBOSE) || defined(DEBUG)
-					switch(rx_fp_map.mode) {
-						case NONE:
-							pmesg(VERBOSE_FP,"NACK(FP_MAP[NONE]\n");
-						case ADD:
-							pmesg(VERBOSE_FP,"NACK(FP_MAP[ADD]\n");
-						case DELETE:
-							pmesg(VERBOSE_FP,"NACK(FP_MAP[DELETE]\n");
-						case FINISH:
-							pmesg(VERBOSE_FP,"NACK(FP_MAP[FINISH]\n");
-					}
-	#endif
 					parent->write(FLIGHT_PLAN_MAP,PKT_ACTION_NACK,(uint8_t *)&rx_fp_map,sizeof(FlightPlanMap_t),NULL);
 
 					reset();
@@ -150,6 +138,7 @@ void BSTModuleFlightPlan::requestMissingWaypoints() {
 		all_waypoints_received = true;
 		requesting_missing_points = false;
 		//last_flight_plan_sent = getElapsedTime() - waypoint_timeout + (waypoint_timeout/20.0);
+
 	}
 
 }
@@ -179,12 +168,12 @@ void BSTModuleFlightPlan::validateReceivedPlan()
 	// checks passed, change state to final map hand shake
 	fp_send_state = WAITING_FOR_FINAL_MAP_RX;
 
-	pmesg(VERBOSE_FP, "FLIGHT_PLAN : FINAL MAP\n");
+	pmesg(VERBOSE_FP, "%s FLIGHT_PLAN : FINAL MAP\n", name);
 
 #else
 
 	if(getElapsedTime() - last_flight_plan_sent > waypoint_timeout) {
-		//pmesg(VERBOSE_FP, "validateReceviedPlan\n");
+		pmesg(VERBOSE_FP, "validateReceviedPlan fp_send_state=%u\n", fp_send_state);
 
 		// make sure mode is ADD 
 		rx_fp_map.mode = ADD;
@@ -201,7 +190,7 @@ void BSTModuleFlightPlan::validateReceivedPlan()
 		// checks passed, change state to final map hand shake
 		fp_send_state = WAITING_FOR_FINAL_MAP_RX;
 
-		pmesg(VERBOSE_FP, "FLIGHT_PLAN : FINAL MAP\n");
+		pmesg(VERBOSE_FP, "%s FLIGHT_PLAN : FINAL MAP\n", name);
 
 		last_fpmap_tx = 0;
 		last_flight_plan_sent = getElapsedTime();
@@ -214,7 +203,7 @@ void BSTModuleFlightPlan::validateReceivedPlan()
 // reset state variables
 void BSTModuleFlightPlan::reset() 
 {
-	pmesg(VERBOSE_FP, "FLIGHT_PLAN : WAITING\n");
+	pmesg(VERBOSE_FP, "%s FLIGHT_PLAN : WAITING\n", name);
 
 	fp_send_state = WAITING;
 
@@ -257,7 +246,8 @@ void BSTModuleFlightPlan::sendTermination() {
 	num_fpmap_term_tx++;
 	last_fpmap_tx = getElapsedTime();
 
-	pmesg(VERBOSE_FP, "<- FLIGHT_PLAN_MAP [TERM-ACK]\n");
+	pmesg(VERBOSE_FP, "%s <- FLIGHT_PLAN_MAP [TERM-ACK]\n", name);
+
 }
 
 void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, const void * parameter) {
@@ -275,7 +265,7 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 					if(parameter != NULL)
 						memcpy(&tx_fp_map, (FlightPlanMap_t *)parameter, sizeof(FlightPlanMap_t));
 					else {
-						bzero(&tx_fp_map,sizeof(FlightPlanMap_t));
+						bzero((uint8_t *)&tx_fp_map,sizeof(FlightPlanMap_t));
 					}
 
 					// fill out the waypoints
@@ -296,9 +286,9 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 
 #ifdef VERBOSE
 					switch(tx_fp_map.mode) {
-						case NONE: pmesg(VERBOSE_FP, "<- FLIGHT_PLAN_MAP(NONE)\n"); break;
-						case ADD: pmesg(VERBOSE_FP, "<- FLIGHT_PLAN_MAP(ADD)\n"); break;
-						case DELETE: pmesg(VERBOSE_FP, "<- FLIGHT_PLAN_MAP(DEL)\n"); break;
+						case NONE: pmesg(VERBOSE_FP, "%s <- FLIGHT_PLAN_MAP(NONE)\n", name); break;
+						case ADD: pmesg(VERBOSE_FP, "%s <- FLIGHT_PLAN_MAP(ADD)\n", name); break;
+						case DELETE: pmesg(VERBOSE_FP, "%s <- FLIGHT_PLAN_MAP(DEL)\n", name); break;
 						case FINISH: pmesg(VERBOSE_FP, "<- FLIGHT_PLAN_MAP(FIN)\n"); break;
 						default: pmesg(VERBOSE_ERROR, "<- INVALID FLIGHT_PLAN_MAP\n");
 					}
@@ -312,7 +302,7 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 
 					fp_send_state = SENT_FP_MAP;
 
-					pmesg(VERBOSE_FP,"SENT_FP_MAP\n");
+					pmesg(VERBOSE_FP,"%s SENT_FP_MAP\n", name);
 
 					break;
 
@@ -360,13 +350,12 @@ void BSTModuleFlightPlan::finishSend(uint8_t type, uint8_t * data, uint16_t size
 					if(getElapsedTime() - last_flight_plan_sent > waypoint_timeout) {
 #ifdef VERBOSE
 						switch(tx_fp_map.mode) {
-							case NONE: pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_MAP(NONE)\n"); break;
-							case ADD: pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_MAP(ADD)\n"); break;
+							case NONE: pmesg(VERBOSE_FP,"%s <- FLIGHT_PLAN_MAP(NONE)\n", name); break;
+							case ADD: pmesg(VERBOSE_FP,"%s <- FLIGHT_PLAN_MAP(ADD)\n", name); break;
 							case DELETE: pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_MAP(DEL)\n"); break;
 							case FINISH: pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_MAP(FINISH)\n"); break;
 						}
 #endif
-
 						parent->write(FLIGHT_PLAN_MAP,send_action, (uint8_t *)&tx_fp_map, sizeof(FlightPlanMap_t), NULL);
 						last_flight_plan_sent = getElapsedTime();
 
@@ -383,10 +372,11 @@ void BSTModuleFlightPlan::finishSend(uint8_t type, uint8_t * data, uint16_t size
 						reset();
 						return;
 					}
+
 					// FIXME -- should remove and let the hardware limit this
 					if (getElapsedTime() - last_waypoint_sent >= (waypoint_timeout / 20.0))
 					{
-						pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_WAYPOINT %u \n",waypoint_i);
+						pmesg(VERBOSE_FP,"%s <- FLIGHT_PLAN_WAYPOINT %u \n",name, waypoint_i);
 
 						// send waypoint
 						n = parent->write(FLIGHT_PLAN_WAYPOINT, send_action, (uint8_t *)(&tx_temp_plan[waypoint_i]), sizeof(Waypoint_t), NULL);
@@ -412,7 +402,7 @@ void BSTModuleFlightPlan::finishSend(uint8_t type, uint8_t * data, uint16_t size
 								//last_flight_plan_sent = getElapsedTime() - waypoint_timeout + (waypoint_timeout/20.0);
 
 								last_flight_plan_sent = getElapsedTime();
-								pmesg(VERBOSE_FP,"WAITING_FOR_FINAL_MAP\n");
+								pmesg(VERBOSE_FP,"%s WAITING_FOR_FINAL_MAP\n", name);
 							}
 						}
 					}
@@ -448,6 +438,7 @@ void BSTModuleFlightPlan::request(uint8_t type, uint8_t parameter){
 			break;
 		case FLIGHT_PLAN_WAYPOINT:
 			pmesg(VERBOSE_FP,"<- FLIGHT_PLAN_WAYPOINT REQUEST %i\n",parameter);
+
 			parent->write(type,PKT_ACTION_REQUEST,&parameter,1,NULL);
 			break;
 
@@ -461,11 +452,14 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 	if(parent == NULL) return;
 
+	//printf("BSTModuleFlightPlan::parse - type=%u\n", type);
+
 	switch(type) {
 
 		/* FLIGHT PLAN */
 		case FLIGHT_PLAN_MAP:
-			pmesg(VERBOSE_FP,"-> FLIGHT_PLAN_MAP\n");
+
+			pmesg(VERBOSE_FP,"%s -> FLIGHT_PLAN_MAP\n", name);
 
 			// we received a MAP, so we can update the next map
 			last_flight_plan_sent = 0;
@@ -583,6 +577,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 								break;
 
 							case DELETE:
+
 								pmesg(VERBOSE_FP,"   ACK DEL_FLIGHT_PLAN\n");
 								//pmesg(VERBOSE_FP, "Got final FP MAP, transmission success\n");
 								pmesg(VERBOSE_FP, "Flight plan successfully deleted\n");
@@ -595,6 +590,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 							case FINISH:
 								pmesg(VERBOSE_FP,"FLIGHT_PLAN : ACK - Got final FP MAP ACK, transmission success\n");
 								pmesg(VERBOSE_INFO, "Flight plan update completed\n");
+
 
 								switch( fp_send_state ) {
 									case WAITING_FOR_FINAL_MAP:
@@ -614,6 +610,8 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 								reset();
 
+								pmesg(VERBOSE_INFO, "%s fp_send_State=%u\n", name, fp_send_state);
+
 								break;
 
 							case NONE:
@@ -622,6 +620,7 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 								switch(fp_send_state) {
 									case WAITING:
 										break;
+
 									case SENT_FP_MAP:
 										pmesg(VERBOSE_FP, "   SENT_FP_MAP\n");
 

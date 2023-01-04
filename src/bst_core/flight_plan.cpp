@@ -3,12 +3,11 @@
 #include <stdio.h>
 //#include "main.h"
 #include "debug.h"
-
-// FIXME - we need a temp variable, but this is reall
-// bad in interrupt driven / multi-threaded system.
-static FlightPlanMap_t tmp_map; 
 		
 FlightPlan::FlightPlan() {
+
+	pmesg(VERBOSE_ALLOC, "FlightPlan::FlightPlan()\n");
+
 	i_wp  = INVALID_WAYPOINT; 
 	i_wpn = INVALID_WAYPOINT;
 
@@ -51,10 +50,6 @@ bool FlightPlan::add(const Waypoint_t * const points, uint8_t num_waypts) {
 	if(num_waypts > MAX_WAYPOINTS || points == NULL) 
 		return false;
 
-	if (num_waypts == 2 && (points[0].latitude == points[1].latitude && points[0].longitude == points[1].longitude)) {
-		is_helix = true;
-	}
-
 	for(uint8_t i=0; i<num_waypts; i++) {
 		if( isValidInd( points[i].num ) ) {
 			//pmesg(VERBOSE_INFO, "Waypoint action=%u\n", points[i].action);
@@ -71,9 +66,9 @@ bool FlightPlan::add(const Waypoint_t * const points, uint8_t num_waypts) {
 					i_wpn = INVALID_WAYPOINT;
 
 				/*
-					if( !isValidInd(i_wpn) || !isValidInd(plan[i_wpn].num) )
-					i_wpn = INVALID_WAYPOINT;
-					*/
+					 if( !isValidInd(i_wpn) || !isValidInd(plan[i_wpn].num) )
+					 i_wpn = INVALID_WAYPOINT;
+					 */
 			}
 
 			// add to fp map
@@ -103,10 +98,6 @@ bool FlightPlan::add(const FlightPlan * const fp)
 				fp_size++;
 			}
 		}
-	}
-
-	if (fp_size == 2 && (plan[0].latitude == plan[1].latitude && plan[0].longitude == plan[1].longitude)) {
-		is_helix = true;
 	}
 
 #ifdef VERBOSE
@@ -446,6 +437,28 @@ void FlightPlan::getBounds(float * const bounds) const {
 	}
 }
 
+uint8_t FlightPlan::getClosest(double ac_lat, double ac_lon, uint8_t closest_point) const {
+
+  float min_range = 1e9;
+  float tmp_range = 0.f;
+  float c_ac_lat = cosf(ac_lat);
+
+  for(uint8_t i=0; i<MAX_WAYPOINTS; i++) {
+    if(isValidInd(plan[i].num)) {
+      if(currentPlanContains(plan[i].num)) {
+        // L1-norm
+        // TODO could make this an L2 norm on these two values and it will
+        // match a range comparison, but L1 is cheaper.
+        tmp_range = fabs(plan[i].latitude-ac_lat) + fabs(c_ac_lat*(plan[i].longitude-ac_lon));
+        if(tmp_range < min_range) {
+          min_range = tmp_range;
+          closest_point = i;
+        }
+      }
+    }
+  }
+  return closest_point;
+}
 
 void FlightPlan::getCurrentPlanMap(FlightPlanMap_t * const map) const {
 	memcpy(map, &curr_map, sizeof(FlightPlanMap_t));
@@ -661,7 +674,7 @@ float FlightPlan::getPathLength(uint8_t start_ind, uint16_t action ) const
 
 // LLA2LOCAL - convert latitude, longitude, to x-y in a local frame
 void lla2local(Vector *v, const Waypoint_t * wp, double lat, double lon, float alt) {
-	v->operator()(2) = alt - wp->latitude;
+	v->operator()(2) = wp->altitude - alt;
 	return lla2local(v, wp->latitude, wp->longitude, lat, lon);
 }
 
@@ -783,12 +796,4 @@ float lla2Bearing(const double f_lat, const double f_lon, const double t_lat, co
 	x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(d_lon);
 
 	return atan2f(y, x);
-}
-
-bool FlightPlan::isHelix() const {
-	return is_helix;
-}
-
-bool FlightPlan::isContinuous() const {
-	return is_helix && (plan[1].next == plan[0].num);
 }

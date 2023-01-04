@@ -38,11 +38,8 @@ void printTestHelp() {
 	printf("Keys:\n");
 	printf("  T   : Show telmetry\n");
 	printf("\n");
-	printf("  h   : Send payload heartbeat\n");
 	printf("  r   : Send payload ready comannd \n");
-	printf("  c   : Send payload active comannd \n");
 	printf("  o   : Send payload off comannd \n");
-	printf("  s   : Send payload shutdown comannd \n");
 	printf("\n");
 	printf("  z   : Zero gyros (required for launch)\n");
 	printf("  t   : Send launch / land comannd \n");
@@ -109,7 +106,10 @@ void initializeTest() {
 }
 
 
-//---- Update loop 
+FlightPlanMap_t flight_plan_map;
+FlightPlan flight_plan;
+int8_t * buff;
+
 void updateTest() {
 	char input;
 
@@ -118,11 +118,6 @@ void updateTest() {
 	uint8_t num_points = 0;
 	Waypoint_t temp_waypoint;
 	Waypoint_t temp_waypoints[MAX_WAYPOINTS];
-
-	FlightPlanMap_t flight_plan_map;
-	FlightPlan flight_plan;
-
-	int8_t * buff = (int8_t *)&command.value;
 
 	if (inputAvailable()) {
 		input = getchar();
@@ -137,10 +132,6 @@ void updateTest() {
 						show_telemetry = true;
 					break;
 
-				case 'h':
-					comm_handler->send(TELEMETRY_HEARTBEAT, NULL, 0, NULL);
-					break;
-
 				case 'r':
 					printf("Sending payload ready command mode ...\n");
 					sendPayloadControlMode(PAYLOAD_CTRL_READY);
@@ -149,15 +140,6 @@ void updateTest() {
 				case 'o':
 					printf("Sending payload off command ...\n");
 					sendPayloadControlMode(PAYLOAD_CTRL_OFF);
-					break;
-
-				case 's':
-					printf("Shutdown payload command ...\n");
-					sendPayloadControlMode(PAYLOAD_CTRL_SHUTDOWN);
-					break;
-
-				case 'c':
-					sendPayloadControlMode(PAYLOAD_CTRL_ACTIVE);
 					break;
 
 				case 'z':
@@ -257,6 +239,7 @@ void updateTest() {
 					printf("Sending stop command\n");
 					command.id = CMD_VEL_CTRL;
 					command.value = 0;
+					buff = (int8_t *)(&command.value);
 					buff[0] = (int8_t)(0);
 					buff[1] = (int8_t)(0);
 					buff[2] = (int8_t)(0);
@@ -405,6 +388,7 @@ void updateTest() {
 					printf("Sending velocity triple\n");
 					command.id = CMD_VEL_CTRL;
 					command.value = 0;
+					buff = (int8_t *)(&command.value);
 					buff[0] = (int8_t)(1.1*10.0);
 					buff[1] = (int8_t)(-1.1*10.0);
 					buff[2] = (int8_t)(0.5*10.0);
@@ -562,7 +546,7 @@ void updateTest() {
 					break;
 
 				case 3: // <CTRL-C>
-					// allow flowthrough
+								// allow flowthrough
 				case 'q':
 					printf("Keyboard caught exit signal ...\n");
 					running = false;
@@ -581,6 +565,7 @@ void updateTest() {
 	// send heartbeat
 	send_hb();
 
+#if 0
 	/** Update control interval */
 	static float last_ctrl = 0.0;
 	float now = getElapsedTime();
@@ -588,11 +573,12 @@ void updateTest() {
 		last_ctrl = now;
 
 		/** Get State estimate for pitch/roll */
-		//comm_handler->request(STATE_ESTIMATOR_PARAM, 0);
+		comm_handler->request(STATE_ESTIMATOR_PARAM, 0);
 
 		/** Get agl value for raw control */
 		comm_handler->request(SENSORS_AGL, 0);
 	}
+#endif
 
 }
 

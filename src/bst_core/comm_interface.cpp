@@ -26,7 +26,12 @@
 
 #include "comm_interface.h"
 
+#include "debug.h"
+
 CommunicationsInterface::CommunicationsInterface() {
+
+	pmesg(VERBOSE_ALLOC, "CommunicationsInterface::CommunicationsInterface()\n");
+
 	connected = false;
 	comm_type = CommunicationsInterface::UNKNOWN;
 }

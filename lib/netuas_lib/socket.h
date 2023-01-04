@@ -180,7 +180,7 @@ class Socket {
 
 		// if server, then some client data
 		int numClients;               	// number of clients connected
-		int clientIndex[NUM_CLIENTS]; 		// index of connected clients
+		int clientIndex[NUM_CLIENTS+1];  // index of connected clients
 		SocketFD clientFD[NUM_CLIENTS+1];	// fd of connected clients
 		//GPtrArray *clientList;
 

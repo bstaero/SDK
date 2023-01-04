@@ -81,7 +81,7 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
  #include "dip.h"
 #endif
 
-#if defined IMPLEMENTATION_swil
+#if defined IMPLEMENTATION_swil || defined IMPLEMENTATION_xplane
 extern uint8_t p_new_gps_data;
 #endif
 /** @addtogroup Source

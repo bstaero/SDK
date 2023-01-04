@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 		comm_interface->initialize(param[0],param[1],param[2]);
 
 	BSTModuleBasic basic_module;
-	BSTModuleFlightPlan flight_plan_module;
+	BSTModuleFlightPlan flight_plan_module((char *)"SDK");
 
 	basic_module.registerReceive(receive);
 	basic_module.registerReceiveCommand(receiveCommand);
