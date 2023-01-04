@@ -77,7 +77,7 @@ using namespace bst::comms::canpackets;
  #include "dip.h"
 #endif
 
-#if defined IMPLEMENTATION_swil
+#if defined IMPLEMENTATION_swil || defined IMPLEMENTATION_xplane
 extern uint8_t p_new_gps_data;
 #endif
 /** @addtogroup Source
@@ -519,6 +519,9 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 	if(data->humidity > -FLT_MAX) {
 		updateHumidity(t0, data->humidity);
 	}
+
+	pmesg(VERBOSE_CAN, "AIR DATA: %+.5f [Pa], %+.5f [Pa], %+.2f [deg C], %0.1f [%%]\n\r", 
+			data->static_pressure, data->dynamic_pressure, data->air_temperature, data->humidity);
 
 	//----- packet specific code -----//
 

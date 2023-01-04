@@ -5,6 +5,8 @@
 
 Vector::Vector()
 {
+	pmesg(VERBOSE_ALLOC, "Vector::Vector()\n");
+
 	len = 0;
 	V = NULL;
 }
@@ -86,7 +88,7 @@ void Vector::setSize(size_t _len)
 
 		len = _len;
 
-		pmesg(VERBOSE_ALLOC, "Vector::setSize()\n");
+		pmesg(VERBOSE_ALLOC, "Vector::setSize(%u)\n",len);
 		V = new float[len];
 	}
 
@@ -219,8 +221,8 @@ Vector cross3(const Vector& v1, const Vector& v2)
 
 	Vector tmp(3);
 	tmp.V[0] = v1.V[1]*v2.V[2] - v1.V[2]*v2.V[1];
-	tmp.V[1] = v1.V[2]*v2.V[0] - v1.V[1]*v2.V[2];
-	tmp.V[2] = v1.V[0]*v2.V[1] - v1.V[0]*v2.V[0];
+	tmp.V[1] = v1.V[2]*v2.V[0] - v1.V[0]*v2.V[2];
+	tmp.V[2] = v1.V[0]*v2.V[1] - v1.V[1]*v2.V[0];
 	return tmp;
 }
 

@@ -19,6 +19,8 @@
 #ifndef _PACKET_H_
 #define _PACKET_H_
 
+#include <inttypes.h>
+
 #ifdef __cplusplus
   #include <stdint.h>
   #include <string.h>

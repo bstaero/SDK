@@ -24,7 +24,17 @@
 
 class BSTModuleFlightPlan : public BSTCommunicationsModule {
 	public:
-		BSTModuleFlightPlan();
+		typedef enum {
+			WAITING,
+			SENT_FP_MAP,
+			SENDING_WAYPOINTS,
+			WAITING_FOR_FINAL_MAP,
+			WAITING_FOR_FINAL_MAP_RX,
+			WAITING_FOR_WAYPOINTS,
+			FINAL_ACK
+		} FPSendState_t;
+
+		BSTModuleFlightPlan(char *name);
 
 		virtual void update();
 
@@ -37,30 +47,19 @@ class BSTModuleFlightPlan : public BSTCommunicationsModule {
 		void setWaypointTimeout(float timeout);
 		void setDefaultWaypointTimeout();
 
+		FPSendState_t get_send_state() { return fp_send_state; }
 
 	private:
 
 		int num_waypoints;
 		int waypoint_i;
 
-		typedef enum {
-			WAITING,
-			SENT_FP_MAP,
-			SENDING_WAYPOINTS,
-			WAITING_FOR_FINAL_MAP,
-			WAITING_FOR_FINAL_MAP_RX,
-			WAITING_FOR_WAYPOINTS,
-			FINAL_ACK
-		} FPSendState_t;
-
+		char name[8];
 		Waypoint_t temp_wp;
 		Waypoint_t rx_temp_plan[MAX_WAYPOINTS];
 		Waypoint_t tx_temp_plan[MAX_WAYPOINTS];
 		FlightPlanMap_t rx_fp_map;
 		FlightPlanMap_t tx_fp_map;
-
-		//FIXME -- implement this better, shouldn't need the exta memory, just use rx_temp_plan more intelligently
-		Waypoint_t temp_plan[MAX_WAYPOINTS];
 
 		FPSendState_t fp_send_state;
 		float last_wpt_received;

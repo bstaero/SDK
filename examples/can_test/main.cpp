@@ -53,6 +53,10 @@ CommunicationsInterface * comm_interface;
 
 SystemStatus_t system_status;
 SystemInitialize_t system_initialize;
+
+extern "C"  {
+	uint8_t p_new_gps_data = 0;
+}
 /*<-End Global Variables-->*/
 
 enum {COMM_SERIAL, COMM_SOCKET, COMM_UNKNOWN, COMM_INVALID};
@@ -65,7 +69,7 @@ void printHelp();
 int main(int argc, char *argv[])
 {
 #ifdef VERBOSE
-	//verbose = VERBOSE_CAN;
+	//verbose = -VERBOSE_CAN;
 	verbose = VERBOSE_ERROR;
 #endif
 

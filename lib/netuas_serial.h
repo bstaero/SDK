@@ -6,7 +6,7 @@
 
 #include "comm_interface.h"
 
-#include "netuas/serial.h"
+#include "netuas_lib/serial.h"
 
 // how often to attempt a new connection
 #define CONNECTION_TIMEOUT 1.0 // s
