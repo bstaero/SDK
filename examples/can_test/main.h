@@ -27,6 +27,8 @@ extern bool running;
 
 extern CommunicationsProtocol * comm_handler;
 
+bool writeFile(uint8_t * data, uint16_t num);
+
 void printHelp();
 
 void setupTime();
