@@ -53,6 +53,14 @@
 */ 
 #define CAN_DEVICE_0 0
 #define CAN_DEVICE_1 1
+#define CAN_DEVICE_2 2
+#define CAN_DEVICE_3 3
+#define CAN_DEVICE_4 4
+#define CAN_DEVICE_5 5
+#define CAN_DEVICE_6 6
+#define CAN_DEVICE_7 7
+#define CAN_DEVICE_8 8
+#define CAN_DEVICE_9 9
 	  
 /**
 * @}
