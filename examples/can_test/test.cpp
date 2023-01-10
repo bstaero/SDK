@@ -31,6 +31,9 @@
 
 
 // variables
+volatile bool display_telemetry = false;
+volatile bool write_file = false;
+
 bool show_gps = false;
 bool show_mag = false;
 bool show_dynamic = false;
@@ -62,7 +65,9 @@ struct termios initial_settings, new_settings;
 
 void printTestHelp() {
 	printf("Keys:\n");
-	printf("  t   : take a picture\n");
+	printf("  t   : Toggle telemetry display\n");
+	printf("\n");
+	printf("  T   : take a picture\n");
 	printf("\n");
 	printf("  p   : print this help\n");
 }
@@ -108,7 +113,12 @@ void updateTest() {
 
 		if(input > 0) {
 			switch(input) {
+
 				case 't':
+					display_telemetry? display_telemetry=false: display_telemetry=true;
+					break;
+
+				case 'T':
 					if(!is_triggering) {
 						is_triggering = 1;
 						trigger_time = getElapsedTime();

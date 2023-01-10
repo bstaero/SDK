@@ -16,29 +16,9 @@
 |                                                                              |
 |                                                                              |
 \*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*/
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _CAN_HANDLER_H_
+#define _CAN_HANDLER_H_
 
-#include "bst_protocol.h"
-#define NUM_COMM_INTERFACES 1
-
-extern bool big_endian;
-extern bool running;
-
-extern CommunicationsProtocol * comm_handler;
-
-bool writeFile(uint8_t * data, uint16_t num);
-
-void printHelp();
-
-void setupTime();
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-float getElapsedTime();
-#ifdef __cplusplus
-}
-#endif
 
 #endif
+

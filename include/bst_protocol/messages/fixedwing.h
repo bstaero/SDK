@@ -196,6 +196,7 @@ typedef enum {
 	LAUNCH_ROLLING,
 	LAUNCH_CAR,
 	LAUNCH_RAIL,
+	LAUNCH_DROP,
 }  __attribute__ ((packed)) LaunchType_t;
 
 typedef struct _LandingParameters_t {

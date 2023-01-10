@@ -34,8 +34,12 @@ void printHelp();
 
 void setupTime();
 
+#ifdef __cplusplus
 extern "C" {
-	float getElapsedTime();
+#endif
+float getElapsedTime();
+#ifdef __cplusplus
 }
+#endif
 
 #endif

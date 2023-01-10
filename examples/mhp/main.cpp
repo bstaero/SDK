@@ -59,7 +59,7 @@ void printHelp();
 int main(int argc, char *argv[])
 {
 #ifdef VERBOSE
-	verbose = VERBOSE_ALL;
+	verbose = VERBOSE_INFO;
 #endif
 
 	uint16_t temp = 0x0100;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 		out_fid = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if(out_fid < 0) {
 			printf("ERROR - unable to open file %s for writing.\n",outfile);
-			close(in_fid);
+			close(out_fid);
 			exit(1);
 		}
 		write_file = true;
@@ -201,6 +201,10 @@ int main(int argc, char *argv[])
 
 	if(comm_type == COMM_FILE) {
 		close(in_fid);
+
+	}
+
+	if(out_fid >= 0) {
 		close(out_fid);
 	}
 

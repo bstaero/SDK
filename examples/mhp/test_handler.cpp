@@ -25,6 +25,12 @@
 #include "test.h"
 #include "main.h"
 #include "structs.h"
+#include "canpackets.h"
+#include "helper_functions.h"
+
+using namespace bst::comms::canpackets;
+
+#include "bridge.h"
 
 /*<---Global Variables---->*/
 Packet rx_packet;
@@ -96,11 +102,13 @@ uint32_t product_cnt = 0;
 uint32_t sensors_cnt = 0;
 
 float last_print = 0;
+
+volatile bool using_can = false;
 /*<-End Global Variables-->*/
 
 /*<---Local Functions----->*/
 void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size);
-void printMHPValues(uint8_t num_ports);
+void sendOverCAN(uint32_t id, void * data, uint8_t size);
 /*<-End Local Functions--->*/
 
 bool updateCommunications(void) {
@@ -130,9 +138,18 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 	MHPOld_t * mhp_old;
 	GPS_t * gps_old_data;
 
+
+	uint32_t hwil_id;
+	uint8_t hwil_size;
+	uint16_t hwil_ptr = 0;
+
+	const uint8_t * hwil_data_ptr = (uint8_t *)data;
+
 	switch(type) {
 
 		case SENSORS_BOARD_ORIENTATION:
+			using_can = false;
+
 			switch(action) {
 				case PKT_ACTION_STATUS:
 					axis_mapping = (AxisMapping_t *)data;
@@ -157,6 +174,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 			break;
 
 		case SENSORS_GNSS_ORIENTATION:
+			using_can = false;
+
 			switch(action) {
 				case PKT_ACTION_STATUS:
 					axis_mapping = (AxisMapping_t *)data;
@@ -180,6 +199,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 			break;
 
 		case SENSORS_CALIBRATE:
+			using_can = false;
+
 			calibration_data = (CalibrateSensor_t *)data;
 			if(calibration_data->state == CALIBRATED)
 				if(calibration_data->sensor == calibration_requested)
@@ -187,6 +208,7 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 			break;
 
 		case SENSORS_MHP:
+			using_can = false;
 			product_cnt++;
 			if(size == sizeof(MHP_t)) {
 				memcpy(&mhp_data,data,sizeof(MHP_t));;
@@ -228,6 +250,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 			break;
 
 		case SENSORS_MHP_SENSORS:
+			using_can = false;
+
 			memcpy(&mhp_sensors,data,sizeof(MHPSensors_t));;
 			sensors_cnt++;
 
@@ -243,6 +267,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 			break;
 
 		case SENSORS_MHP_9H_SENSORS:
+			using_can = false;
+
 			memcpy(&mhp_9h_sensors,data,sizeof(MHP9HSensors_t));;
 
 			printMHPValues(9);
@@ -250,6 +276,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 						break;
 
 		case SENSORS_MHP_GNSS:
+						using_can = false;
+
 						//FIXME - this should not be sent by the GPS
 						/*if( (((MHPSensorsGNSS_t *)data)-> latitude <  200.0) &&
 								(((MHPSensorsGNSS_t *)data)-> latitude > -200.0) )
@@ -260,6 +288,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 						break;
 
 		case SENSORS_MHP_9H_TIMING:
+						using_can = false;
+
 						memcpy(&mhp_9h_timing,data,sizeof(MHP9HTiming_t));;
 
 						if(display_telemetry_timing)
@@ -283,6 +313,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 						break;
 
 		case SENSORS_MHP_TIMING:
+						using_can = false;
+
 						memcpy(&mhp_timing,data,sizeof(MHPTiming_t));;
 
 						if(display_telemetry_timing)
@@ -319,12 +351,23 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 						break;
 
 		case SYSTEM_POWER_ON:
+						using_can = false;
+
 						power_on_data = (PowerOn_t *)data;
 
 						printf("serial number: 0x%x  comm revision: %u\n",
 								power_on_data->serial_num,
 								power_on_data->comms_rev
 								);
+						break;
+
+		case HWIL_CAN:
+
+						using_can = true;
+
+						memcpy(&hwil_id,(void *)(hwil_data_ptr + hwil_ptr),4); hwil_ptr += 4;
+						memcpy(&hwil_size,(void *)(hwil_data_ptr + hwil_ptr),1); hwil_ptr += 1;
+						BRIDGE_Arbiter(hwil_id,(void *)(hwil_data_ptr + hwil_ptr), hwil_size); hwil_ptr += hwil_size;
 						break;
 
 						/* ERRORS */
@@ -355,59 +398,128 @@ void sendCalibrate(SensorType_t sensor) {
 
 	calibration_requested = sensor;
 
-	calibrate_pkt.sensor = sensor;
-	calibrate_pkt.state = REQUESTED;
+	if(using_can) {
 
-	tx_packet.setAddressing(false);
-	tx_packet.setType(SENSORS_CALIBRATE);
-	tx_packet.setAction(PKT_ACTION_COMMAND);
-	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(CalibrateSensor_t));
+		CAN_CalibrateSensor_t data;
 
-	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+		data.sensor = (CAN_SensorType_t)sensor;
+		data.state = CAN_REQUESTED;
+
+		uint32_t id = CAN_PKT_CALIBRATE;
+		uint8_t size = sizeof(CAN_CalibrateSensor_t);
+
+		sendOverCAN(id,&data,size);
+
+	} else {
+
+		calibrate_pkt.sensor = sensor;
+		calibrate_pkt.state = REQUESTED;
+
+		tx_packet.setAddressing(false);
+		tx_packet.setType(SENSORS_CALIBRATE);
+		tx_packet.setAction(PKT_ACTION_COMMAND);
+		tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(CalibrateSensor_t));
+
+		writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+
+	}
 }
 
 void requestPowerOn(void) {
-	PowerOn_t power_on_pkt;
+	if(using_can) {
 
-	tx_packet.setAddressing(false);
-	tx_packet.setType(SYSTEM_POWER_ON);
-	tx_packet.setAction(PKT_ACTION_REQUEST);
-	tx_packet.setData((uint8_t *)&power_on_pkt, sizeof(PowerOn_t));
+		CAN_PowerOn_t data;
+		data.startByte = '@';
 
-	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+		uint32_t id = CAN_PKT_POWER_ON;
+		uint8_t size = sizeof(CAN_PowerOn_t);
+
+		sendOverCAN(id,&data,size);
+
+	} else {
+
+		PowerOn_t power_on_pkt;
+
+		tx_packet.setAddressing(false);
+		tx_packet.setType(SYSTEM_POWER_ON);
+		tx_packet.setAction(PKT_ACTION_REQUEST);
+		tx_packet.setData((uint8_t *)&power_on_pkt, sizeof(PowerOn_t));
+
+		writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+	}
 }
 
 void requestOrientation(PacketTypes_t type) {
 	if(type != SENSORS_BOARD_ORIENTATION && type != SENSORS_GNSS_ORIENTATION)
 		return;
 
-	AxisMapping_t axis_mapping_pkt;
+	if(using_can) {
 
-	tx_packet.setAddressing(false);
-	tx_packet.setType(type);
-	tx_packet.setAction(PKT_ACTION_REQUEST);
-	tx_packet.setData((uint8_t *)&axis_mapping_pkt, sizeof(AxisMapping_t));
+		CAN_AxisMapping_t data;
+		data.startByte = '@';
 
-	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+		data.axis[0] = 0;
+		data.axis[1] = 0;
+		data.axis[2] = 0;
+
+		uint32_t id;
+		if(type == SENSORS_BOARD_ORIENTATION) id = CAN_PKT_BOARD_ORIENTATION;
+		if(type == SENSORS_GNSS_ORIENTATION) id = CAN_PKT_GNSS_ORIENTATION;
+
+		uint8_t size = sizeof(CAN_AxisMapping_t);
+
+		sendOverCAN(id,&data,size);
+
+	} else {
+
+		AxisMapping_t axis_mapping_pkt;
+
+		tx_packet.setAddressing(false);
+		tx_packet.setType(type);
+		tx_packet.setAction(PKT_ACTION_REQUEST);
+		tx_packet.setData((uint8_t *)&axis_mapping_pkt, sizeof(AxisMapping_t));
+
+		writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+	}
 }
 
 void setOrientation(PacketTypes_t type, AxisMapping_t * axis_mapping) {
-	if(orientation_requested) return;
+	if(using_can) {
 
-	if(type != SENSORS_BOARD_ORIENTATION && type != SENSORS_GNSS_ORIENTATION)
-		return;
+		CAN_AxisMapping_t data;
+		data.startByte = '@';
 
-	orientation_action = PKT_ACTION_NACK;
-	orientation_requested = type;
+		data.axis[0] = axis_mapping->axis[0];
+		data.axis[1] = axis_mapping->axis[1];
+		data.axis[2] = axis_mapping->axis[2];
 
-	AxisMapping_t axis_mapping_pkt;
+		uint32_t id;
+		if(type == SENSORS_BOARD_ORIENTATION) id = CAN_PKT_BOARD_ORIENTATION;
+		if(type == SENSORS_GNSS_ORIENTATION) id = CAN_PKT_GNSS_ORIENTATION;
 
-	tx_packet.setAddressing(false);
-	tx_packet.setType(type);
-	tx_packet.setAction(PKT_ACTION_COMMAND);
-	tx_packet.setData((uint8_t *)axis_mapping, sizeof(AxisMapping_t));
+		uint8_t size = sizeof(CAN_AxisMapping_t);
 
-	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+		sendOverCAN(id,&data,size);
+
+	} else {
+
+		if(orientation_requested) return;
+
+		if(type != SENSORS_BOARD_ORIENTATION && type != SENSORS_GNSS_ORIENTATION)
+			return;
+
+		orientation_action = PKT_ACTION_NACK;
+		orientation_requested = type;
+
+		AxisMapping_t axis_mapping_pkt;
+
+		tx_packet.setAddressing(false);
+		tx_packet.setType(type);
+		tx_packet.setAction(PKT_ACTION_COMMAND);
+		tx_packet.setData((uint8_t *)axis_mapping, sizeof(AxisMapping_t));
+
+		writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+	}
 }
 
 void printMHPValues(uint8_t num_ports) {
@@ -747,4 +859,24 @@ void printMHPValues(uint8_t num_ports) {
 						writeFile((uint8_t*)out,strlen(out));
 			}
 	}
+}
+
+void sendOverCAN(uint32_t id, void * data, uint8_t size) {
+	((char *)data)[0] = '@';
+	setFletcher16((uint8_t *)data, size);	
+
+	uint8_t can_tx_buffer[500];
+
+	uint8_t ptr = 0;
+
+	memcpy(can_tx_buffer + ptr,&id,4); ptr += 4;
+	memcpy(can_tx_buffer + ptr,&size,1); ptr += 1;
+	memcpy(can_tx_buffer + ptr,data,size); ptr += size;
+
+	tx_packet.setAddressing(false);
+	tx_packet.setType(HWIL_CAN);
+	tx_packet.setAction(PKT_ACTION_STATUS);
+	tx_packet.setData(can_tx_buffer, ptr);
+
+	writeBytes(tx_packet.getPacket(),tx_packet.getSize());
 }
