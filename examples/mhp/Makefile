@@ -28,9 +28,9 @@ FLAGS = $(CFLAGS)
 
 VPATH     += 
 INCLUDES  += -I./
-OBJ       += main.o test.o test_handler.o
+OBJ       += main.o test.o test_handler.o can_handler.o
 
-FLAGS+=-g -DVERBOSE
+FLAGS+=-g -DVERBOSE -DBOARD_core -DBOARD_MHP
 
 ifneq ($(HOST_OS), Darwin)
 LDFLAGS+=-lrt
@@ -42,12 +42,14 @@ INCLUDES  += -I../../lib -I../../lib/netuas
 #-------[ BST Protocol ]-------#
 VPATH     += ../../src \
 						 ../../src/bst_core \
-						 ../../src/bst_protocol
+						 ../../src/bst_protocol \
+						 ../../src/bst_can 
 INCLUDES  += -I../../include \
 						 -I../../include/bst_core \
 						 -I../../include/bst_protocol \
-						 -I../../include/bst_protocol/messages
-OBJ       += comm_interface.o bst_packet.o helper_functions.o debug.o
+						 -I../../include/bst_protocol/messages \
+						 -I../../include/bst_can 
+OBJ       += comm_interface.o bst_packet.o helper_functions.o debug.o simulated_can.o bridge.o
 
 %.o:%.cpp
 	$(CXX) $(FLAGS) -c -o $@ $^ $(INCLUDES)

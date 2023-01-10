@@ -1038,7 +1038,8 @@ void Socket::fastClose()
 		// knows they can't connect
 		tempFD = accept(sock, 0, 0);
 
-		if(::write( tempFD, 0, sizeof(char) ))
+		char tmp;
+		if(::write( tempFD, &tmp, sizeof(char) ))
 			; // added if statement to avoid compiler warning
 		::close(tempFD);
 	}
