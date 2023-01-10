@@ -47,6 +47,17 @@ uint32_t stat_p_cnt;
 
 uint8_t p_new_gps_data;
 
+float local_dynamic_pressure = 0.0;
+float local_static_pressure = 0.0;
+float local_temperature = 0.0;
+float local_humidity = 0.0;
+
+float local_data[8];
+
+/*<---Local Functions----->*/
+void printData(void);
+/*<-End Local Functions--->*/
+
 
 void updateActuatorValues(uint16_t * values) { 
 	printf("Act:");
@@ -77,11 +88,14 @@ void updateIMU(float system_time,
 		float mx, float my, float mz) {}
 
 void updateDynamicPressure(float system_time,
-		float pressure, float temperature) { printf("DynP: %04.1f\n",pressure);}
+		float pressure, float temperature) {
+	local_dynamic_pressure = pressure;
+}
 
 void updateStaticPressure(float system_time,
 		float pressure, float temperature) {
-	stat_p_cnt++; printf("StatP: %04.1f\n",pressure);
+	stat_p_cnt++;
+	local_static_pressure = pressure;
 }
 
 void updateMHPSensors(float system_time,
@@ -107,7 +121,13 @@ void updateWind(float system_time, float u, float v, float w) {}
 
 void updateHumidity(float system_time,
 		float humidity) {
-	printf("RH: %03.1f\n",humidity);
+	local_humidity = humidity;
+
+	local_data[0] = getElapsedTime();
+	local_data[1] = local_dynamic_pressure;
+	local_data[2] = local_static_pressure;
+	local_data[3] = local_temperature;
+	local_data[4] = local_humidity;
 }
 
 void updateAGL(float system_time,
@@ -117,7 +137,17 @@ void updateProximity(float system_time,
 		float distance) {}
 
 void updateTemperature(float system_time,
-		float temperature) {printf("Temp: %02.1f\n",temperature);}
+		float temperature) {
+	if(temperature != 0.0) local_temperature = temperature;
+	else {
+
+		local_data[5] = getElapsedTime();
+		local_data[6] = local_dynamic_pressure;
+		local_data[7] = local_static_pressure;
+
+		printData();
+	}
+}
 
 void updateSupply(float system_time,
 		float voltage, float current, float coulomb_count, float temperature) {}
@@ -184,3 +214,51 @@ void updateADSB(float system_time,
 
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel) {}
+
+
+void printData() {
+	static bool first_run = true;
+	char out[2048];
+
+		if(display_telemetry)
+			printf("%07.03f sec %+06.01f Pa %+07.01f Pa %+05.01f deg C %04.01f %% | %07.03f sec %+06.01f Pa %+07.01f Pa\n\r",
+					local_data[0],
+					local_data[1],
+					local_data[2],
+					local_data[3],
+					local_data[4],
+					local_data[5],
+					local_data[6],
+					local_data[7]
+						);
+
+			if(write_file) {
+				if(first_run) {
+					sprintf(out,"%%"
+							"PRESSURE_0_TIME,"
+							"DYNAMIC_PRESSURE_0,"
+							"STATIC_PRESSURE_0,"
+							"DYNAMIC_PRESSURE_TIME_0,"
+							"AIR_TEMPERATURE,"
+							"HUMIDITY,"
+							"DYNAMIC_PRESSURE_1,"
+							"STATIC_PRESSURE_1,"
+							"\n");
+					writeFile((uint8_t*)out,strlen(out));
+					first_run = 0;
+				}
+
+				sprintf(out,"%f,%f,%f,%f,%f,%f,%f,%f\n", 
+					local_data[0],
+					local_data[1],
+					local_data[2],
+					local_data[3],
+					local_data[4],
+					local_data[5],
+					local_data[6],
+					local_data[7]
+							);
+
+						writeFile((uint8_t*)out,strlen(out));
+			}
+}
