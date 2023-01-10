@@ -145,18 +145,28 @@ uint16_t NetuasSocket::read(uint8_t * buf, uint16_t buf_size) {
 						
 						// data available
 						if( n > 0) { 
+#ifdef DEBUG
 							//printf("read %d bytes from socket client %d\n",n, last_client);
+#endif
 							return n;
 						} else {
-							if(n == 0)
+							if(n == 0) {
+#ifdef DEBUG 
 								printf("NetuasSocket::read from client returned zero bytes\n");
-							else if( errno != EWOULDBLOCK || errno != EINTR) 
+#endif
+							} else if( errno != EWOULDBLOCK || errno != EINTR) 
+#ifdef DEBUG
 								printf("NetuasSocket::bad read from client\n");
+#endif
 
 							if(sock_ptr->removeClient(last_client) != last_client) {
+#ifdef DEBUG
 								printf("NetuasSocket::could not remove client\n");
+#endif
 							} else {
+#ifdef DEBUG
 								printf("NetuasSocket::removed client\n");
+#endif
 							}
 
 							// reset last_client
@@ -189,17 +199,27 @@ uint16_t NetuasSocket::write(uint8_t * buf, uint16_t buf_size) {
 				n = sock_ptr->write(i,(char *)buf, buf_size);
 				if( buf_size != n) { 
 					success = false;
-					if(n == 0)
+					if(n == 0) {
+#ifdef DEBUG
 						printf("NetuasSocket::write to client returned zero bytes\n");
-					else if( errno != EWOULDBLOCK || errno != EINTR) 
+#endif
+					} else if( errno != EWOULDBLOCK || errno != EINTR) 
+#ifdef DEBUG
 						printf("NetuasSocket::bad write to client\n");
+#endif
 					if(sock_ptr->removeClient(i) != i) {
+#ifdef DEBUG
 						printf("NetuasSocket::could not remove client\n");
+#endif
 					} else {
+#ifdef DEBUG
 						printf("NetuasSocket::removed client\n");
+#endif
 					}
 				} 
+#ifdef DEBUG
 				//else printf("wrote %d bytes to socket client %d\n",n, i);
+#endif
 			}
 		}
 
@@ -213,7 +233,9 @@ uint16_t NetuasSocket::write(uint8_t * buf, uint16_t buf_size) {
 bool NetuasSocket::close() 
 {
 	if(sock_ptr != NULL) {
+#ifdef DEBUG
 		printf("NetuasSocket::close()\n");
+#endif
 		sock_ptr->close();
 		delete sock_ptr;
 		sock_ptr = NULL;
@@ -234,14 +256,18 @@ bool NetuasSocket::open() {
 		last_connection = ts;
 
 		if ( !sock_ptr->open( this->mode_type ) ) {
+#ifdef DEBUG
 			printf("NetuasSocket::Could not open sock\n");
+#endif
 			connected = false;
 			return false;
 		} 
 
 		if( mode_type == Socket::CLIENT ) {
 			if( !sock_ptr->connectHost() ) {
+#ifdef DEBUG
 				//printf("Could not connect to host\n");
+#endif
 				sock_ptr->close();
 
 				connected = false;

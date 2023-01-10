@@ -40,115 +40,6 @@ namespace comms {
 namespace canpackets {
 #endif
 
-typedef struct _CAN_GNSS_LLA_t {
-	uint8_t startByte;
-
-	double latitude;  // [deg]
-	double longitude;  // [deg]
-	float altitude;  // [m]
-
-	uint16_t chk;
-
-#ifdef __cplusplus
-	_CAN_GNSS_LLA_t() {
-		startByte = 0;
-		latitude = 0.0;
-		longitude = 0.0;
-		altitude = 0.0;
-		chk = 0;
-	}
-#endif
-} __attribute__ ((packed)) CAN_GNSS_LLA_t;
-
-typedef struct _CAN_GNSS_RTCM_t {
-	uint8_t startByte;
-
-	uint8_t size;
-	uint8_t payload[64];
-
-	uint16_t chk;
-
-#ifdef __cplusplus
-	_CAN_GNSS_RTCM_t() {
-		uint8_t _i;
-
-		startByte = 0;
-		size = 0;
-
-		for (_i = 0; _i < 64; ++_i)
-			payload[_i] = 0;
-
-		chk = 0;
-	}
-#endif
-} __attribute__ ((packed)) CAN_GNSS_RTCM_t;
-
-typedef struct _CAN_GNSS_SVIN_t {
-	uint8_t startByte;
-
-	uint32_t time_elapsed;  // [s] - time since start of survey in was requested
-	uint32_t time_minimum;  // [s] - time required for survey in
-	float accuracy;  // [s] - current accuracy of survey in
-	float accuracy_minimum;  // [s] - minimum accuracy required for survey in
-	uint8_t flags;  // see GCSRTKFlags_t
-
-	uint16_t chk;
-
-#ifdef __cplusplus
-	_CAN_GNSS_SVIN_t() {
-		startByte = 0;
-		time_elapsed = 0;
-		time_minimum = 0;
-		accuracy = 0.0;
-		accuracy_minimum = 0.0;
-		flags = 0;
-		chk = 0;
-	}
-#endif
-} __attribute__ ((packed)) CAN_GNSS_SVIN_t;
-
-typedef struct _CAN_GNSS_UTC_t {
-	uint8_t startByte;
-
-	uint8_t hours;  // [hrs]
-	uint8_t minutes;  // [min]
-	float seconds;  // [sec]
-
-	uint16_t chk;
-
-#ifdef __cplusplus
-	_CAN_GNSS_UTC_t() {
-		startByte = 0;
-		hours = 0;
-		minutes = 0;
-		seconds = 0.0;
-		chk = 0;
-	}
-#endif
-} __attribute__ ((packed)) CAN_GNSS_UTC_t;
-
-typedef struct _CAN_GNSS_UTC_W_t {
-	uint8_t startByte;
-
-	uint16_t week;
-	uint8_t hours;  // [hrs]
-	uint8_t minutes;  // [min]
-	float seconds;  // [sec]
-
-	uint16_t chk;
-
-#ifdef __cplusplus
-	_CAN_GNSS_UTC_W_t() {
-		startByte = 0;
-		week = 0;
-		hours = 0;
-		minutes = 0;
-		seconds = 0.0;
-		chk = 0;
-	}
-#endif
-} __attribute__ ((packed)) CAN_GNSS_UTC_W_t;
-
 /*--------[ Actuators ]--------*/
 
 #define CAN_NUM_ACTUATORS 16
@@ -848,6 +739,115 @@ typedef struct _CAN_PowerOn_t {
 	}
 #endif
 } __attribute__ ((packed)) CAN_PowerOn_t;
+
+typedef struct _CAN_GNSS_LLA_t {
+	uint8_t startByte;
+
+	double latitude;  // [deg]
+	double longitude;  // [deg]
+	float altitude;  // [m]
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GNSS_LLA_t() {
+		startByte = 0;
+		latitude = 0.0;
+		longitude = 0.0;
+		altitude = 0.0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GNSS_LLA_t;
+
+typedef struct _CAN_GNSS_RTCM_t {
+	uint8_t startByte;
+
+	uint8_t size;
+	uint8_t payload[64];
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GNSS_RTCM_t() {
+		uint8_t _i;
+
+		startByte = 0;
+		size = 0;
+
+		for (_i = 0; _i < 64; ++_i)
+			payload[_i] = 0;
+
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GNSS_RTCM_t;
+
+typedef struct _CAN_GNSS_SVIN_t {
+	uint8_t startByte;
+
+	uint32_t time_elapsed;  // [s] - time since start of survey in was requested
+	uint32_t time_minimum;  // [s] - time required for survey in
+	float accuracy;  // [s] - current accuracy of survey in
+	float accuracy_minimum;  // [s] - minimum accuracy required for survey in
+	uint8_t flags;  // see GCSRTKFlags_t
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GNSS_SVIN_t() {
+		startByte = 0;
+		time_elapsed = 0;
+		time_minimum = 0;
+		accuracy = 0.0;
+		accuracy_minimum = 0.0;
+		flags = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GNSS_SVIN_t;
+
+typedef struct _CAN_GNSS_UTC_t {
+	uint8_t startByte;
+
+	uint8_t hours;  // [hrs]
+	uint8_t minutes;  // [min]
+	float seconds;  // [sec]
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GNSS_UTC_t() {
+		startByte = 0;
+		hours = 0;
+		minutes = 0;
+		seconds = 0.0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GNSS_UTC_t;
+
+typedef struct _CAN_GNSS_UTC_W_t {
+	uint8_t startByte;
+
+	uint16_t week;
+	uint8_t hours;  // [hrs]
+	uint8_t minutes;  // [min]
+	float seconds;  // [sec]
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GNSS_UTC_W_t() {
+		startByte = 0;
+		week = 0;
+		hours = 0;
+		minutes = 0;
+		seconds = 0.0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GNSS_UTC_W_t;
 
 /*--------[ ACTUATORS ]--------*/
 

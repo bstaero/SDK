@@ -470,7 +470,7 @@ void BRIDGE_HandleReceiverPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Receiver_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleReceiverPkt";
+	static char * function_name = "BRIDGE_HandleReceiverPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Receiver_t)];
 
@@ -508,7 +508,7 @@ void BRIDGE_HandlePressurePkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Pressure_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandlePressurePkt";
+	static char * function_name = "BRIDGE_HandlePressurePkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Pressure_t)];
 
@@ -559,7 +559,7 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_AirData_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleAirDataPkt";
+	static char * function_name = "BRIDGE_HandleAirDataPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_AirData_t)];
 
@@ -615,7 +615,7 @@ void BRIDGE_HandleMHPPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_MHP_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleMHPPkt";
+	static char * function_name = "BRIDGE_HandleMHPPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_MHP_t)];
 
@@ -668,7 +668,7 @@ void BRIDGE_HandleMHPRawPkt(uint8_t *byte,uint8_t size) {
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_MHP_Raw_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleMHPRawPkt";
+	static char * function_name = "BRIDGE_HandleMHPRawPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_MHP_Raw_t)];
 
@@ -706,7 +706,7 @@ void BRIDGE_HandleMHPProductsPkt(uint8_t *byte,uint8_t size) {
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_MHP_Products_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleMHPProductsPkt";
+	static char * function_name = "BRIDGE_HandleMHPProductsPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_MHP_Products_t)];
 
@@ -743,7 +743,7 @@ void BRIDGE_HandleWindPkt(uint8_t *byte,uint8_t size) {
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Wind_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleWindPkt";
+	static char * function_name = "BRIDGE_HandleWindPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Wind_t)];
 
@@ -780,7 +780,7 @@ void BRIDGE_HandleIMUPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_IMU_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleIMUPkt";
+	static char * function_name = "BRIDGE_HandleIMUPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_IMU_t)];
 
@@ -825,7 +825,7 @@ void BRIDGE_HandleAccelPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Accelerometer_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleAccelPkt";
+	static char * function_name = "BRIDGE_HandleAccelPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Accelerometer_t)];
 
@@ -866,7 +866,7 @@ void BRIDGE_HandleGyroPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Gyroscope_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGyroPkt";
+	static char * function_name = "BRIDGE_HandleGyroPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Gyroscope_t)];
 
@@ -907,7 +907,7 @@ void BRIDGE_HandleMagPkt(uint8_t node_id, uint8_t *byte, uint8_t size)
 #if defined BOARD_core || defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_Magnetometer_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleMagPkt";
+	static char * function_name = "BRIDGE_HandleMagPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Magnetometer_t)];
 
@@ -957,7 +957,7 @@ void BRIDGE_HandleOrientationPkt(uint8_t *byte,uint8_t size) {
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Orientation_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleOrientationPkt";
+	static char * function_name = "BRIDGE_HandleOrientationPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Orientation_t)];
 
@@ -997,7 +997,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK
 	static uint8_t pkt_size = sizeof(CAN_Actuator_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleActuatorPkt";
+	static char * function_name = "BRIDGE_HandleActuatorPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Actuator_t)];
 
@@ -1097,7 +1097,7 @@ void BRIDGE_HandleGNSSPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_GNSS_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSPkt";
+	static char * function_name = "BRIDGE_HandleGNSSPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_GNSS_t)];
 
@@ -1156,7 +1156,7 @@ void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core || defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_GNSS_UTC_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSUTCPkt";
+	static char * function_name = "BRIDGE_HandleGNSSUTCPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_GNSS_UTC_t)];
 
@@ -1192,7 +1192,7 @@ void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core || defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_GNSS_UTC_W_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSUTCWPkt";
+	static char * function_name = "BRIDGE_HandleGNSSUTCWPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_GNSS_UTC_W_t)];
 
@@ -1228,7 +1228,7 @@ void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core || defined BOARD_MHP
   static uint8_t pkt_size = sizeof(CAN_GNSS_LLA_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSLLAPkt";
+	static char * function_name = "BRIDGE_HandleGNSSLLAPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_GNSS_LLA_t)];
 
@@ -1268,7 +1268,7 @@ void BRIDGE_HandleGNSSVelPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core || defined BOARD_MHP
   static uint8_t pkt_size = sizeof(CAN_GNSS_VEL_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSVelPkt";
+	static char * function_name = "BRIDGE_HandleGNSSVelPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_GNSS_VEL_t)];
 
@@ -1307,7 +1307,7 @@ void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core || defined BOARD_MHP
   static uint8_t pkt_size = sizeof(CAN_GNSS_HEALTH_2_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSHealth2Pkt";
+	static char * function_name = "BRIDGE_HandleGNSSHealth2Pkt";
 #endif
 
 	static uint8_t buffer[sizeof(CAN_GNSS_HEALTH_2_t)];
@@ -1343,7 +1343,7 @@ void BRIDGE_HandleGNSSHealthPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core || defined BOARD_MHP
   static uint8_t pkt_size = sizeof(CAN_GNSS_HEALTH_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSHealthPkt";
+	static char * function_name = "BRIDGE_HandleGNSSHealthPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_GNSS_HEALTH_t)];
 
@@ -1378,7 +1378,7 @@ void BRIDGE_HandleGNSSRTCMPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_GNSS || defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_GNSS_RTCM_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSRTCMPkt";
+	static char * function_name = "BRIDGE_HandleGNSSRTCMPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_GNSS_RTCM_t)];
 
@@ -1413,7 +1413,7 @@ void BRIDGE_HandleGNSSSVINPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_GCS
 	static uint8_t pkt_size = sizeof(CAN_GNSS_SVIN_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSSVINPkt";
+	static char * function_name = "BRIDGE_HandleGNSSSVINPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_GNSS_SVIN_t)];
 
@@ -1451,7 +1451,7 @@ void BRIDGE_HandleSupplyPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Supply_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleSupplyPkt";
+	static char * function_name = "BRIDGE_HandleSupplyPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Supply_t)];
 
@@ -1484,7 +1484,7 @@ void BRIDGE_HandlePowerOnPkt(uint8_t *byte,uint8_t size) {
 #if defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_PowerOn_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandlePowerOnPkt";
+	static char * function_name = "BRIDGE_HandlePowerOnPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_PowerOn_t)];
 
@@ -1516,7 +1516,7 @@ void BRIDGE_HandleNDVIUpPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_arbiter || defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_NDVI_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleNDVIUpPkt";
+	static char * function_name = "BRIDGE_HandleNDVIUpPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_NDVI_t)];
 
@@ -1548,7 +1548,7 @@ void BRIDGE_HandleNDVIDownPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_arbiter || defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_NDVI_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleNDVIDownPkt";
+	static char * function_name = "BRIDGE_HandleNDVIDownPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_NDVI_t)];
 
@@ -1581,7 +1581,7 @@ void BRIDGE_HandleNDVIPkt(uint8_t *byte, uint8_t size)
 #ifdef BOARD_pro_arbiter
 	static uint8_t pkt_size = sizeof(CAN_NDVI_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleNDVIPkt";
+	static char * function_name = "BRIDGE_HandleNDVIPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_NDVI_t)];
 
@@ -1614,7 +1614,7 @@ void BRIDGE_HandleAGLPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_AGL_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleAGLPkt";
+	static char * function_name = "BRIDGE_HandleAGLPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_AGL_t)];
 
@@ -1647,7 +1647,7 @@ void BRIDGE_HandleProximityPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core && defined IMPLEMENTATION_firmware
 	static uint8_t pkt_size = sizeof(CAN_Proximity_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleProximityPkt";
+	static char * function_name = "BRIDGE_HandleProximityPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Proximity_t)];
 
@@ -1682,7 +1682,7 @@ void BRIDGE_HandleADSBPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_ADSB_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleADSBPkt";
+	static char * function_name = "BRIDGE_HandleADSBPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_ADSB_t)];
 
@@ -1728,7 +1728,7 @@ void BRIDGE_HandleCalibratePkt(uint8_t *byte,uint8_t size) {
 #if defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_CalibrateSensor_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleCalibratePkt";
+	static char * function_name = "BRIDGE_HandleCalibratePkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_CalibrateSensor_t)];
 
@@ -1798,7 +1798,7 @@ void BRIDGE_HandleBoardOrientationPkt(uint8_t *byte,uint8_t size) {
 #if defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_AxisMapping_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleBoardOrientationPkt";
+	static char * function_name = "BRIDGE_HandleBoardOrientationPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_AxisMapping_t)];
 
@@ -1829,7 +1829,7 @@ void BRIDGE_HandleGNSSOrientationPkt(uint8_t *byte,uint8_t size) {
 #if defined BOARD_MHP
 	static uint8_t pkt_size = sizeof(CAN_AxisMapping_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleGNSSOrientationPkt";
+	static char * function_name = "BRIDGE_HandleGNSSOrientationPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_AxisMapping_t)];
 
@@ -1862,7 +1862,7 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte, uint8_t size)
 #if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Trigger_t);
 #ifdef DEBUG
-	//static char * function_name = "BRIDGE_HandleTriggerPkt";
+	static char * function_name = "BRIDGE_HandleTriggerPkt";
 #endif
 	static uint8_t buffer[sizeof(CAN_Trigger_t)];
 

@@ -270,7 +270,7 @@ void updateCalibration(CAN_SensorType_t sensor,
 		CAN_CalibrationState_t state) {
 
 	if(state == CAN_CALIBRATED)
-		if(sensor == calibration_requested)
+		if(sensor == (CAN_SensorType_t)calibration_requested)
 			calibration_requested = UNKNOWN_SENSOR;
 }
 
