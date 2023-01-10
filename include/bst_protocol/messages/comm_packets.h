@@ -281,7 +281,7 @@ typedef enum {
 
 /*--------[ Configuration ]--------*/
 
-#define COMMS_VERSION 3160
+#define COMMS_VERSION 3170
 
 #define MAX_ALTITUDE 20000
 
@@ -1708,12 +1708,10 @@ typedef struct _TelemetryOrientation_t {
 } __attribute__ ((packed)) TelemetryOrientation_t;
 
 typedef struct _TelemetryPosition_t {
-	float latitude;  // [deg]
-	float longitude;  // [deg]
+	double latitude;  // [deg]
+	double longitude;  // [deg]
 	float altitude;  // [m] - mean sea level
 	float height;  // [m] - above ground level
-	float speed;  // [m/s] - ground speed
-	float course;  // [deg] - course over ground
 	ThreeAxisSensor_t position;  // [m]
 	ThreeAxisSensor_t velocity;  // [m/s]
 	ThreeAxisSensor_t acceleration;  // [m/s^2]
@@ -1724,8 +1722,6 @@ typedef struct _TelemetryPosition_t {
 		longitude = 0.0;
 		altitude = 0.0;
 		height = 0.0;
-		speed = 0.0;
-		course = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) TelemetryPosition_t;

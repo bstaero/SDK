@@ -283,6 +283,7 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 								(((MHPSensorsGNSS_t *)data)-> latitude > -200.0) )
 							memcpy(&mhp_sensors_gnss,data,sizeof(MHPSensorsGNSS_t));;*/
 
+
 						memcpy(&mhp_sensors_gnss,data,sizeof(MHPSensorsGNSS_t));;
 						break;
 
