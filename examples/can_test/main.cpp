@@ -70,8 +70,8 @@ void printHelp();
 int main(int argc, char *argv[])
 {
 #ifdef VERBOSE
-	//verbose = -VERBOSE_CAN;
-	verbose = VERBOSE_ERROR;
+	verbose = -VERBOSE_CAN;
+	//verbose = VERBOSE_ERROR;
 #endif
 
 	uint16_t temp = 0x0100;

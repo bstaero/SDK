@@ -31,26 +31,26 @@
 using namespace bst::comms::canpackets;
 #endif
 
-#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx
+#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx
   #include "helper_functions.h"
   #include "simulated_can.h"
 #endif
 
 #include "debug.h"
 
-#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx
-  #if ! defined STM32F413xx && ! defined STM32F405xx
+#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
+  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx
     #include "can.h"
     #include "led.h" // DEBUG
   #else
-    #if defined STM32F405xx
+    #if defined STM32F405xx || defined STM32L432xx
 uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
 	return 0;
-    #endif
 }
+    #endif
   #endif
 
-  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx
+  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
     uint8_t checkFletcher16(uint8_t * data, uint8_t size);
     void setFletcher16 (uint8_t * data, uint8_t size);
   #endif
@@ -253,6 +253,13 @@ void handleNDVI(float ts, uint8_t id, float red, float near_ir, float ir_ambient
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel);
 
+void updateDeployTube(float ts, 
+		uint8_t state,
+		uint8_t parachute_door,
+		uint8_t error);
+
+void handleDeployTubeCmd(float ts, uint8_t id, float value);
+
 /** @addtogroup Low_Level
  * @{
  */ 
@@ -382,6 +389,9 @@ void BRIDGE_HandleNDVIDownPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleNDVIPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleTriggerPkt(uint8_t *byte,uint8_t size);
 
+void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size);
+
 
 
 
@@ -455,6 +465,8 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_NDVI_UP:    BRIDGE_HandleNDVIUpPkt(data,size); break;
 		case CAN_PKT_NDVI_DOWN:  BRIDGE_HandleNDVIDownPkt(data,size); break;
 		case CAN_PKT_TRIGGER:    BRIDGE_HandleTriggerPkt(data,size); break;
+		case CAN_PKT_DEPLOYMENT_TUBE:    BRIDGE_HandleDeplyTubePkt(data,size); break;
+		case CAN_PKT_DEPLOYMENT_TUBE_CMD:    BRIDGE_HandleDeplyTubeCmdPkt(data,size); break;
 		default: break;
 	}
 }
@@ -1888,6 +1900,91 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte, uint8_t size)
 #endif
 }
 
+void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
+{
+#if defined BOARD_core
+	static uint8_t pkt_size = sizeof(CAN_DeploymentTube_t);
+#ifdef DEBUG
+	//static char * function_name = "BRIDGE_HandleDeplyTubePkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_DeploymentTube_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+
+	CAN_DeploymentTube_t *data = (CAN_DeploymentTube_t *)buffer;
+
+	float t0 = getElapsedTime();
+	updateDeployTube(t0,
+			data->state,
+			data->parachute_door,
+			data->error);
+
+#ifdef VERBOSE
+	// DEBUG - sanity check
+	char state[8];
+
+	switch(data->state) {
+		case DEPLOY_TUBE_INIT:          sprintf(state, "INIT   "); break;
+		case DEPLOY_TUBE_READY:         sprintf(state, "READY  "); break;
+		case DEPLOY_TUBE_ARMED:         sprintf(state, "ARMED  "); break;
+		case DEPLOY_TUBE_FLAP_OPEN:     sprintf(state, "FL OPEN"); break;
+		case DEPLOY_TUBE_PARA_DEPLOYED: sprintf(state, "PARA DP"); break;
+		case DEPLOY_TUBE_JETTISONED:    sprintf(state, "TUB JET"); break;
+		case DEPLOY_TUBE_AC_RELASED:    sprintf(state, "AC REL "); break;
+		case DEPLOY_TUBE_ERROR:         sprintf(state, "ERROR  "); break;
+	}
+
+	char door[8];
+
+	if(data->parachute_door) sprintf(door,"OPEN  ");
+	else sprintf(door,"CLOSED");
+
+	//pmesg(VERBOSE_CAN, "DEPLOY TUBE: %0.02f s, state %u door %u error 0x%08x\n", 
+			//t0, data->state, data->parachute_door, data->error);
+	pmesg(VERBOSE_CAN, "DEPLOY TUBE: %0.02f s, state %s door %s error 0x%08x\n", 
+			t0, state, door, data->error);
+#endif
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size)
+{
+#if defined BOARD_DEPLOYMENT
+	static uint8_t pkt_size = sizeof(CAN_DeploymentTubeCommand_t);
+#ifdef DEBUG
+	//static char * function_name = "BRIDGE_HandleDeplyTubePkt";
+#endif
+	static uint8_t buffer[sizeof(CAN_DeploymentTubeCommand_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+
+	CAN_DeploymentTubeCommand_t *data = (CAN_DeploymentTubeCommand_t *)buffer;
+
+	float t0 = getElapsedTime();
+	handleDeployTubeCmd(t0,
+			data->id,
+			data->value);
+
+#ifdef VERBOSE
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "DEPLOY TUBE CMD: %0.02f s, id %u value %0.1f\n", 
+			t0, data->id, data->value);
+#endif
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
 // ==============================================================================
 // FUNCTIONS FOR SENDING CAN-BUS PACKETS
 // ==============================================================================
@@ -2495,6 +2592,37 @@ uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
 }
 
 
+uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
+		uint8_t state,
+		uint8_t parachute_door,
+		uint8_t error) {
+
+	CAN_DeploymentTube_t data;
+
+	// fill packet
+	data.state = (CAN_DeploymentTubeState_t)state;
+	data.parachute_door = (CAN_DeploymentTubeDoorStatus_t)parachute_door;
+	data.error = (CAN_DeploymentTubeErrors_t)error;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTube_t));
+
+	return CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE, &data, sizeof(CAN_DeploymentTube_t));
+}
+
+uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
+		uint8_t id,
+		float value) {
+
+	CAN_DeploymentTubeCommand_t data;
+
+	// fill packet
+	data.id = id;
+	data.value = value;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTubeCommand_t));
+
+	return CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE_CMD, &data, sizeof(CAN_DeploymentTubeCommand_t));
+}
+
+
 /**
  * @brief	Return packet drops
  * @param	None
@@ -2505,7 +2633,7 @@ __inline uint32_t BRIDGE_GetPktDrop(void)
 	return BRIDGE_pktDrops;
 }
 
-#if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx
+#if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
 uint8_t checkFletcher16(uint8_t * data, uint8_t size) {
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;

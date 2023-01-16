@@ -161,6 +161,15 @@ uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
 		uint16_t id,
 		uint8_t channel);
 
+uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
+		uint8_t state,
+		uint8_t parachute_door,
+		uint8_t error);
+
+uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
+		uint8_t id,
+		float value);
+
 uint32_t BRIDGE_GetPktDrop(void);
 /**
   * @}

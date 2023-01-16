@@ -78,6 +78,7 @@ typedef enum {
 	/* STATE */
 
 	/* CONTROL */
+	CAN_PKT_DEPLOYMENT_TUBE_CMD=129,
 
 	/* ACTUATORS */
 	CAN_PKT_ACTUATOR=2047,
@@ -90,6 +91,7 @@ typedef enum {
 	CAN_PKT_POWER_ON=65,
 
 	/* TELEMETRY */
+	CAN_PKT_DEPLOYMENT_TUBE=128,
 
 	/* HWIL */
 
@@ -107,6 +109,37 @@ typedef enum {
 
 	/* ERRORS */
 }  __attribute__ ((packed)) CAN_PacketTypes_t;
+
+/*--------[ Control ]--------*/
+
+typedef enum {
+	DEPLOY_TUBE_INIT,
+	DEPLOY_TUBE_READY,
+	DEPLOY_TUBE_ARMED,
+	DEPLOY_TUBE_FLAP_OPEN,
+	DEPLOY_TUBE_PARA_DEPLOYED,
+	DEPLOY_TUBE_JETTISONED,
+	DEPLOY_TUBE_AC_RELASED,
+	DEPLOY_TUBE_ERROR,
+}  __attribute__ ((packed)) CAN_DeploymentTubeState_t;
+
+typedef struct _CAN_DeploymentTubeCommand_t {
+	uint8_t startByte;
+
+	uint8_t id;
+	float value;
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_DeploymentTubeCommand_t() {
+		startByte = 0;
+		id = 255;
+		value = 0.0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_DeploymentTubeCommand_t;
 
 /*--------[ PAYLOAD ]--------*/
 
@@ -720,6 +753,30 @@ typedef struct _CAN_CalibrateSensor_t {
 #endif
 } __attribute__ ((packed)) CAN_CalibrateSensor_t;
 
+/*--------[ Status ]--------*/
+
+typedef enum {
+	CMD_HEARTBEAT,
+	CMD_SET_STATE,
+}  __attribute__ ((packed)) CAN_DeploymentTubeCommandID_t;
+
+typedef enum {
+	CLOSED,
+	OPEN,
+}  __attribute__ ((packed)) CAN_DeploymentTubeDoorStatus_t;
+
+typedef enum {
+	DEPLOY_TUBE_ERROR_NO_ERROR=0,
+	DEPLOY_TUBE_ERROR_LOW_BATT=1,
+	DEPLOY_TUBE_ERROR_HIGH_VOLTAGE=2,
+	DEPLOY_TUBE_ERROR_NO_BATT=4,
+	DEPLOY_TUBE_ERROR_HIGH_CURRENT=8,
+	DEPLOY_TUBE_ERROR_HIGH_TEMP=16,
+	DEPLOY_TUBE_ERROR_CHUTE_FLAP_OPEN=32,
+	DEPLOY_TUBE_ERROR_CHUTE_FLAP_CLOSED=64,
+	DEPLOY_TUBE_ERROR_NO_UA_COMMS=128,
+}  __attribute__ ((packed)) CAN_DeploymentTubeErrors_t;
+
 /*--------[ System ]--------*/
 
 typedef struct _CAN_PowerOn_t {
@@ -894,6 +951,25 @@ typedef struct _CAN_Receiver_t {
 	}
 #endif
 } __attribute__ ((packed)) CAN_Receiver_t;
+
+/*--------[ Telemetry ]--------*/
+
+typedef struct _CAN_DeploymentTube_t {
+	uint8_t startByte;
+
+	CAN_DeploymentTubeState_t state;
+	CAN_DeploymentTubeDoorStatus_t parachute_door;
+	CAN_DeploymentTubeErrors_t error;
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_DeploymentTube_t() {
+		startByte = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_DeploymentTube_t;
 
 #ifdef __cplusplus
 } /* namespace canpackets */

@@ -47,13 +47,6 @@ uint32_t stat_p_cnt;
 
 uint8_t p_new_gps_data;
 
-float local_dynamic_pressure = 0.0;
-float local_static_pressure = 0.0;
-float local_temperature = 0.0;
-float local_humidity = 0.0;
-
-float local_data[8];
-
 /*<---Local Functions----->*/
 void printData(void);
 /*<-End Local Functions--->*/
@@ -88,14 +81,11 @@ void updateIMU(float system_time,
 		float mx, float my, float mz) {}
 
 void updateDynamicPressure(float system_time,
-		float pressure, float temperature) {
-	local_dynamic_pressure = pressure;
-}
+		float pressure, float temperature) {}
 
 void updateStaticPressure(float system_time,
 		float pressure, float temperature) {
 	stat_p_cnt++;
-	local_static_pressure = pressure;
 }
 
 void updateMHPSensors(float system_time,
@@ -104,9 +94,7 @@ void updateMHPSensors(float system_time,
 		float temperature,
 		float humidity,
 		float gyroscope[3],
-		float accelerometer[3]) {
-	printf("MHP\n");
-}
+		float accelerometer[3]) {}
 
 void updateMHPRaw(float system_time,
 		float differential_pressure[5]) {}
@@ -120,15 +108,7 @@ void updateMHPProducts(float system_time,
 void updateWind(float system_time, float u, float v, float w) {}
 
 void updateHumidity(float system_time,
-		float humidity) {
-	local_humidity = humidity;
-
-	local_data[0] = getElapsedTime();
-	local_data[1] = local_dynamic_pressure;
-	local_data[2] = local_static_pressure;
-	local_data[3] = local_temperature;
-	local_data[4] = local_humidity;
-}
+		float humidity) {}
 
 void updateAGL(float system_time,
 		float distance) {}
@@ -138,15 +118,6 @@ void updateProximity(float system_time,
 
 void updateTemperature(float system_time,
 		float temperature) {
-	if(temperature != 0.0) local_temperature = temperature;
-	else {
-
-		local_data[5] = getElapsedTime();
-		local_data[6] = local_dynamic_pressure;
-		local_data[7] = local_static_pressure;
-
-		printData();
-	}
 }
 
 void updateSupply(float system_time,
@@ -215,50 +186,14 @@ void updateADSB(float system_time,
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel) {}
 
+void updateDeployTube(float system_time,
+		uint8_t state,
+		uint8_t parachute_door,
+		uint8_t error) {}
+
+void handleDeployTubeCmd(float system_time,
+		uint8_t id,
+		float value) {}
 
 void printData() {
-	static bool first_run = true;
-	char out[2048];
-
-		if(display_telemetry)
-			printf("%07.03f sec %+06.01f Pa %+07.01f Pa %+05.01f deg C %04.01f %% | %07.03f sec %+06.01f Pa %+07.01f Pa\n\r",
-					local_data[0],
-					local_data[1],
-					local_data[2],
-					local_data[3],
-					local_data[4],
-					local_data[5],
-					local_data[6],
-					local_data[7]
-						);
-
-			if(write_file) {
-				if(first_run) {
-					sprintf(out,"%%"
-							"PRESSURE_0_TIME,"
-							"DYNAMIC_PRESSURE_0,"
-							"STATIC_PRESSURE_0,"
-							"DYNAMIC_PRESSURE_TIME_0,"
-							"AIR_TEMPERATURE,"
-							"HUMIDITY,"
-							"DYNAMIC_PRESSURE_1,"
-							"STATIC_PRESSURE_1,"
-							"\n");
-					writeFile((uint8_t*)out,strlen(out));
-					first_run = 0;
-				}
-
-				sprintf(out,"%f,%f,%f,%f,%f,%f,%f,%f\n", 
-					local_data[0],
-					local_data[1],
-					local_data[2],
-					local_data[3],
-					local_data[4],
-					local_data[5],
-					local_data[6],
-					local_data[7]
-							);
-
-						writeFile((uint8_t*)out,strlen(out));
-			}
 }
