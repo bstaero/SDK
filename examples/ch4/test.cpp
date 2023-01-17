@@ -40,10 +40,10 @@ Packet              tx_packet;
 typedef struct _OldTelemetryPosition_t {
 	float latitude;  // [deg]
 	float longitude;  // [deg]
+	float altitude;  // [m]
+	float height;  // [m]
 	float speed;  // [m/s]
-	float course;  // [rad]
-	float altitude;  // [m] - mean sea level
-	float height;  // [m] - above ground level
+	float course;  // [deg] 
 	ThreeAxisSensor_t position;  // [m]
 	ThreeAxisSensor_t velocity;  // [m/s]
 	ThreeAxisSensor_t acceleration;  // [m/s^2]
