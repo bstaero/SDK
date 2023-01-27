@@ -170,7 +170,7 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * parameter) 
 {
-	printf("receiveCommand: type=%u\n", type);
+	//printf("receiveCommand: type=%u\n", type);
 
 	// validate this is a command
 	if( size != sizeof(Command_t) ) {
@@ -184,21 +184,21 @@ uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * pa
 
 void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void * parameter) 
 {
-	printf("receiveReply: type=%u\n", type);
-	ack? fprintf(stderr,"ACK\n"): fprintf(stderr,"NACK\n");
+	//printf("receiveReply: type=%u\n", type);
+	//ack? fprintf(stderr,"ACK\n"): fprintf(stderr,"NACK\n");
 
 	Command_t * tmp_command = (Command_t *) data;
 }
 
 void request(uint8_t type, uint8_t value) 
 {
-	printf("request: type=%u\n", type);
+	//printf("request: type=%u\n", type);
 	// do something with status request
 }
 
 bool publish(uint8_t type, uint8_t param) 
 {
-	printf("publish: type=%u\n", type);
+	//printf("publish: type=%u\n", type);
 
 	// do something with status request
 	return true;

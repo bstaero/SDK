@@ -30,6 +30,8 @@
 
 // variables
 bool show_telemetry = false;
+volatile bool write_file = false;
+volatile bool simulation = false;
 
 // functional definitions
 bool sendPayloadData(uint8_t * data, uint8_t size);
@@ -125,6 +127,8 @@ void updateTest() {
 	Waypoint_t temp_waypoint;
 	Waypoint_t temp_waypoints[MAX_WAYPOINTS];
 
+	static uint8_t first_run = 1;
+
 	if( inputAvailable() ) {
 		input = getchar();
 
@@ -180,11 +184,29 @@ void updateTest() {
 		}
 	}
 
+	if(simulation) {
+		if(first_run) {
+			telemetry_position.latitude = 40.0;
+			telemetry_position.longitude = -105.0;
+			telemetry_position.altitude = 1600.0;
+		}
+
+		static float last_data = 0;
+		if(getElapsedTime() - last_data > 1.0) {
+			last_data = getElapsedTime();
+			new_data = 1;
+			ch4_pkt.system_time = getElapsedTime();
+			ch4_pkt.ch4 = (float)rand()/(float)RAND_MAX * sin(getElapsedTime()/10.0) + 1400.0;
+			telemetry_position.latitude += sin(getElapsedTime()/10.0)/100.0;
+			telemetry_position.longitude += cos(getElapsedTime()/10.0)/100.0;
+			telemetry_position.altitude += (float)rand()/(float)RAND_MAX;
+		}
+	}
+
 	// show telemetry
 
 	if(show_telemetry) {
 		if(new_data) {
-			new_data = 0;
 			printf("%f,\"%s\",\"%s\",%f,%f,%f,%f,%f,%f,%f\n",
 					ch4_pkt.system_time,
 					ch4_pkt.mode,
@@ -198,6 +220,33 @@ void updateTest() {
 					telemetry_pressure.humidity
 					);
 		}
+	}
+
+	if(write_file) {
+		char out[80];
+
+		if(first_run) {
+			first_run = 0;
+
+			sprintf(out, "SYSTEM_TIME,CH4,LATITUDE,LONGITUDE,ALTITUDE\n");
+			writeFile((uint8_t *)out,strlen(out));
+		}
+
+		if(new_data) {
+			sprintf(out, "%f,%f,%f,%f,%f\n",
+					ch4_pkt.system_time,
+					ch4_pkt.ch4,
+					telemetry_position.latitude,
+					telemetry_position.longitude,
+					telemetry_position.altitude
+					);
+
+			writeFile((uint8_t *)out,strlen(out));
+		}
+	}
+
+	if(new_data) {
+		new_data = 0;
 	}
 }
 

@@ -21,6 +21,9 @@
 
 #include <inttypes.h>
 
+extern volatile bool write_file;
+extern volatile bool simulation;
+
 void initializeTest(void);
 void updateTest(void);
 void exitTest(void);
