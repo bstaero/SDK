@@ -21,6 +21,29 @@
 
 #include <inttypes.h>
 
+#include "structs.h"
+
+typedef struct _OldTelemetryPosition_t {
+	float latitude;  // [deg]
+	float longitude;  // [deg]
+	float altitude;  // [m]
+	float height;  // [m]
+	float speed;  // [m/s]
+	float course;  // [deg] 
+	ThreeAxisSensor_t position;  // [m]
+	ThreeAxisSensor_t velocity;  // [m/s]
+	ThreeAxisSensor_t acceleration;  // [m/s^2]
+
+#ifdef __cplusplus
+	_OldTelemetryPosition_t() {
+		latitude = 0.0;
+		longitude = 0.0;
+		altitude = 0.0;
+		height = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) OldTelemetryPosition_t;
+
 extern volatile bool write_file;
 extern volatile bool simulation;
 

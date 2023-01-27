@@ -173,10 +173,18 @@ int main(int argc, char *argv[])
 	initializeTest();
 	printTestHelp();
 
-	while((simulation || comm_interface->isConnected()) && running) {
+	float last_connection = getElapsedTime();
+
+	while(running) {
 		// Update communications
-		if(!simulation)
+		if(comm_interface->isConnected()) {
 			comm_handler->update();
+		} else {
+			if(getElapsedTime() - last_connection > 1.0) {
+				comm_handler->getInterface()->open();
+				last_connection = getElapsedTime();
+			}
+		}
 
 		// Perform user functions
 		updateTest();

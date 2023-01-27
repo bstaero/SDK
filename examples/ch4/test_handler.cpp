@@ -25,7 +25,8 @@
 #include "structs.h"
 
 TelemetryOrientation_t telemetry_orientation;
-TelemetryPosition_t    telemetry_position;
+//TelemetryPosition_t    telemetry_position;
+OldTelemetryPosition_t    telemetry_position;
 TelemetryPressure_t    telemetry_pressure;
 TelemetrySystem_t      telemetry_system;
 TelemetryControl_t     telemetry_control;
@@ -96,7 +97,8 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 		case TELEMETRY_POSITION:
 			if((address & 0xFF000000) == 0x41000000) {
-				memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
+				//memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
+				memcpy(&telemetry_position,data,sizeof(OldTelemetryPosition_t));
 			}
 			break;
 

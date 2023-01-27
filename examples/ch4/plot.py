@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-window = 60
+window = 30
 first_run = 1
 
 def animate(i):
@@ -18,7 +18,7 @@ def animate(i):
     alt = data['ALTITUDE']
 
     end = len(t)
-    start = len(t) - 60
+    start = len(t) - window
     if start < 0:
       start = 0
 

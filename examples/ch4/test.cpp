@@ -24,7 +24,6 @@
 #include "test.h"
 #include "test_handler.h"
 #include "main.h"
-#include "structs.h"
 
 #include "flight_plan.h"
 
@@ -39,28 +38,8 @@ bool sendPayloadData(uint8_t * data, uint8_t size);
 // packet for transmision
 Packet              tx_packet;
 
-typedef struct _OldTelemetryPosition_t {
-	float latitude;  // [deg]
-	float longitude;  // [deg]
-	float altitude;  // [m]
-	float height;  // [m]
-	float speed;  // [m/s]
-	float course;  // [deg] 
-	ThreeAxisSensor_t position;  // [m]
-	ThreeAxisSensor_t velocity;  // [m/s]
-	ThreeAxisSensor_t acceleration;  // [m/s^2]
-
-#ifdef __cplusplus
-	_OldTelemetryPosition_t() {
-		latitude = 0.0;
-		longitude = 0.0;
-		altitude = 0.0;
-		height = 0.0;
-	}
-#endif
-} __attribute__ ((packed)) OldTelemetryPosition_t;
-
 extern TelemetryOrientation_t telemetry_orientation;
+//extern TelemetryPosition_t    telemetry_position;
 extern OldTelemetryPosition_t    telemetry_position;
 extern TelemetryPressure_t    telemetry_pressure;
 extern TelemetrySystem_t      telemetry_system;
