@@ -290,6 +290,11 @@ void updateGNSSAxis(int8_t axis[3]) {
 
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel) {}
+
+void updateDeployTube(float ts, 
+		uint8_t state,
+		uint8_t parachute_door,
+		uint8_t error) {}
 /*<-End Local Functions--->*/
 
 
