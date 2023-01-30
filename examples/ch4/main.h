@@ -25,6 +25,10 @@
 extern bool big_endian;
 extern bool running;
 
+enum {COMM_SERIAL, COMM_SOCKET, COMM_FILE, COMM_UNKNOWN, COMM_INVALID};
+
+extern uint8_t comm_type;
+
 extern CommunicationsProtocol * comm_handler;
 
 bool writeFile(uint8_t * data, uint16_t num);

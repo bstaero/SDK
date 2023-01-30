@@ -29,7 +29,7 @@
 class CommunicationsInterface {
 	public:
 
-		typedef enum CommTypes {SOCKET_UDP,SOCKET_TCP,SERIAL,XBEE,XTEND,XETAWAVE,U_HARD,UNKNOWN} CommType_t;
+		typedef enum CommTypes {SOCKET_UDP,SOCKET_TCP,SERIAL,XBEE,XTEND,XETAWAVE,U_HARD,LOCAL_FILE,UNKNOWN} CommType_t;
 
 		CommunicationsInterface();
 		virtual ~CommunicationsInterface() { }

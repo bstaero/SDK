@@ -25,6 +25,7 @@
 #include "bst_module_flight_plan.h"
 #include "bst_protocol.h"
 #include "helper_functions.h"
+#include "file_interface.h"
 
 /* NetUAS */
 #include "netuas_serial.h"
@@ -56,12 +57,12 @@ SystemStatus_t system_status;
 SystemInitialize_t system_initialize;
 /*<-End Global Variables-->*/
 
-enum {COMM_SERIAL, COMM_SOCKET, COMM_UNKNOWN, COMM_INVALID};
-
 bool big_endian = false;
 bool running = true;
 
 void printHelp();
+
+uint8_t comm_type = COMM_UNKNOWN;
 
 int main(int argc, char *argv[])
 {
@@ -72,8 +73,6 @@ int main(int argc, char *argv[])
 	uint16_t temp = 0x0100;
 	big_endian = ((uint8_t *)&temp)[0];
 
-	uint8_t comm_type = COMM_UNKNOWN;
-
 	char param[3][32];
 
 	char outfile[132];
@@ -81,7 +80,7 @@ int main(int argc, char *argv[])
 	bzero(outfile,132);
 
 	char c;
-	while ((c = getopt(argc, argv, "b:d:i:o:p:st:x:h")) != -1) {
+	while ((c = getopt(argc, argv, "b:d:i:f:o:p:st:x:h")) != -1) {
 		switch(c) {
 			case 'b':
 				strcpy(&param[1][0],optarg);
@@ -101,6 +100,10 @@ int main(int argc, char *argv[])
 				comm_type != COMM_SERIAL ? comm_type = COMM_SOCKET : comm_type = COMM_INVALID;
 				strcpy(&param[2][0],"TCP:CLIENT");
 				break;
+			case 'f':
+				comm_type = COMM_FILE;
+				strcpy(&param[0][0],optarg);
+				break;
 			case 'o':
 				strcpy(outfile,optarg);
 				break;
@@ -113,12 +116,29 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	// set default
-	if(comm_type == COMM_UNKNOWN) {
-		comm_type = COMM_SOCKET;
-		strcpy(&param[0][0],"localhost");
-		strcpy(&param[1][0],"55555");
-		strcpy(&param[2][0],"TCP:CLIENT");
+	switch(comm_type) {
+		case COMM_SERIAL:
+			comm_type = COMM_SERIAL;
+			if(!param[0][0]) strcpy(&param[0][0],"/dev/ttyUSB0");
+			if(!param[1][0]) strcpy(&param[1][0],"921600");
+			break;
+		case COMM_SOCKET:
+			comm_type = COMM_SOCKET;
+			if(!param[0][0]) strcpy(&param[0][0],"localhost");
+			if(!param[1][0]) strcpy(&param[1][0],"55555");
+			if(!param[2][0]) strcpy(&param[2][0],"TCP:CLIENT");
+			break;
+		case COMM_FILE:
+			comm_type = COMM_FILE;
+			if(!param[0][0]) {printHelp(); exit(1);}
+			break;
+		case COMM_UNKNOWN:
+		default:
+			comm_type = COMM_SOCKET;
+			if(!param[0][0]) strcpy(&param[0][0],"localhost");
+			if(!param[1][0]) strcpy(&param[1][0],"55555");
+			if(!param[2][0]) strcpy(&param[2][0],"TCP:CLIENT");
+			break;
 	}
 
 	if(comm_type == COMM_INVALID) {
@@ -136,6 +156,9 @@ int main(int argc, char *argv[])
 		comm_handler->setInterface(new NetuasSerial);
 	} else if(comm_type == COMM_SOCKET) {
 		comm_handler->setInterface(new NetuasSocket);
+	} else if(comm_type == COMM_FILE) {
+		comm_handler->setInterface(new FileInterface);
+		comm_handler->setAddressing(false);
 	}
 
 	comm_interface = comm_handler->getInterface();
@@ -180,6 +203,7 @@ int main(int argc, char *argv[])
 		if(comm_interface->isConnected()) {
 			comm_handler->update();
 		} else {
+			if(comm_type == COMM_FILE) break;
 			if(getElapsedTime() - last_connection > 1.0) {
 				comm_handler->getInterface()->open();
 				last_connection = getElapsedTime();
@@ -189,7 +213,8 @@ int main(int argc, char *argv[])
 		// Perform user functions
 		updateTest();
 
-		usleep(1000);
+		if(comm_type != COMM_FILE)
+			usleep(1000);
 	}
 
 	comm_handler->getInterface()->close();
@@ -211,6 +236,7 @@ void printHelp() {
 	printf("    -i <server ip number>   : default localhost\n");
 	printf("    -p <socket port number> : default 55552\n");
 	printf("  File paramerters:\n");
+	printf("    -f <filename>           : read data from file\n");
 	printf("    -o <filename>           : save data to file\n");
 	printf("  Simulation paramerters:\n");
 	printf("    -s                      : simluate data\n");

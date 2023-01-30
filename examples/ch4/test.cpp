@@ -32,6 +32,8 @@ bool show_telemetry = false;
 volatile bool write_file = false;
 volatile bool simulation = false;
 
+char out[1024];
+
 // functional definitions
 bool sendPayloadData(uint8_t * data, uint8_t size);
 
@@ -44,6 +46,12 @@ extern OldTelemetryPosition_t    telemetry_position;
 extern TelemetryPressure_t    telemetry_pressure;
 extern TelemetrySystem_t      telemetry_system;
 extern TelemetryControl_t     telemetry_control;
+
+extern State_t                state;
+extern Pressure_t             static_pressure;
+extern SingleValueSensor_t    air_temperature;
+extern SingleValueSensor_t    humidity;
+extern GPS_t                  gps;
 
 extern UserPayload_t          rx_payload;
 UserPayload_t                 tx_payload;
@@ -182,51 +190,66 @@ void updateTest() {
 		}
 	}
 
-	// show telemetry
-
-	if(show_telemetry) {
-		if(new_data) {
-			printf("%f,\"%s\",\"%s\",%f,%f,%f,%f,%f,%f,%f\n",
-					ch4_pkt.system_time,
-					ch4_pkt.mode,
-					ch4_pkt.error,
-					ch4_pkt.ch4,
-					telemetry_position.latitude,
-					telemetry_position.longitude,
-					telemetry_position.altitude,
-					telemetry_pressure.air_temperature,
-					telemetry_pressure.static_pressure,
-					telemetry_pressure.humidity
-					);
-		}
-	}
-
-	if(write_file) {
-		char out[80];
-
-		if(first_run) {
-			first_run = 0;
-
-			sprintf(out, "SYSTEM_TIME,CH4,LATITUDE,LONGITUDE,ALTITUDE\n");
-			writeFile((uint8_t *)out,strlen(out));
-		}
-
-		if(new_data) {
-			sprintf(out, "%f,%f,%f,%f,%f\n",
-					ch4_pkt.system_time,
-					ch4_pkt.ch4,
-					telemetry_position.latitude,
-					telemetry_position.longitude,
-					telemetry_position.altitude
-					);
-
-			writeFile((uint8_t *)out,strlen(out));
-		}
-	}
-
 	if(new_data) {
+
+		if(write_file) {
+
+			if(first_run) {
+				first_run = 0;
+
+				sprintf(out, "SYSTEM_TIME,ERROR,MODE,CH4,LATITUDE,LONGITUDE,ALTITUDE,TEMPERATURE,PRESSURE,RH,U,V,W\n");
+				writeFile((uint8_t *)out,strlen(out));
+			}
+		}
+
+		if(show_telemetry || write_file) {
+			if(comm_type == COMM_FILE) {
+				sprintf(out, "%f,\"%s\",\"%s\",%f,%g,%g,%f,%f,%f,%f,%f,%f,%f\n",
+						ch4_pkt.system_time,
+						ch4_pkt.error,
+						ch4_pkt.mode,
+						ch4_pkt.ch4,
+						gps.latitude,
+						gps.longitude,
+						gps.altitude,
+						air_temperature.value,
+						static_pressure.pressure,
+						humidity.value,
+						state.wind[0],
+						state.wind[1],
+						state.wind[2]
+						);
+
+				writeFile((uint8_t *)out,strlen(out));
+			} else {
+				sprintf(out, "%f,\"%s\",\"%s\",%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+						ch4_pkt.system_time,
+						ch4_pkt.error,
+						ch4_pkt.mode,
+						ch4_pkt.ch4,
+						telemetry_position.latitude,
+						telemetry_position.longitude,
+						telemetry_position.altitude,
+						telemetry_pressure.air_temperature,
+						telemetry_pressure.static_pressure,
+						telemetry_pressure.humidity,
+						telemetry_pressure.wind.x,
+						telemetry_pressure.wind.y,
+						telemetry_pressure.wind.z
+						);
+
+			}
+		}
+
+		if(write_file)
+			writeFile((uint8_t *)out,strlen(out));
+
+		if(show_telemetry)
+			printf("%s",out);
+
 		new_data = 0;
 	}
+
 }
 
 void exitTest() {

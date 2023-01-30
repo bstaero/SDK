@@ -32,6 +32,7 @@ BST_OBJ= simulated_can.o \
 			   bridge.o \
 			   comm_interface.o \
 			   debug.o \
+			   file_interface.o \
 			   comm_protocol.o \
 			   helper_functions.o \
 			   vector.o \

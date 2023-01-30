@@ -15,6 +15,7 @@ cp ../shared/devices/communications/can/protocol/bridge.h        ./include/bst_c
 cp ../shared/tasks/communications/interface/comm_interface.h     ./include/bst_core/
 cp ../shared/comm_protocols/comm_protocol.h                      ./include/bst_core/
 cp ../shared/lib/debug.h                                         ./include/bst_core/
+cp ../shared/devices/communications/file/file_interface.h        ./include/bst_core/
 cp ../shared/tasks/controller/navigation/flight_plan.h           ./include/bst_core/
 cp ../shared/lib/helper_functions.h                              ./include/bst_core/
 cp ../shared/lib/vector.h                                        ./include/bst_core/
@@ -32,6 +33,7 @@ cp ../shared/devices/communications/can/protocol/bridge.c        ./src/bst_can/
 cp ../shared/tasks/communications/interface/comm_interface.cpp   ./src/bst_core/
 cp ../shared/comm_protocols/comm_protocol.cpp                    ./src/bst_core/
 cp ../shared/lib/debug.c                                         ./src/bst_core/
+cp ../shared/devices/communications/file/file_interface.cpp      ./src/bst_core/
 cp ../shared/tasks/controller/navigation/flight_plan.cpp         ./src/bst_core/
 cp ../shared/lib/helper_functions.cpp                            ./src/bst_core/
 cp ../shared/lib/vector.cpp                                      ./src/bst_core/

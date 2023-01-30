@@ -26,12 +26,18 @@
 
 TelemetryOrientation_t telemetry_orientation;
 //TelemetryPosition_t    telemetry_position;
-OldTelemetryPosition_t    telemetry_position;
+OldTelemetryPosition_t telemetry_position;
 TelemetryPressure_t    telemetry_pressure;
 TelemetrySystem_t      telemetry_system;
 TelemetryControl_t     telemetry_control;
 
 UserPayload_t          rx_payload;
+
+State_t                state;
+Pressure_t             static_pressure;
+SingleValueSensor_t    air_temperature;
+SingleValueSensor_t    humidity;
+GPS_t                  gps;
 
 bool new_data = false;
 MethanePacket_t ch4_pkt;
@@ -44,21 +50,35 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 	switch(type) {
 		/* SENSORS */
 		case SENSORS_GPS:
+			memcpy(&gps,data,sizeof(GPS_t));
+			break;
+
 		case SENSORS_ACCELEROMETER:
 		case SENSORS_GYROSCOPE:
 		case SENSORS_MAGNETOMETER:
 		case SENSORS_IMU:
 		case SENSORS_DYNAMIC_PRESSURE:
+			break;
+
 		case SENSORS_STATIC_PRESSURE:
+			memcpy(&static_pressure,data,sizeof(State_t));
+			break;
 		case SENSORS_AIR_TEMPERATURE:
+			memcpy(&air_temperature,data,sizeof(State_t));
+			break;
+
 		case SENSORS_AGL:
 		case SENSORS_CALIBRATE:
 		case SENSORS_BOARD_ORIENTATION:
 		case SENSORS_GNSS_ORIENTATION:
 		case SENSORS_MHP:
+			break;
 
 			/* STATE */
 		case STATE_STATE:
+			memcpy(&state,data,sizeof(State_t));
+			break;
+
 		case STATE_ESTIMATOR_PARAM:
 
 			/* CONTROL */
