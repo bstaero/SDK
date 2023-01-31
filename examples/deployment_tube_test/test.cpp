@@ -28,8 +28,6 @@
 #include "flight_plan.h"
 
 #include "bridge.h"
-#include "canpackets.h"
-using namespace bst::comms::canpackets;
 
 
 // variables
@@ -56,6 +54,9 @@ extern uint32_t gnss_hs_cnt;
 extern uint32_t mag_cnt;
 
 extern uint32_t stat_p_cnt;
+
+CAN_DeploymentTube_t deployment_tube;
+uint8_t new_deployment_tube_data = 0;
 
 // functional definitions
 void SendState(CAN_DeploymentTubeState_t state);
@@ -194,15 +195,42 @@ void updateTest() {
 		actuators[14] = 1000;
 	}
 
-	if(print_timing) {
-	printf("LLA %04.1f  UTC %04.01f  VEL %04.01f  HS %04.01f | MAG %05.01f | STAT %05.01f\n",
-			(float)gnss_lla_cnt/getElapsedTime(),
-			(float)gnss_utc_cnt/getElapsedTime(),
-			(float)gnss_vel_cnt/getElapsedTime(),
-			(float)gnss_hs_cnt/getElapsedTime(),
-			(float)mag_cnt/getElapsedTime(),
-			(float)stat_p_cnt/getElapsedTime()
-			);
+	if(display_telemetry) {
+		if(new_deployment_tube_data) {
+			new_deployment_tube_data = 0;
+			// DEBUG - sanity check
+			char state[8];
+
+			switch(deployment_tube.state) {
+				case DEPLOY_TUBE_INIT:          sprintf(state, "INIT   "); break;
+				case DEPLOY_TUBE_READY:         sprintf(state, "READY  "); break;
+				case DEPLOY_TUBE_ARMED:         sprintf(state, "ARMED  "); break;
+				case DEPLOY_TUBE_FLAP_OPEN:     sprintf(state, "FL OPEN"); break;
+				case DEPLOY_TUBE_PARA_DEPLOYED: sprintf(state, "PARA DP"); break;
+				case DEPLOY_TUBE_JETTISONED:    sprintf(state, "TUB JET"); break;
+				case DEPLOY_TUBE_AC_RELASED:    sprintf(state, "AC REL "); break;
+				case DEPLOY_TUBE_ERROR:         sprintf(state, "ERROR  "); break;
+			}
+
+			char door[8];
+
+			if(deployment_tube.parachute_door) sprintf(door,"OPEN  ");
+			else sprintf(door,"CLOSED");
+
+			printf("DEPLOY TUBE: %0.02f s, state %s door %s error 0x%08x\n", 
+					getElapsedTime(), state, door, deployment_tube.error);
+		}
+
+		if(print_timing) {
+			printf("LLA %04.1f  UTC %04.01f  VEL %04.01f  HS %04.01f | MAG %05.01f | STAT %05.01f\n",
+					(float)gnss_lla_cnt/getElapsedTime(),
+					(float)gnss_utc_cnt/getElapsedTime(),
+					(float)gnss_vel_cnt/getElapsedTime(),
+					(float)gnss_hs_cnt/getElapsedTime(),
+					(float)mag_cnt/getElapsedTime(),
+					(float)stat_p_cnt/getElapsedTime()
+					);
+		}
 	}
 
 }

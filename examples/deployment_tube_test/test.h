@@ -21,8 +21,14 @@
 
 #include <inttypes.h>
 
+#include "canpackets.h"
+using namespace bst::comms::canpackets;
+
 extern volatile bool display_telemetry;
 extern volatile bool write_file;
+
+extern CAN_DeploymentTube_t deployment_tube;
+extern uint8_t new_deployment_tube_data;
 
 void initializeTest(void);
 void updateTest(void);
