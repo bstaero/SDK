@@ -2600,6 +2600,7 @@ uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
 	CAN_DeploymentTube_t data;
 
 	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
 	data.state = (CAN_DeploymentTubeState_t)state;
 	data.parachute_door = (CAN_DeploymentTubeDoorStatus_t)parachute_door;
 	data.error = (CAN_DeploymentTubeErrors_t)error;
@@ -2615,6 +2616,7 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 	CAN_DeploymentTubeCommand_t data;
 
 	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
 	data.id = id;
 	data.value = value;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTubeCommand_t));

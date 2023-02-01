@@ -233,6 +233,7 @@ typedef enum {
 	TELEMETRY_GCS_LOCATION=103,
 	TELEMETRY_PAYLOAD=104,
 	TELEMETRY_GCS_SVIN=105,
+	TELEMETRY_DEPLOYMENT_TUBE=121,  // FIXME - TECHNICALLY IN HIWL ADDR SPACE
 
 	/* HWIL */
 	HWIL_SENSORS=112,
@@ -1691,6 +1692,20 @@ typedef struct _TelemetryControl_t {
 } __attribute__ ((packed)) TelemetryControl_t;
 
 /*--------[ Telemetry ]--------*/
+
+typedef struct _DeploymentTube_t {
+	uint8_t state;
+	uint8_t parachute_door;
+	uint8_t error;
+
+#ifdef __cplusplus
+	_DeploymentTube_t() {
+		state = 0;
+		parachute_door = 0;
+		error = 0;
+	}
+#endif
+} __attribute__ ((packed)) DeploymentTube_t;
 
 typedef struct _TelemetryOrientation_t {
 	float q[4];

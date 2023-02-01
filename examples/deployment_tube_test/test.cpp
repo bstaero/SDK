@@ -78,6 +78,7 @@ void printTestHelp() {
 	printf("  h   : Toggle heartbeat\n");
 	printf("  r   : Set state ready\n");
 	printf("  a   : Set state armed\n");
+	printf("  A   : Emergency aircraft release\n");
 	printf("\n");
 	printf("  p   : print this help\n");
 }
@@ -159,6 +160,11 @@ void updateTest() {
 				case 'r':
 					printf("Requesting state READY\n");
 					SendState(DEPLOY_TUBE_READY);
+					break;
+
+				case 'A':
+					printf("Requesting emergency aircraft release\n");
+					SendState(DEPLOY_TUBE_AC_RELASED);
 					break;
 
 				case 'a':
