@@ -52,6 +52,7 @@ void printTestHelp() {
 	printf("  d   : Request dynamic pressure calibration\n");
 	printf("  g   : Request gyroscope calibration\n");
 	printf("  m   : Request magnetometer calibration\n");
+	printf("  h   : Request humidity recondition\n");
 	printf("\n");
 	printf("  u   : Request imu orientation\n");
 	printf("  U   : Set imu orientation with mount above probe\n");
@@ -143,6 +144,13 @@ void updateTest() {
 					sendCalibrate(MAGNETOMETER);
 					waiting_on_calibrate = true;
 					printf("Magnetometer Calibration Requested.. ");
+					fflush(stdout);
+					break;
+
+				case 'h':
+					sendCalibrate(HUMIDITY);
+					waiting_on_calibrate = true;
+					printf("Humidity Recondition Requested.. ");
 					fflush(stdout);
 					break;
 
