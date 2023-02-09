@@ -165,7 +165,7 @@ bool sendPayloadData(uint8_t * data, uint8_t size) {
 
 		memcpy(tx_payload.buffer,&(data[ptr]),tx_payload.size);
 
-		comm_handler->send(PAYLOAD_DATA_CHANNEL_0, (uint8_t *)&tx_payload, sizeof(UserPayload_t), NULL);
+		comm_handler->send(PAYLOAD_DATA_CHANNEL_1, (uint8_t *)&tx_payload, sizeof(UserPayload_t), NULL);
 
 		ptr += tx_payload.size;
 		tx_payload.size = 0;
