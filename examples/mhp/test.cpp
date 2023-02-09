@@ -268,6 +268,7 @@ void updateCalibration() {
 			case DYNAMIC_PRESSURE: end_time = getElapsedTime() + 2.0; break;
 			case GYROSCOPE:        end_time = getElapsedTime() + 2.0; break;
 			case MAGNETOMETER:     end_time = getElapsedTime() + 60.0; break;
+			case HUMIDITY:         end_time = getElapsedTime() + 300.0; break;
 		}
 	}
 

@@ -392,6 +392,8 @@ void sendCalibrate(SensorType_t sensor) {
 			break;
 		case MAGNETOMETER:
 			break;
+		case HUMIDITY:
+			break;
 		default:
 			return;
 	}
@@ -685,7 +687,7 @@ void printMHPValues(uint8_t num_ports) {
 
 	if(num_ports == 9) {
 		if(display_telemetry)
-			printf("%+0.01f m %+05.01f %+05.01f %+05.01f a %+0.02f %+0.02f %+0.02f g %+0.02f %+0.02f %+0.02f d %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+05.01f %04.01f a %+05.01f b %+05.01f q %+07.01f i %+05.01f t %+05.01f %04u %02u:%02u:%04.01f lla %+06.02f %+07.02f %06.01f v %+05.01f %+05.01f %+05.01f p %04.01f\n\r",
+			printf("%+0.01f m %+05.01f %+05.01f %+05.01f a %+0.02f %+0.02f %+0.02f g %+0.02f %+0.02f %+0.02f d %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f %+07.01f t %+05.01f rh %04.01f a %+05.01f b %+05.01f q %+07.01f i %+05.01f t %+05.01f %04u %02u:%02u:%04.01f lla %+06.02f %+07.02f %06.01f v %+05.01f %+05.01f %+05.01f p %04.01f\n\r",
 					mhp_9h_sensors.static_pressure,
 					mhp_sensors_gnss.magnetometer[0],
 					mhp_sensors_gnss.magnetometer[1],
