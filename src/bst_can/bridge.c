@@ -38,8 +38,8 @@ using namespace bst::comms::canpackets;
 
 #include "debug.h"
 
-#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
-  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx
+#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32H743xx
+  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx
     #include "can.h"
     #include "led.h" // DEBUG
   #else
