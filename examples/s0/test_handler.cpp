@@ -179,6 +179,13 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 			break;
 
 		case PAYLOAD_DATA_CHANNEL_0:
+		case PAYLOAD_DATA_CHANNEL_1:
+		case PAYLOAD_DATA_CHANNEL_2:
+		case PAYLOAD_DATA_CHANNEL_3:
+		case PAYLOAD_DATA_CHANNEL_4:
+		case PAYLOAD_DATA_CHANNEL_5:
+		case PAYLOAD_DATA_CHANNEL_6:
+		case PAYLOAD_DATA_CHANNEL_7:
 			memcpy(&rx_payload,data,sizeof(UserPayload_t));
 			char out[100];
 
@@ -207,13 +214,6 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 			break;
 
-		case PAYLOAD_DATA_CHANNEL_1:
-		case PAYLOAD_DATA_CHANNEL_2:
-		case PAYLOAD_DATA_CHANNEL_3:
-		case PAYLOAD_DATA_CHANNEL_4:
-		case PAYLOAD_DATA_CHANNEL_5:
-		case PAYLOAD_DATA_CHANNEL_6:
-		case PAYLOAD_DATA_CHANNEL_7:
 
 			/* ERRORS */
 		default:
