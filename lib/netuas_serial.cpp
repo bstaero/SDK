@@ -49,6 +49,13 @@ bool NetuasSerial::setNonBlocking() {
 	return false;
 }
 
+bool NetuasSerial::setFlowControl() {
+	if( serial_ptr )
+		return serial_ptr->setModem();
+
+	return false;
+}
+
 uint16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
 	int maxFD, val;
 	fd_set readFDs;
@@ -83,9 +90,10 @@ uint16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
 				return n;
 			} 
 			else {
-				if(n == 0)
+				if(n == 0) {
 					pmesg(VERBOSE_WARN,"read from serial returned zero bytes\n");
-				else if( errno != EWOULDBLOCK && errno != EINTR && errno != EAGAIN) 
+					initialize(device_str.c_str(), baud_str.c_str(), NULL);
+				} else if( errno != EWOULDBLOCK && errno != EINTR && errno != EAGAIN) 
 					pmesg(VERBOSE_ERROR,"bad read from client\n");
 			}
 		}

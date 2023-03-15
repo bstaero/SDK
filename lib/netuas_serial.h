@@ -34,6 +34,8 @@ class NetuasSerial : public CommunicationsInterface {
 
 		bool setNonBlocking();
 
+		bool setFlowControl();
+
 	private:
 		SerialPort *serial_ptr;
 		std::string device_str, baud_str;
