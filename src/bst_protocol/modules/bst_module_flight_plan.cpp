@@ -330,7 +330,9 @@ void BSTModuleFlightPlan::send(uint8_t type, uint8_t * data, uint16_t size, cons
 
 		case FLIGHT_PLAN_MAP:
 		case FLIGHT_PLAN_WAYPOINT:
+			break;
 		case LAST_MAPPING_WAYPOINT:
+			BSTCommunicationsModule::send(type,data,size,NULL);
 			break;
 
 		case DUBIN_PATH:

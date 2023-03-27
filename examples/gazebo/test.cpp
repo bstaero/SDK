@@ -565,7 +565,6 @@ void updateTest() {
 	// send heartbeat
 	send_hb();
 
-#if 0
 	/** Update control interval */
 	static float last_ctrl = 0.0;
 	float now = getElapsedTime();
@@ -573,12 +572,11 @@ void updateTest() {
 		last_ctrl = now;
 
 		/** Get State estimate for pitch/roll */
-		comm_handler->request(STATE_ESTIMATOR_PARAM, 0);
+		//comm_handler->request(STATE_ESTIMATOR_PARAM, 0);
 
 		/** Get agl value for raw control */
 		comm_handler->request(SENSORS_AGL, 0);
 	}
-#endif
 
 }
 

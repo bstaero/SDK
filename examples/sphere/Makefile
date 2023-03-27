@@ -1,5 +1,5 @@
 #*=+--+=#=+--            SwiftPilot Autopilot Software            --+=#=+--+=#*#
-#               Copyright (C) 2012 Black Swift Technologies LLC.               #
+#               Copyright (C) 2019 Black Swift Technologies LLC.               #
 #                             All Rights Reserved.                             #
 #                                                                              #
 #    This program is free software: you can redistribute it and/or modify      #
@@ -24,30 +24,28 @@ HOST_OS := $(shell uname -s)
 CC=gcc
 CXX=g++
 
-FLAGS = $(CFLAGS) 
+VPATH     = ../../src \
+            ../../src/bst_protocol \
+            ../../src/bst_protocol/modules \
+            ../../src/bst_core \
 
-VPATH     += 
-INCLUDES  += -I./
-OBJ       += main.o test.o test_handler.o
+INCLUDES += -I. \
+					  -I../../include \
+					  -I../../include/bst_protocol \
+					  -I../../include/bst_protocol/messages \
+					  -I../../include/bst_protocol/modules \
+					  -I../../include/bst_core \
+					  -I../../lib \
+					  -I../../lib/netuas \
 
-FLAGS+=-g -DVERBOSE
+FLAGS=-g -DVERBOSE -DVEHICLE_FIXEDWING
+
+OBJ=comm_protocol.o comm_interface.o bst_module_basic.o bst_module_flight_plan.o debug.o vector.o helper_functions.o flight_plan.o
+OBJ+=bst_protocol.o bst_packet.o bst_module.o
 
 ifneq ($(HOST_OS), Darwin)
-LDFLAGS+=-lrt
+FLAGS+=-lrt
 endif
-
-#----------[ NetUAS ]----------#
-INCLUDES  += -I../../lib -I../../lib/netuas
-
-#-------[ BST Protocol ]-------#
-VPATH     += ../../src \
-						 ../../src/bst_core \
-						 ../../src/bst_protocol
-INCLUDES  += -I../../include \
-						 -I../../include/bst_core \
-						 -I../../include/bst_protocol \
-						 -I../../include/bst_protocol/messages
-OBJ       += comm_interface.o bst_packet.o helper_functions.o debug.o
 
 %.o:%.cpp
 	$(CXX) $(FLAGS) -c -o $@ $^ $(INCLUDES)
@@ -55,19 +53,17 @@ OBJ       += comm_interface.o bst_packet.o helper_functions.o debug.o
 %.o: %.c
 	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES)
  
-all: default
+default: bstsdklibs test
 
-default: libnetuas test
-
-test: $(OBJ)
-	$(CXX) -o $@ $^ -L../../lib -lnetuas_lib $(LDFLAGS) 
+test: $(OBJ) main.o test.o test_handler.o
+	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lrt
 
 clean:
 	cd ../../lib && $(MAKE) clean
 	rm -f *.o
 	rm -f test
 
-libnetuas: ../../lib/libnetuas_lib.a
+bstsdklibs: ../../lib/libnetuas_lib.a
 
 ../../lib/libnetuas_lib.a:
 	cd ../../lib && $(MAKE)

@@ -20,16 +20,27 @@
 #define _TEST_HANDLER_H_
 
 #include <inttypes.h>
-#include "bst_packet.h"
 
-extern volatile SensorType_t calibration_requested;
-extern volatile PacketTypes_t orientation_requested;
-extern volatile PacketAction_t orientation_action;
+typedef struct _Downstream_t {
+	float time;
+	double latitude;
+	double longitude;
+	float altitude;
+	float q[4];
+	float rh;
+	float u;
+	float v;
+	float w;
+	float speed_of_sound;
+	float temperature;
+} __attribute__ ((packed)) Downstream_t;
 
-void sendCalibrate(SensorType_t sensor);
-void requestPowerOn(void);
-void requestOrientation(PacketTypes_t type);
-void setOrientation(PacketTypes_t type, AxisMapping_t * axis_mapping);
-bool updateCommunications(void);
+extern bool new_data;
+extern Downstream_t downstream_pkt;
+
+void receive(uint8_t type, void * data, uint16_t size, const void * parameter);
+uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * parameter);
+void receiveReply(uint8_t type, void * data, uint16_t size, bool ack, const void * parameter);
+bool publish(uint8_t type, uint8_t param);
 
 #endif

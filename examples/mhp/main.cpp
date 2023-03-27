@@ -59,7 +59,7 @@ void printHelp();
 int main(int argc, char *argv[])
 {
 #ifdef VERBOSE
-	verbose = VERBOSE_INFO;
+	verbose = VERBOSE_ALL;
 #endif
 
 	uint16_t temp = 0x0100;

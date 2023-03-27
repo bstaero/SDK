@@ -433,15 +433,9 @@ bool setCommandValue(bst::comms::CommandID_t id, float value) {
     set_command_ack = false;
     received_reply = false;
 
-		uint8_t i;
-		bool retval=false; 
+    comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&set_command, sizeof(Command_t), NULL);
 
-		while((i++ < CMD_RETRIES) && !retval) {
-			comm_handler->sendCommand(CONTROL_COMMAND, (uint8_t *)&set_command, sizeof(Command_t), NULL);
-			retval = waitForACK();
-		}
-
-    return retval;
+    return waitForACK();
 }
 
 //---- Send command and wait for valid ACK and a value to change
@@ -536,14 +530,14 @@ bool validate_payload_control()
     if (payload_current_state != PAYLOAD_CTRL_ACTIVE) {
         pmesg(VERBOSE_PAYLOAD, "Activating payload control ...");
 
-				if (!setCheckCommandValue(CMD_PAYLOAD_CONTROL, PAYLOAD_CTRL_ACTIVE, (uint8_t*)&payload_current_state, PAYLOAD_CTRL_ACTIVE, 10.0)) {
-					if( verbose >= VERBOSE_PAYLOAD)
-						printf(" failed\n");
-					return false;
-				}
-				else if( verbose >= VERBOSE_PAYLOAD)
-					printf(" done\n");
-		}
+        if (!setCheckCommandValue(CMD_PAYLOAD_CONTROL, PAYLOAD_CTRL_ACTIVE, (uint8_t*)&payload_current_state, PAYLOAD_CTRL_ACTIVE, 10.0)) {
+			if( verbose >= VERBOSE_PAYLOAD)
+				printf(" failed\n");
+            return false;
+        }
+		else if( verbose >= VERBOSE_PAYLOAD)
+			printf(" done\n");
+    }
 
     return true;
 }

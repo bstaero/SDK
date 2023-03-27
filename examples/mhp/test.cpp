@@ -52,7 +52,6 @@ void printTestHelp() {
 	printf("  d   : Request dynamic pressure calibration\n");
 	printf("  g   : Request gyroscope calibration\n");
 	printf("  m   : Request magnetometer calibration\n");
-	printf("  h   : Request humidity recondition\n");
 	printf("\n");
 	printf("  u   : Request imu orientation\n");
 	printf("  U   : Set imu orientation with mount above probe\n");
@@ -147,13 +146,6 @@ void updateTest() {
 					fflush(stdout);
 					break;
 
-				case 'h':
-					sendCalibrate(HUMIDITY);
-					waiting_on_calibrate = true;
-					printf("Humidity Recondition Requested.. ");
-					fflush(stdout);
-					break;
-
 				case 'u':
 					requestOrientation(SENSORS_BOARD_ORIENTATION);
 					break;
@@ -207,11 +199,6 @@ void updateTest() {
 					//temp_axis_mapping.axis[1] = 2;
 					//temp_axis_mapping.axis[2] = 3;
 
-					// cable to the back & upside down
-					//temp_axis_mapping.axis[0] = -2;
-					//temp_axis_mapping.axis[1] = -1;
-					//temp_axis_mapping.axis[2] = -3;
-
 					// aeropod mount
 					//temp_axis_mapping.axis[0] = 2;
 					//temp_axis_mapping.axis[1] = -1;
@@ -222,10 +209,6 @@ void updateTest() {
 					temp_axis_mapping.axis[1] = 1;
 					temp_axis_mapping.axis[2] = 3;
 
-					// new aeropod mount
-					temp_axis_mapping.axis[0] = -2;
-					temp_axis_mapping.axis[1] = 1;
-					temp_axis_mapping.axis[2] = 3;
 
 					printf("Setting GNSS orietation to [%i,%i,%i].. ",
 							temp_axis_mapping.axis[0],
@@ -268,7 +251,6 @@ void updateCalibration() {
 			case DYNAMIC_PRESSURE: end_time = getElapsedTime() + 2.0; break;
 			case GYROSCOPE:        end_time = getElapsedTime() + 2.0; break;
 			case MAGNETOMETER:     end_time = getElapsedTime() + 60.0; break;
-			case HUMIDITY:         end_time = getElapsedTime() + 300.0; break;
 		}
 	}
 

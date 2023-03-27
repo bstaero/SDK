@@ -20,7 +20,7 @@
 %*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*%
 function plot_data(data)
 
-	start_index = 10;
+	start_index = 1;
 	fig_index = 1;
 
 	%----- [ ] -----%
@@ -123,12 +123,12 @@ function plot_data(data)
 	%----- [ ] -----%
 	figure(fig_index); fig_index = fig_index+1;
 	ax(fig_index) = subplot(1,1,1);
-	plot(data.DATA_PRODUCT_TIME(start_index:end),...
-			[data.ALPHA(start_index:end).*180/pi,...
-			 data.BETA(start_index:end).*180/pi,]);
 	%plot(data.DATA_PRODUCT_TIME(start_index:end),...
-			%[smooth(data.ALPHA(start_index:end).*180/pi,0.005),...
-			 %smooth(data.BETA(start_index:end).*180/pi,0.005),]);
+			%[data.ALPHA(start_index:end).*180/pi,...
+			 %data.BETA(start_index:end).*180/pi,]);
+	plot(data.DATA_PRODUCT_TIME(start_index:end),...
+			[smooth(data.ALPHA(start_index:end).*180/pi,0.005),...
+			 smooth(data.BETA(start_index:end).*180/pi,0.005),]);
 
 	title('Wind Angles [deg]');
 	legend('\alpha','\beta');
