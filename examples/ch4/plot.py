@@ -5,12 +5,16 @@ from itertools import count
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import os
 
 window = 30
 first_run = 1
 
 def animate(i):
-    data = pd.read_csv('data.csv')
+    os.system('head -n 1 data.csv > data_short.csv')
+    os.system('tail -n 100 data.csv >> data_short.csv')
+
+    data = pd.read_csv('data_short.csv')
     t = data['SYSTEM_TIME']
     ch4 = data['CH4']
     lat = data['LATITUDE']
