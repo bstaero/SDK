@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import os
 
-window = 30
+window = 60
 first_run = 1
 
 def animate(i):

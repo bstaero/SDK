@@ -33,6 +33,7 @@ volatile bool display_telemetry = false;
 volatile bool display_telemetry_timing = false;
 volatile bool waiting_on_calibrate = false;
 volatile bool waiting_on_orientation = false;
+volatile bool waiting_on_mag = false;
 volatile bool write_file = false;
 
 // for command line (terminal) input
@@ -42,6 +43,7 @@ struct termios initial_settings, new_settings;
 /*<---Local Functions----->*/
 void updateCalibration(void);
 void updateOrientation(void);
+void updateMagCal(void);
 /*<-End Local Functions--->*/
 
 void printTestHelp() {
@@ -52,6 +54,7 @@ void printTestHelp() {
 	printf("  d   : Request dynamic pressure calibration\n");
 	printf("  g   : Request gyroscope calibration\n");
 	printf("  m   : Request magnetometer calibration\n");
+	printf("  M   : Send magnetometer calibration\n");
 	printf("\n");
 	printf("  u   : Request imu orientation\n");
 	printf("  U   : Set imu orientation with mount above probe\n");
@@ -106,6 +109,7 @@ void updateTest() {
 
 	if(waiting_on_calibrate) updateCalibration();
 	if(waiting_on_orientation) updateOrientation();
+	if(waiting_on_mag) updateMagCal();
 
 	char input; 
 
@@ -139,11 +143,26 @@ void updateTest() {
 					fflush(stdout);
 					break;
 
-				case 'm':
+#if 0 // TODO - implement on board calibration
+				case 'M':
 					sendCalibrate(MAGNETOMETER);
 					waiting_on_calibrate = true;
 					printf("Magnetometer Calibration Requested.. ");
 					fflush(stdout);
+					break;
+#else
+				case 'M':
+					if(waiting_on_mag) break;
+					waiting_on_mag = true;
+
+					sendMagCalibraton();
+					printf("Magnetometer Calibration Sent.. ");
+					fflush(stdout);
+					break;
+#endif
+
+				case 'm':
+					requestMagCalibration();
 					break;
 
 				case 'u':
@@ -288,6 +307,25 @@ void updateOrientation() {
 
 	end_time = 0.0;
 	waiting_on_orientation = false;
+}
+
+void updateMagCal() {
+	static float end_time = 0.0;
+	if(end_time == 0.0) {
+		end_time = getElapsedTime() + 2.0;;
+	}
+
+	if(getElapsedTime() < end_time)
+		return;
+
+	if(getElapsedTime() < end_time && mag_cal_action == PKT_ACTION_ACK) {
+		printf("SUCCESS\n");
+	} else {
+		printf("FAILED\n");
+	}
+
+	end_time = 0.0;
+	waiting_on_mag = false;
 }
 
 

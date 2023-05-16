@@ -41,8 +41,8 @@ bool sendPayloadData(uint8_t * data, uint8_t size);
 Packet              tx_packet;
 
 extern TelemetryOrientation_t telemetry_orientation;
-//extern TelemetryPosition_t    telemetry_position;
-extern OldTelemetryPosition_t    telemetry_position;
+extern TelemetryPosition_t    telemetry_position;
+//extern OldTelemetryPosition_t    telemetry_position;
 extern TelemetryPressure_t    telemetry_pressure;
 extern TelemetrySystem_t      telemetry_system;
 extern TelemetryControl_t     telemetry_control;

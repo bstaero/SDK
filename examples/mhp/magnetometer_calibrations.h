@@ -16,23 +16,50 @@
 |                                                                              |
 |                                                                              |
 \*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*/
-#ifndef _TEST_HANDLER_H_
-#define _TEST_HANDLER_H_
+#ifndef _MAGNETOMETER_CALIBRATIONS_H_
+#define _MAGNETOMETER_CALIBRATIONS_H_
 
-#include <inttypes.h>
-#include "bst_packet.h"
+#define USING_MAG_ZERO
 
-extern volatile SensorType_t calibration_requested;
-extern volatile PacketTypes_t orientation_requested;
-extern volatile PacketAction_t orientation_action;
-extern volatile PacketAction_t mag_cal_action;
+/* -----[ Zero ] ----- */
 
-void sendCalibrate(SensorType_t sensor);
-void sendMagCalibraton(void);
-void requestPowerOn(void);
-void requestOrientation(PacketTypes_t type);
-void requestMagCalibration(void);
-void setOrientation(PacketTypes_t type, AxisMapping_t * axis_mapping);
-bool updateCommunications(void);
+#ifdef USING_MAG_ZERO
+
+#define  MAG_M_0_0  0.0
+#define  MAG_M_1_0  0.0
+#define  MAG_M_2_0  0.0
+#define  MAG_M_0_1  0.0
+#define  MAG_M_1_1  0.0
+#define  MAG_M_2_1  0.0
+#define  MAG_M_0_2  0.0
+#define  MAG_M_1_2  0.0
+#define  MAG_M_2_2  0.0
+
+#define  MAG_B_0    0.0
+#define  MAG_B_1    0.0
+#define  MAG_B_2    0.0
+
+#endif 
+
+/* -----[ Zero ] ----- */
+
+#ifdef USING_MAG_ZERO
+
+#define  MAG_M_0_0  0.0
+#define  MAG_M_1_0  0.0
+#define  MAG_M_2_0  0.0
+#define  MAG_M_0_1  0.0
+#define  MAG_M_1_1  0.0
+#define  MAG_M_2_1  0.0
+#define  MAG_M_0_2  0.0
+#define  MAG_M_1_2  0.0
+#define  MAG_M_2_2  0.0
+
+#define  MAG_B_0    0.0
+#define  MAG_B_1    0.0
+#define  MAG_B_2    0.0
+
+#endif 
+
 
 #endif

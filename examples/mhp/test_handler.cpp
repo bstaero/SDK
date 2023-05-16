@@ -90,6 +90,7 @@ MHP9HTiming_t    mhp_9h_timing;
 volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
 volatile PacketTypes_t orientation_requested = (PacketTypes_t)0;
 volatile PacketAction_t orientation_action = PKT_ACTION_NACK;
+volatile PacketAction_t mag_cal_action = PKT_ACTION_NACK;
 
 
 uint32_t product_cnt = 0;
@@ -127,6 +128,7 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 	PowerOn_t * power_on_data;
 	CalibrateSensor_t * calibration_data;
 	AxisMapping_t * axis_mapping;
+	ThreeAxisSensorCalibration_t * mag_cal;
 	MHPOld_t * mhp_old;
 	GPS_t * gps_old_data;
 
@@ -174,6 +176,39 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 				case PKT_ACTION_NACK:
 					orientation_action = PKT_ACTION_NACK;
 					orientation_requested = (PacketTypes_t)0;
+					break;
+			}
+
+			break;
+
+		case SENSORS_MAG_CALIBRATION:
+			printf("SENSORS_MAG_CALIBRATION\n");
+			switch(action) {
+				case PKT_ACTION_STATUS:
+					mag_cal = (ThreeAxisSensorCalibration_t *)data;
+					printf("MAG: M = | %+7.02f %+7.02f %+7.02f | B = | %+7.02f |\n"
+							   "         | %+7.02f %+7.02f %+7.02f |     | %+7.02f |\n"
+							   "         | %+7.02f %+7.02f %+7.02f |     | %+7.02f |\n",
+							mag_cal->m[0],
+							mag_cal->m[1],
+							mag_cal->m[2],
+							mag_cal->b[0],
+							mag_cal->m[3],
+							mag_cal->m[4],
+							mag_cal->m[5],
+							mag_cal->b[1],
+							mag_cal->m[6],
+							mag_cal->m[7],
+							mag_cal->m[8],
+							mag_cal->b[2]);
+					break;
+
+				case PKT_ACTION_ACK:
+					mag_cal_action = PKT_ACTION_ACK;
+					break;
+
+				case PKT_ACTION_NACK:
+					mag_cal_action = PKT_ACTION_NACK;
 					break;
 			}
 
@@ -361,6 +396,48 @@ void sendCalibrate(SensorType_t sensor) {
 	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(CalibrateSensor_t));
 
 	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+}
+
+#include "magnetometer_calibrations.h"
+
+void sendMagCalibraton(void) {
+	mag_cal_action = PKT_ACTION_NACK;
+
+	ThreeAxisSensorCalibration_t calibrate_pkt;
+
+	calibrate_pkt.m[0] = MAG_M_0_0;
+	calibrate_pkt.m[1] = MAG_M_1_0;
+	calibrate_pkt.m[2] = MAG_M_2_0;
+	calibrate_pkt.m[3] = MAG_M_0_1;
+	calibrate_pkt.m[4] = MAG_M_1_1;
+	calibrate_pkt.m[5] = MAG_M_2_1;
+	calibrate_pkt.m[6] = MAG_M_0_2;
+	calibrate_pkt.m[7] = MAG_M_1_2;
+	calibrate_pkt.m[8] = MAG_M_2_2;
+
+	calibrate_pkt.b[0] = MAG_B_0;
+	calibrate_pkt.b[1] = MAG_B_1;
+	calibrate_pkt.b[2] = MAG_B_2;
+
+	tx_packet.setAddressing(false);
+	tx_packet.setType(SENSORS_MAG_CALIBRATION);
+	tx_packet.setAction(PKT_ACTION_COMMAND);
+	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(ThreeAxisSensorCalibration_t));
+
+	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+}
+
+void requestMagCalibration(void) {
+	ThreeAxisSensorCalibration_t calibrate_pkt;
+
+	tx_packet.setAddressing(false);
+	tx_packet.setType(SENSORS_MAG_CALIBRATION);
+	tx_packet.setAction(PKT_ACTION_REQUEST);
+	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(ThreeAxisSensorCalibration_t));
+
+	writeBytes(tx_packet.getPacket(), 20);
+	usleep(100);
+	writeBytes(tx_packet.getPacket()+20, tx_packet.getSize()-20);
 }
 
 void requestPowerOn(void) {
