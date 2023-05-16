@@ -24,6 +24,7 @@
 
 extern volatile SensorType_t calibration_requested;
 extern volatile PacketTypes_t orientation_requested;
+extern volatile PacketTypes_t mag_cal_requested;
 extern volatile PacketAction_t orientation_action;
 extern volatile PacketAction_t mag_cal_action;
 

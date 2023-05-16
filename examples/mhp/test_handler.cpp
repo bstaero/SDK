@@ -89,6 +89,7 @@ MHP9HTiming_t    mhp_9h_timing;
 
 volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
 volatile PacketTypes_t orientation_requested = (PacketTypes_t)0;
+volatile PacketTypes_t mag_cal_requested = (PacketTypes_t)0;
 volatile PacketAction_t orientation_action = PKT_ACTION_NACK;
 volatile PacketAction_t mag_cal_action = PKT_ACTION_NACK;
 
@@ -182,7 +183,6 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 			break;
 
 		case SENSORS_MAG_CALIBRATION:
-			printf("SENSORS_MAG_CALIBRATION\n");
 			switch(action) {
 				case PKT_ACTION_STATUS:
 					mag_cal = (ThreeAxisSensorCalibration_t *)data;
@@ -205,10 +205,12 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 
 				case PKT_ACTION_ACK:
 					mag_cal_action = PKT_ACTION_ACK;
+					mag_cal_requested = (PacketTypes_t)0;
 					break;
 
 				case PKT_ACTION_NACK:
 					mag_cal_action = PKT_ACTION_NACK;
+					mag_cal_requested = (PacketTypes_t)0;
 					break;
 			}
 
@@ -399,9 +401,13 @@ void sendCalibrate(SensorType_t sensor) {
 }
 
 #include "magnetometer_calibrations.h"
+#include <unistd.h>
 
 void sendMagCalibraton(void) {
+	if(mag_cal_requested) return;
+
 	mag_cal_action = PKT_ACTION_NACK;
+	mag_cal_requested = (PacketTypes_t)1;
 
 	ThreeAxisSensorCalibration_t calibrate_pkt;
 
@@ -425,6 +431,7 @@ void sendMagCalibraton(void) {
 	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(ThreeAxisSensorCalibration_t));
 
 	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+	printf("Wrote %u bytes\n",tx_packet.getSize());
 }
 
 void requestMagCalibration(void) {
@@ -435,9 +442,7 @@ void requestMagCalibration(void) {
 	tx_packet.setAction(PKT_ACTION_REQUEST);
 	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(ThreeAxisSensorCalibration_t));
 
-	writeBytes(tx_packet.getPacket(), 20);
-	usleep(100);
-	writeBytes(tx_packet.getPacket()+20, tx_packet.getSize()-20);
+	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
 }
 
 void requestPowerOn(void) {

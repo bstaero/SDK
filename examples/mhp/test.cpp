@@ -311,11 +311,11 @@ void updateOrientation() {
 
 void updateMagCal() {
 	static float end_time = 0.0;
-	if(end_time == 0.0) {
+	if(end_time == 0.0 && mag_cal_requested != 0) {
 		end_time = getElapsedTime() + 2.0;;
 	}
 
-	if(getElapsedTime() < end_time)
+	if(mag_cal_requested != 0 && getElapsedTime() < end_time)
 		return;
 
 	if(getElapsedTime() < end_time && mag_cal_action == PKT_ACTION_ACK) {
@@ -323,6 +323,8 @@ void updateMagCal() {
 	} else {
 		printf("FAILED\n");
 	}
+
+	mag_cal_requested = (PacketTypes_t)0;
 
 	end_time = 0.0;
 	waiting_on_mag = false;
