@@ -288,8 +288,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 
 		case SENSORS_MHP_GNSS:
 						//FIXME - this should not be sent by the GPS
-						if( (((MHPSensorsGNSS_t *)data)-> latitude <  200.0) &&
-								(((MHPSensorsGNSS_t *)data)-> latitude > -200.0) )
+						/*if( (((MHPSensorsGNSS_t *)data)-> latitude <  200.0) &&
+								(((MHPSensorsGNSS_t *)data)-> latitude > -200.0) )*/
 							memcpy(&mhp_sensors_gnss,data,sizeof(MHPSensorsGNSS_t));;
 						break;
 

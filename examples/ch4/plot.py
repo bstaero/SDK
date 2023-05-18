@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import os
 
-window = 60
+window = 700
 first_run = 1
 
 def animate(i):
     os.system('head -n 1 data.csv > data_short.csv')
-    os.system('tail -n 100 data.csv >> data_short.csv')
+    os.system('tail -n 700 data.csv >> data_short.csv')
 
     data = pd.read_csv('data_short.csv')
     t = data['SYSTEM_TIME']

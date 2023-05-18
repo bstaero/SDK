@@ -55,6 +55,7 @@ void printTestHelp() {
 	printf("  g   : Request gyroscope calibration\n");
 	printf("  m   : Request magnetometer calibration\n");
 	printf("  M   : Send magnetometer calibration\n");
+	printf("  O   : Command magnetometer calibration\n");
 	printf("\n");
 	printf("  u   : Request imu orientation\n");
 	printf("  U   : Set imu orientation with mount above probe\n");
@@ -143,14 +144,13 @@ void updateTest() {
 					fflush(stdout);
 					break;
 
-#if 0 // TODO - implement on board calibration
-				case 'M':
+				case 'O':
 					sendCalibrate(MAGNETOMETER);
 					waiting_on_calibrate = true;
 					printf("Magnetometer Calibration Requested.. ");
 					fflush(stdout);
 					break;
-#else
+
 				case 'M':
 					if(waiting_on_mag) break;
 					waiting_on_mag = true;
@@ -159,7 +159,6 @@ void updateTest() {
 					printf("Magnetometer Calibration Sent.. ");
 					fflush(stdout);
 					break;
-#endif
 
 				case 'm':
 					requestMagCalibration();
