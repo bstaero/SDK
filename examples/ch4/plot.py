@@ -6,13 +6,27 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import os
+import subprocess
 
 window = 700
 first_run = 1
 
 def animate(i):
-    os.system('head -n 1 data.csv > data_short.csv')
-    os.system('tail -n 700 data.csv >> data_short.csv')
+    try:
+        result = subprocess.check_output(['wc', '-l', 'data.csv'])
+    except subprocess.CalledProcessError as e:
+        return
+
+    result_str = result.decode('utf-8')
+    result_parts = result_str.split(' ')
+    result_num = int(result_parts[0])
+
+
+    if result_num > window:
+        os.system('head -n 1 data.csv > data_short.csv')
+        os.system('tail -n '+str(window)+' data.csv >> data_short.csv')
+    else:
+        os.system('tail -n '+str(window)+' data.csv > data_short.csv')
 
     data = pd.read_csv('data_short.csv')
     t = data['SYSTEM_TIME']
@@ -37,6 +51,7 @@ def animate(i):
     axs[1].axis('equal')
 
 #    plt.colorbar()
+
 
 fig, axs = plt.subplots(1,2)
 

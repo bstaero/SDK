@@ -47,10 +47,6 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 	//printf("receive: type=%u\n", type);
 	uint32_t address = ((BSTProtocol *)comm_handler)->getLastAddress();
 
-	if((address & 0xFF000000) != 0x41000000) {
-		return;
-	}
-
 	switch(type) {
 		/* SENSORS */
 		case SENSORS_GPS:
@@ -120,15 +116,19 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 			break;
 
 		case TELEMETRY_POSITION:
-			//memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
-			memcpy(&telemetry_position,data,sizeof(OldTelemetryPosition_t));
+			if((address & 0xFF000000) == 0x41000000) {
+				memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
+				//memcpy(&telemetry_position,data,sizeof(OldTelemetryPosition_t));
+			}
 			break;
 
 		case TELEMETRY_ORIENTATION:
 			memcpy(&telemetry_orientation,data,sizeof(TelemetryOrientation_t));
 			break;
 		case TELEMETRY_PRESSURE:
-			memcpy(&telemetry_pressure,data,sizeof(TelemetryPressure_t));
+			if((address & 0xFF000000) == 0x41000000) {
+				memcpy(&telemetry_pressure,data,sizeof(TelemetryPressure_t));
+			}
 			break;
 		case TELEMETRY_CONTROL:
 			memcpy(&telemetry_control,data,sizeof(TelemetryControl_t));

@@ -189,4 +189,4 @@ function plot_data(data)
 	figure(fig_index); fig_index = fig_index+1;
 
 	ind=find(data.PDOP > 0.0 & data.PDOP < 3.0);
-	geoplot(data.LATTIUDE(ind), data.LONGITUDE(ind),'.');
+	geoplot(data.LATITUDE(ind), data.LONGITUDE(ind),'.');
