@@ -8,7 +8,7 @@ from matplotlib.animation import FuncAnimation
 import os
 import subprocess
 
-window = 700
+window = 200
 first_run = 1
 
 def animate(i):

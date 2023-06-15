@@ -223,8 +223,8 @@ void updateTest() {
 			if(deployment_tube.parachute_door) sprintf(door,"OPEN  ");
 			else sprintf(door,"CLOSED");
 
-			printf("DEPLOY TUBE: %0.02f s, state %s door %s error 0x%08x\n", 
-					getElapsedTime(), state, door, deployment_tube.error);
+			printf("DEPLOY TUBE: %0.02f s, state %s door %s batt %0.1fV error 0x%08x\n", 
+					getElapsedTime(), state, door, (float)deployment_tube.batt_voltage / 10.f, deployment_tube.error);
 		}
 
 		if(print_timing) {

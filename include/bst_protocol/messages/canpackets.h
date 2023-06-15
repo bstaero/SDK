@@ -959,6 +959,7 @@ typedef struct _CAN_DeploymentTube_t {
 
 	CAN_DeploymentTubeState_t state;
 	CAN_DeploymentTubeDoorStatus_t parachute_door;
+	uint8_t batt_voltage;
 	CAN_DeploymentTubeErrors_t error;
 
 	uint16_t chk;
@@ -966,6 +967,7 @@ typedef struct _CAN_DeploymentTube_t {
 #ifdef __cplusplus
 	_CAN_DeploymentTube_t() {
 		startByte = 0;
+		batt_voltage = 0;
 		chk = 0;
 	}
 #endif

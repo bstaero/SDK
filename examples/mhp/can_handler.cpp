@@ -294,6 +294,7 @@ void updatePayloadTrigger(float system_time,
 void updateDeployTube(float ts, 
 		uint8_t state,
 		uint8_t parachute_door,
+		uint8_t batt_voltage,
 		uint8_t error) {}
 /*<-End Local Functions--->*/
 

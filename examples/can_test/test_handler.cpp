@@ -186,6 +186,7 @@ void updateGPSRTCM(float t0, uint8_t size, uint8_t * data) {}
 void updateDeployTube(float system_time,
 		uint8_t state,
 		uint8_t parachute_door,
+		uint8_t batt_voltage,
 		uint8_t error) {}
 
 void handleDeployTubeCmd(float system_time,
