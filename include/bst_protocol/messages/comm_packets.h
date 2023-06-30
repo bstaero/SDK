@@ -1696,12 +1696,14 @@ typedef struct _TelemetryControl_t {
 typedef struct _DeploymentTube_t {
 	uint8_t state;
 	uint8_t parachute_door;
+	uint8_t batt_voltage;
 	uint8_t error;
 
 #ifdef __cplusplus
 	_DeploymentTube_t() {
 		state = 0;
 		parachute_door = 0;
+		batt_voltage = 0;
 		error = 0;
 	}
 #endif

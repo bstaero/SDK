@@ -120,6 +120,7 @@ typedef enum {
 	DEPLOY_TUBE_PARA_DEPLOYED,
 	DEPLOY_TUBE_JETTISONED,
 	DEPLOY_TUBE_AC_RELASED,
+	DEPLOY_TUBE_SHUTDOWN,
 	DEPLOY_TUBE_ERROR,
 }  __attribute__ ((packed)) CAN_DeploymentTubeState_t;
 
