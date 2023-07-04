@@ -73,8 +73,6 @@ void printTestHelp() {
 	printf("  t   : Toggle telemetry display\n");
 	printf("  i   : Toggle timing display\n");
 	printf("\n");
-	printf("  T   : take a picture\n");
-	printf("\n");
 	printf("  h   : Toggle heartbeat\n");
 	printf("  r   : Set state ready\n");
 	printf("  a   : Set state armed\n");
@@ -143,13 +141,6 @@ void updateTest() {
 					print_timing = !print_timing;
 					break;
 
-				case 'T':
-					if(!is_triggering) {
-						is_triggering = 1;
-						trigger_time = getElapsedTime();
-					}
-					break;
-
 				case 'h':
 					if(!sending_heartbeat)
 						sending_heartbeat = 1;
@@ -215,6 +206,7 @@ void updateTest() {
 				case DEPLOY_TUBE_PARA_DEPLOYED: sprintf(state, "PARA DP"); break;
 				case DEPLOY_TUBE_JETTISONED:    sprintf(state, "TUB JET"); break;
 				case DEPLOY_TUBE_AC_RELASED:    sprintf(state, "AC REL "); break;
+				case DEPLOY_TUBE_SHUTDOWN:      sprintf(state, "SHTDWN "); break;
 				case DEPLOY_TUBE_ERROR:         sprintf(state, "ERROR  "); break;
 			}
 
