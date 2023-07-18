@@ -319,6 +319,7 @@ typedef enum {
 	PAYLOAD_TRACE_GAS=204,
 	PAYLOAD_LICOR=205,
 	PAYLOAD_SPECTROMETER=206,
+	PAYLOAD_SBA5=207,
 }  __attribute__ ((packed)) PayloadID_t;
 
 typedef struct _NDVI_t {
