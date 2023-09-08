@@ -101,6 +101,7 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 
 	/* MISSION */
 	registerDataType(MISSION_PARAMETERS, sizeof(MissionParameters_t), true, true);
+	registerDataType(MISSION_HDOB_CONFIG, sizeof(HDOBConfig_t), true, true);
 
 	/* PAYLOAD */
 	//registerDataType(PAYLOAD_NDVI, sizeof(NDVI_t), false, false); // FIXME

@@ -54,6 +54,9 @@
   #include "gcs.h"
     using namespace bst::comms::gcs;
 
+  #include "canpackets.h"
+    using namespace bst::comms::canpackets;
+
 #endif
 
 #define NUM_CMDS             CMD_INVALID

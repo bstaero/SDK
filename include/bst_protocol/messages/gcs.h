@@ -79,6 +79,26 @@ typedef struct _GCSStatus_t {
 #endif
 } __attribute__ ((packed)) GCSStatus_t;
 
+typedef struct _HDOBConfig_t {
+	uint8_t vehicle_type;
+	uint8_t mission_number;
+	uint8_t storm_number;
+	char storm_name[32];
+
+#ifdef __cplusplus
+	_HDOBConfig_t() {
+		uint8_t _i;
+
+		vehicle_type = 0;
+		mission_number = 0;
+		storm_number = 0;
+
+		for (_i = 0; _i < 32; ++_i)
+			storm_name[_i] = 0;
+	}
+#endif
+} __attribute__ ((packed)) HDOBConfig_t;
+
 typedef struct _GCSSurveyIn_t {
 	uint32_t time_elapsed;  // [s] - time since start of survey in was requested
 	uint32_t time_minimum;  // [s] - time required for survey in

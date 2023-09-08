@@ -6,6 +6,9 @@
 // FIXME -- remove #define
 #ifdef IMPLEMENTATION_firmware
 #include "firmware.h"
+#else
+uint16_t commWrite(uint8_t type, PacketAction_t action, 
+		void * data, uint16_t size, const void * parameter);
 #endif
 
 extern SystemInitialize_t system_initialize;
@@ -90,6 +93,7 @@ void BSTProtocol::request(uint8_t type, uint8_t parameter) {
 }
 
 uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t size, const void * parameter) {
+#if 1
 		tx_packet.clear();
 
 	if(uses_address) {
@@ -114,6 +118,9 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 
 	//return CommunicationsProtocol::write(tx_packet.getPacket(), tx_packet.getSize(), 0x5300);
 	return CommunicationsProtocol::write(tx_packet.getPacket(), tx_packet.getSize());
+#else
+	return commWrite(type, (PacketAction_t)action, data, size, parameter);
+#endif
 }
 
 void BSTProtocol::setAddressing(bool on_off) {
