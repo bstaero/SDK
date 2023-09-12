@@ -121,4 +121,6 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(PAYLOAD_DATA_CHANNEL_5, sizeof(UserPayload_t), false, false); 
 	registerDataType(PAYLOAD_DATA_CHANNEL_6, sizeof(UserPayload_t), false, false); 
 	registerDataType(PAYLOAD_DATA_CHANNEL_7, sizeof(UserPayload_t), false, false); 
+
+	registerDataType(PAYLOAD_S0_SENSORS, sizeof(S0Sensors_t), false, false); 
 }

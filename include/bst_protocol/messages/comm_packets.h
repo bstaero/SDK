@@ -277,6 +277,8 @@ typedef enum {
 	PAYLOAD_DATA_CHANNEL_6=238,
 	PAYLOAD_DATA_CHANNEL_7=239,
 
+	PAYLOAD_S0_SENSORS=240,
+
 	/* ERRORS */
 	INVALID_PACKET=255,
 }  __attribute__ ((packed)) PacketTypes_t;
@@ -1647,38 +1649,39 @@ typedef struct _TabletJoystick_t {
 /*--------[ Communication ]--------*/
 
 typedef struct _TelemetryControl_t {
-	float roll;
-	float pitch;
-	float yaw;
-	float roll_rate;
-	float pitch_rate;
-	float yaw_rate;
-	float vx;
-	float vy;
-	float vrate;
-	float altitude;
+	uint32_t system_time;  // [s * 1000]
+	int16_t roll;  // [deg * 100]
+	int16_t pitch;  // [deg * 100]
+	int16_t yaw;  // [deg * 100]
+	int16_t roll_rate;  // [deg * 10]
+	int16_t pitch_rate;  // [deg * 10]
+	int16_t yaw_rate;  // [deg * 10]
+	int16_t velocity[3];  // [m/s * 100]
+	int32_t altitude;  // [m * 1000]
 	uint8_t waypoint;
 	uint8_t look_at_point;
 	LateralControlMode_t lat_mode;
 	AltitudeControlMode_t alt_mode;
 	NavigationControllerMode_t nav_mode;
 	uint8_t landing_status;  // use LandingStatus_t to set bits
-	float actuators[16];
+	int16_t actuators[16];  // [% * 100]
 
 #ifdef __cplusplus
 	_TelemetryControl_t() {
 		uint8_t _i;
 
-		roll = 0.0;
-		pitch = 0.0;
-		yaw = 0.0;
-		roll_rate = 0.0;
-		pitch_rate = 0.0;
-		yaw_rate = 0.0;
-		vx = 0.0;
-		vy = 0.0;
-		vrate = 0.0;
-		altitude = 0.0;
+		system_time = 0;
+		roll = 0;
+		pitch = 0;
+		yaw = 0;
+		roll_rate = 0;
+		pitch_rate = 0;
+		yaw_rate = 0;
+
+		for (_i = 0; _i < 3; ++_i)
+			velocity[_i] = 0;
+
+		altitude = 0;
 		waypoint = 0;
 		look_at_point = 0;
 		lat_mode = LAT_MODE_INVALID;
@@ -1687,7 +1690,7 @@ typedef struct _TelemetryControl_t {
 		landing_status = 0;
 
 		for (_i = 0; _i < 16; ++_i)
-			actuators[_i] = 0.0;
+			actuators[_i] = 0;
 	}
 #endif
 } __attribute__ ((packed)) TelemetryControl_t;
@@ -1711,76 +1714,109 @@ typedef struct _DeploymentTube_t {
 } __attribute__ ((packed)) DeploymentTube_t;
 
 typedef struct _TelemetryOrientation_t {
-	float q[4];
-	ThreeAxisSensor_t omega;
-	ThreeAxisSensor_t magnetometer;  // [uT]
+	uint32_t system_time;  // [s * 1000]
+	int16_t q[4];  // [* 10000]
+	int16_t omega[3];  // [deg/s * 10]
+	int16_t magnetometer[3];  // [uT * 100]
 
 #ifdef __cplusplus
 	_TelemetryOrientation_t() {
 		uint8_t _i;
 
+		system_time = 0;
+
 		for (_i = 0; _i < 4; ++_i)
-			q[_i] = 0.0;
+			q[_i] = 0;
+
+		for (_i = 0; _i < 3; ++_i)
+			omega[_i] = 0;
+
+		for (_i = 0; _i < 3; ++_i)
+			magnetometer[_i] = 0;
 	}
 #endif
 } __attribute__ ((packed)) TelemetryOrientation_t;
 
 typedef struct _TelemetryPosition_t {
-	double latitude;  // [deg]
-	double longitude;  // [deg]
-	float altitude;  // [m] - mean sea level
-	float height;  // [m] - above ground level
-	ThreeAxisSensor_t position;  // [m]
-	ThreeAxisSensor_t velocity;  // [m/s]
-	ThreeAxisSensor_t acceleration;  // [m/s^2]
+	uint32_t system_time;  // [s * 1000]
+	int64_t latitude;  // [deg * 1e16]
+	int64_t longitude;  // [deg * 1e16]
+	int32_t altitude;  // [m * 1000] - mean sea level
+	int32_t gps_altitude;  // [m * 1000] - mean sea level
+	int32_t height;  // [m * 1000] - above ground level
+	uint16_t laser_distance;  // [m * 100]
+	int16_t velocity[3];  // [m/s * 100]
+	int16_t acceleration[3];  // [m/s^2 * 100]
 
 #ifdef __cplusplus
 	_TelemetryPosition_t() {
-		latitude = 0.0;
-		longitude = 0.0;
-		altitude = 0.0;
-		height = 0.0;
+		uint8_t _i;
+
+		system_time = 0;
+		latitude = 0;
+		longitude = 0;
+		altitude = 0;
+		gps_altitude = 0;
+		height = 0;
+		laser_distance = 0;
+
+		for (_i = 0; _i < 3; ++_i)
+			velocity[_i] = 0;
+
+		for (_i = 0; _i < 3; ++_i)
+			acceleration[_i] = 0;
 	}
 #endif
 } __attribute__ ((packed)) TelemetryPosition_t;
 
 typedef struct _TelemetryPressure_t {
-	float static_pressure;  // [Pa]
-	float dynamic_pressure;  // [Pa]
-	float air_temperature;  // [deg C]
-	float humidity;  // [%]
-	ThreeAxisSensor_t wind;
-	float ias;  // [m/s]
-	float alpha;  // [rad]
-	float beta;  // [rad]
+	uint32_t system_time;  // [s * 1000]
+	uint32_t static_pressure;  // [Pa * 10]
+	int16_t dynamic_pressure;  // [Pa * 10]
+	int16_t air_temperature;  // [deg C * 100]
+	uint16_t humidity;  // [% * 100]
+	int16_t wind[3];  // [m/s * 100]
+	int16_t ias;  // [m/s * 100]
+	int16_t tas;  // [m/s * 100]
+	int16_t alpha;  // [deg * 100]
+	int16_t beta;  // [deg * 100]
 
 #ifdef __cplusplus
 	_TelemetryPressure_t() {
-		static_pressure = 0.0;
-		dynamic_pressure = 0.0;
-		air_temperature = 0.0;
-		humidity = 0.0;
-		ias = 0.0;
-		alpha = 0.0;
-		beta = 0.0;
+		uint8_t _i;
+
+		system_time = 0;
+		static_pressure = 0;
+		dynamic_pressure = 0;
+		air_temperature = 0;
+		humidity = 0;
+
+		for (_i = 0; _i < 3; ++_i)
+			wind[_i] = 0;
+
+		ias = 0;
+		tas = 0;
+		alpha = 0;
+		beta = 0;
 	}
 #endif
 } __attribute__ ((packed)) TelemetryPressure_t;
 
 typedef struct _TelemetrySystem_t {
-	float batt_voltage;  // [V]
-	float batt_current;  // [A]
-	float batt_coulomb_count;  // [Ah]
-	float batt_percent;  // [%]
-	float flight_time;  // [s]
+	uint32_t system_time;  // [s * 1000]
+	uint16_t batt_voltage;  // [V * 1000]
+	int16_t batt_current;  // [A * 100]
+	uint16_t batt_coulomb_count;  // [mAh]
+	uint16_t batt_percent;  // [% * 100]
+	uint16_t flight_time;  // [s]
 	uint16_t week;
 	uint8_t hour;
 	uint8_t minute;
-	float seconds;
+	uint16_t milliseconds;  // [s * 1000]
 	uint8_t satellites;
-	float pdop;
+	uint16_t pdop;  // [*100]
 	GPSFixType_t fix_type;
-	int8_t rssi;
+	int8_t rssi;  // [dB]
 	uint8_t lost_comm;
 	uint8_t lost_gps;
 	uint8_t engine_on;
@@ -1790,17 +1826,18 @@ typedef struct _TelemetrySystem_t {
 
 #ifdef __cplusplus
 	_TelemetrySystem_t() {
-		batt_voltage = 0.0;
-		batt_current = 0.0;
-		batt_coulomb_count = 0.0;
-		batt_percent = 0.0;
-		flight_time = 0.0;
+		system_time = 0;
+		batt_voltage = 0;
+		batt_current = 0;
+		batt_coulomb_count = 0;
+		batt_percent = 0;
+		flight_time = 0;
 		week = 0;
 		hour = 0;
 		minute = 0;
-		seconds = 0.0;
+		milliseconds = 0;
 		satellites = 0;
-		pdop = 0.0;
+		pdop = 0;
 		rssi = 0;
 		lost_comm = 0;
 		lost_gps = 0;
