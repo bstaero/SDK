@@ -35,31 +35,7 @@ UserPayload_t          rx_payload;
 
 TelemetryPosition_t    telemetry_gcs;
 
-typedef struct _S0Sensors_t {
-	float system_time;  // [s]
-	float static_pressure; // [Pa]
-	float dynamic_pressure[5]; // [Pa]
-	float air_temperature;  // [deg C]
-	float humidity;  // [deg C]
-	float laser_distance;  // [deg C]
-	float ground_temperature;  // [deg C]
-#ifdef __cplusplus
-	_S0Sensors_t() {
-		uint8_t _i;
-
-		system_time = 0.0;
-		static_pressure = 0.0;
-		for (_i = 0; _i < 5; ++_i)
-			dynamic_pressure[_i] = 0.0;
-		air_temperature = 0.0;
-		humidity = 0.0;
-		laser_distance = 0.0;
-		ground_temperature = 0.0;
-	}
-#endif
-} __attribute__ ((packed)) S0Sensors_t;
-
-S0Sensors_t * s0_sensors;
+S0Sensors_t s0_sensors;
 
 void receive(uint8_t type, void * data, uint16_t size, const void * parameter) 
 {
@@ -198,19 +174,26 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 			bearing = angle2heading(270-atan2(y,x)) * 180.0 / M_PI;
 
-			printf("%05.2f: %0.1f [%+4.1f %+4.1f %+4.1f %+4.1f %+4.1f] %0.1f %3.1f %5.2f %0.1f  (%0.1f %0.1f)\n",
+			//printf("%05.2f: [%0.1f %0.1f] [%+4.1f %+4.1f %+4.1f %+4.1f %+4.1f] %0.1f %3.1f %5.2f %0.1f  (%0.1f %0.1f)\n",
+			printf("%07.2f: [%0.1f %0.1f] [%+4.1f %+4.1f %+4.1f %+4.1f %+4.1f] (%0.1f %4.1f) %5.2f %0.1f (%5.2f %5.2f) <%+06.1f %+06.1f %+06.1f.>\n",
 					s0_sensors->system_time,
-					s0_sensors->static_pressure,
-					s0_sensors->dynamic_pressure[0],
-					s0_sensors->dynamic_pressure[1],
-					s0_sensors->dynamic_pressure[2],
-					s0_sensors->dynamic_pressure[3],
-					s0_sensors->dynamic_pressure[4],
-					s0_sensors->air_temperature,
-					s0_sensors->humidity,
-					s0_sensors->laser_distance,
-					s0_sensors->ground_temperature,
-					distance, bearing);
+					s0_sensors->static_pressure[0],
+					s0_sensors->static_pressure[1],
+					s0_sensors->dynamic_pressure[0] / 10.f,
+					s0_sensors->dynamic_pressure[1] / 10.f,
+					s0_sensors->dynamic_pressure[2] / 10.f,
+					s0_sensors->dynamic_pressure[3] / 10.f,
+					s0_sensors->dynamic_pressure[4] / 10.f,
+					s0_sensors->air_temperature / 100.f,
+					s0_sensors->humidity / 100.f,
+					s0_sensors->laser_distance / 100.f,
+					s0_sensors->ground_temperature / 100.f,
+					s0_sensors->altitude[0] / 10.f,
+					s0_sensors->altitude[1] / 10.f,
+					//distance, bearing);
+					s0_sensors->u / 100.f,
+					s0_sensors->v / 100.f,
+					s0_sensors->w / 100.f);
 
 			break;
 
