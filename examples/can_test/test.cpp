@@ -145,7 +145,15 @@ void updateTest() {
 		}
 	}
 
+	static uint16_t value = 1000;
+	if(value ++ > 2000) value = 1000;
+
 	uint16_t actuators[16];
+
+	actuators[0] = value;
+	actuators[1] = value;
+	actuators[2] = value;
+	actuators[16] = value;
 
 	if(is_triggering) {
 		if(getElapsedTime() - trigger_time > 0.1) is_triggering = 0;
