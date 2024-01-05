@@ -1650,12 +1650,12 @@ typedef struct _TabletJoystick_t {
 
 typedef struct _TelemetryControl_t {
 	uint32_t system_time;  // [s * 1000]
-	int16_t roll;  // [deg * 100]
-	int16_t pitch;  // [deg * 100]
-	int16_t yaw;  // [deg * 100]
-	int16_t roll_rate;  // [deg * 10]
-	int16_t pitch_rate;  // [deg * 10]
-	int16_t yaw_rate;  // [deg * 10]
+	int16_t roll;  // [rad * 10000]
+	int16_t pitch;  // [rad * 10000]
+	int16_t yaw;  // [rad * 10000]
+	int16_t roll_rate;  // [rad/s * 100]
+	int16_t pitch_rate;  // rad/s * 100]
+	int16_t yaw_rate;  // rad/s * 100]
 	int16_t velocity[3];  // [m/s * 100]
 	int32_t altitude;  // [m * 1000]
 	uint8_t waypoint;
@@ -1716,7 +1716,7 @@ typedef struct _DeploymentTube_t {
 typedef struct _TelemetryOrientation_t {
 	uint32_t system_time;  // [s * 1000]
 	int16_t q[4];  // [* 10000]
-	int16_t omega[3];  // [deg/s * 10]
+	int16_t omega[3];  // [deg/s * 100]
 	int16_t magnetometer[3];  // [uT * 100]
 
 #ifdef __cplusplus

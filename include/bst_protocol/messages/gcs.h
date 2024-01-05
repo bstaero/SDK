@@ -140,6 +140,12 @@ typedef struct _TelemetryGCS_t {
 	float speed;  // [m/s] - ground speed
 	float course;  // [deg] - course over ground
 	float pressure;  // [Pa] - atmospheric pressure
+	/* int64 latitude # [deg * 1e16] */
+	/* int64 longitude # [deg * 1e16] */
+	/* int32 altitude # [m * 1000] - mean sea level */
+	/* int16_t speed # [m/s * 10] - ground speed */
+	/* uint16_t course # [deg * 100] - course over ground */
+	/* uint32_t static_pressure # [Pa * 10] - atmospheric pressure */
 
 #ifdef __cplusplus
 	_TelemetryGCS_t() {

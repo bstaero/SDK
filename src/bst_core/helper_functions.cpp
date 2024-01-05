@@ -181,7 +181,7 @@ uint64_t changeEndiannessUint64 (uint64_t value) {
 
 #include <stdio.h>
 
-#ifndef ARCH_stm32f1
+#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx
 /**
  * @brief  Verify checksum using all but the last two bytes of data
  * @param  data Pointer to the data

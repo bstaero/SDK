@@ -77,8 +77,10 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
  #include "pro_arbiter.h"
 #endif
 
-#if defined _SP_ACTUATOR || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000
- #include "dip.h"
+#if defined _SP_ACTUATOR || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined _SP_MULTI_ACTUATOR
+  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
+    #include "dip.h"
+  #endif
 #endif
 
 #if defined IMPLEMENTATION_swil || defined IMPLEMENTATION_xplane
@@ -1007,7 +1009,7 @@ static camera_triggered = 0u;
 #endif
 void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 {
-#if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK
+#if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK || defined _SP_MULTI_ACTUATOR
 	static uint8_t pkt_size = sizeof(CAN_Actuator_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleActuatorPkt";
@@ -1021,7 +1023,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 	CAN_Actuator_t *data;
 	data = (CAN_Actuator_t *)buffer;
 
-#if defined _SP_ACTUATOR || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000
+#if defined _SP_ACTUATOR || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined _SP_MULTI_ACTUATOR
 #ifdef _SP_ACTUATOR
 	LED_Toggle(0);	
 #if 1
@@ -1052,6 +1054,14 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #endif
 #ifdef _SP_ACTUATOR_A6000
 	updateActuator(data->usec[DIP_GetVal()]);
+#endif
+#ifdef _SP_MULTI_ACTUATOR
+	uint8_t i;
+	LED_Toggle(0);	
+
+	for(i=0; i<CAN_NUM_ACTUATORS; i++) {
+		PWM_SetPulseWidth(i, data->usec[i]);
+	}
 #endif
 #else
 	uint16_t actuator_values[CAN_NUM_ACTUATORS];

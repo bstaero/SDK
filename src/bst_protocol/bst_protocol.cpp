@@ -93,7 +93,7 @@ void BSTProtocol::request(uint8_t type, uint8_t parameter) {
 }
 
 uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t size, const void * parameter) {
-#if 1
+#if 0
 		tx_packet.clear();
 
 	if(uses_address) {
