@@ -37,7 +37,7 @@ TelemetryPosition_t    telemetry_gcs;
 
 typedef struct _S0Sensors_t {
 	float system_time;  // [s]
-	float static_pressure; // [Pa]
+	float static_pressure[3]; // [Pa]
 	float dynamic_pressure[5]; // [Pa]
 	float air_temperature;  // [deg C]
 	float humidity;  // [deg C]
@@ -48,7 +48,8 @@ typedef struct _S0Sensors_t {
 		uint8_t _i;
 
 		system_time = 0.0;
-		static_pressure = 0.0;
+		for (_i = 0; _i < 3; ++_i)
+			static_pressure[_i] = 0.0;
 		for (_i = 0; _i < 5; ++_i)
 			dynamic_pressure[_i] = 0.0;
 		air_temperature = 0.0;
@@ -179,15 +180,9 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 			break;
 
 		case PAYLOAD_DATA_CHANNEL_0:
+			break;
 		case PAYLOAD_DATA_CHANNEL_1:
-		case PAYLOAD_DATA_CHANNEL_2:
-		case PAYLOAD_DATA_CHANNEL_3:
-		case PAYLOAD_DATA_CHANNEL_4:
-		case PAYLOAD_DATA_CHANNEL_5:
-		case PAYLOAD_DATA_CHANNEL_6:
-		case PAYLOAD_DATA_CHANNEL_7:
 			memcpy(&rx_payload,data,sizeof(UserPayload_t));
-			char out[100];
 
 			s0_sensors = (S0Sensors_t *)rx_payload.buffer;
 
@@ -198,9 +193,11 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 			bearing = angle2heading(270-atan2(y,x)) * 180.0 / M_PI;
 
-			printf("%05.2f: %0.1f [%+4.1f %+4.1f %+4.1f %+4.1f %+4.1f] %0.1f %3.1f %5.2f %0.1f  (%0.1f %0.1f)\n",
+			printf("%05.2f: (%0.1f %0.1f %0.1f) [%+4.1f %+4.1f %+4.1f %+4.1f %+4.1f] %0.1f %3.1f %5.2f %0.1f  (%0.1f %0.1f)\n",
 					s0_sensors->system_time,
-					s0_sensors->static_pressure,
+					s0_sensors->static_pressure[0],
+					s0_sensors->static_pressure[1],
+					s0_sensors->static_pressure[2],
 					s0_sensors->dynamic_pressure[0],
 					s0_sensors->dynamic_pressure[1],
 					s0_sensors->dynamic_pressure[2],
@@ -211,7 +208,12 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 					s0_sensors->laser_distance,
 					s0_sensors->ground_temperature,
 					distance, bearing);
-
+			break;
+		case PAYLOAD_DATA_CHANNEL_3:
+		case PAYLOAD_DATA_CHANNEL_4:
+		case PAYLOAD_DATA_CHANNEL_5:
+		case PAYLOAD_DATA_CHANNEL_6:
+		case PAYLOAD_DATA_CHANNEL_7:
 			break;
 
 

@@ -162,6 +162,7 @@ typedef struct _Actuators_t {
 
 typedef enum {
 	/* SENSORS */
+	SENSORS_HUMIDITY=0,
 	SENSORS_GPS=1,
 	SENSORS_ACCELEROMETER=2,
 	SENSORS_GYROSCOPE=3,
