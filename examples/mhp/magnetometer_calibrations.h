@@ -39,6 +39,13 @@
 #define  MAG_B_1    0.0
 #define  MAG_B_2    0.0
 
+#define  MAG_I_X_0  0.0
+#define  MAG_I_X_1  0.0
+#define  MAG_I_Y_0  0.0
+#define  MAG_I_Y_1  0.0
+#define  MAG_I_Z_0  0.0
+#define  MAG_I_Z_1  0.0
+
 #endif 
 
 /* -----[ Zero ] ----- */
@@ -58,6 +65,13 @@
 #define  MAG_B_0    0.0
 #define  MAG_B_1    0.0
 #define  MAG_B_2    0.0
+
+#define  MAG_I_X_0  0.0
+#define  MAG_I_X_1  0.0
+#define  MAG_I_Y_0  0.0
+#define  MAG_I_Y_1  0.0
+#define  MAG_I_Z_0  0.0
+#define  MAG_I_Z_1  0.0
 
 #endif 
 

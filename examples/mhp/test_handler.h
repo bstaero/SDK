@@ -25,14 +25,19 @@
 extern volatile SensorType_t calibration_requested;
 extern volatile PacketTypes_t orientation_requested;
 extern volatile PacketTypes_t mag_cal_requested;
+extern volatile PacketTypes_t mag_i_cal_requested;
 extern volatile PacketAction_t orientation_action;
 extern volatile PacketAction_t mag_cal_action;
+extern volatile PacketAction_t mag_i_cal_action;
 
 void sendCalibrate(SensorType_t sensor);
 void sendMagCalibraton(void);
+void sendMagCurrentCalibraton(void);
+void sendCurrent(void);
 void requestPowerOn(void);
 void requestOrientation(PacketTypes_t type);
 void requestMagCalibration(void);
+void requestMagCurrentCalibration(void);
 void setOrientation(PacketTypes_t type, AxisMapping_t * axis_mapping);
 bool updateCommunications(void);
 
