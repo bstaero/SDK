@@ -201,9 +201,14 @@ void updateTest() {
 					waiting_on_orientation = true;
 
 					// mount pointing up - aeropods
-					temp_axis_mapping.axis[0] = -2;
-					temp_axis_mapping.axis[1] = -1;
-					temp_axis_mapping.axis[2] = -3;
+					//temp_axis_mapping.axis[0] = -2;
+					//temp_axis_mapping.axis[1] = -1;
+					//temp_axis_mapping.axis[2] = -3;
+
+					// v06a (Altius)
+					temp_axis_mapping.axis[0] = 1;
+					temp_axis_mapping.axis[1] = 2;
+					temp_axis_mapping.axis[2] = 3;
 
 					printf("Setting IMU orietation to [%i,%i,%i].. ",
 							temp_axis_mapping.axis[0],
