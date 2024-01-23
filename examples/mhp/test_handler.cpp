@@ -328,7 +328,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 						memcpy(&mhp_9h_timing,data,sizeof(MHP9HTiming_t));;
 
 						if(display_telemetry_timing)
-							printf("s %+0.02f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
+							printf("%+0.02f | s %+0.02f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
+									mhp_9h_timing.system_time,  // [s]
 									mhp_9h_timing.static_pressure_time,  // [s]
 									mhp_9h_timing.dynamic_pressure_time[0],  // [s]
 									mhp_9h_timing.dynamic_pressure_time[1],  // [s]
@@ -351,7 +352,7 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 						memcpy(&mhp_timing,data,sizeof(MHPTiming_t));;
 
 						if(display_telemetry_timing)
-							printf("s %+0.02f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
+							printf("s %f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
 									mhp_timing.static_pressure_time,  // [s]
 									mhp_timing.dynamic_pressure_time[0],  // [s]
 									mhp_timing.dynamic_pressure_time[1],  // [s]
@@ -516,9 +517,9 @@ void requestPowerOn(void) {
 }
 
 void sendCurrent(void) {
-	SystemStatus_t system_status;
+	static SystemStatus_t system_status;
 
-	system_status.batt_current = 123.4;
+	system_status.batt_current = system_status.batt_current+0.1;
 	printf("Setting current to %0.1f mA\n", system_status.batt_current);
 
 	tx_packet.setAddressing(false);
