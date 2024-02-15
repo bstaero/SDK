@@ -68,6 +68,12 @@ void printTestHelp() {
 	printf("  t   : Toggle telemetry display\n");
 	printf("\n");
 	printf("  T   : take a picture\n");
+	printf("  1   : test channel 0\n");
+	printf("  2   : test channel 1\n");
+	printf("  3   : test channel 2\n");
+	printf("  4   : test channel 3\n");
+	printf("  5   : test channel 4\n");
+	printf("  6   : test channel 5\n");
 	printf("\n");
 	printf("  p   : print this help\n");
 }
@@ -107,6 +113,7 @@ void updateTest() {
 	char input; 
 	static uint8_t is_triggering = 0;
 	static float trigger_time = 0;
+	static uint16_t actuators[16];
 
 	if( inputAvailable() ) {
 		input = getchar();
@@ -120,7 +127,20 @@ void updateTest() {
 
 				case 'T':
 					if(!is_triggering) {
-						is_triggering = 1;
+						is_triggering = 15;
+						trigger_time = getElapsedTime();
+					}
+					break;
+
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+					if(!is_triggering) {
+						printf("Triggerging channel %u\n",input - '0');
+						is_triggering = input - '0';
 						trigger_time = getElapsedTime();
 					}
 					break;
@@ -145,14 +165,15 @@ void updateTest() {
 		}
 	}
 
-	uint16_t actuators[16];
-
-	if(is_triggering) {
-		if(getElapsedTime() - trigger_time > 0.1) is_triggering = 0;
-		actuators[14] = 2000;
-	} else {
-		actuators[14] = 1000;
+	for(uint8_t i=0; i<16; i++) {
+		if(is_triggering && (is_triggering-1) == i) {
+			actuators[i] = 2000;
+		} else {
+			actuators[i] = 1000;
+		}
 	}
+	if(getElapsedTime() - trigger_time > 1.0) is_triggering = 0;
+
 
 	if(print_timing) {
 	printf("LLA %04.1f  UTC %04.01f  VEL %04.01f  HS %04.01f | MAG %05.01f | STAT %05.01f\n",
@@ -163,6 +184,12 @@ void updateTest() {
 			(float)mag_cnt/getElapsedTime(),
 			(float)stat_p_cnt/getElapsedTime()
 			);
+	}
+
+	if(display_telemetry) {
+		for(uint8_t i=0; i<16; i++)
+			printf("%04u ",actuators[i]);
+		printf(" [%u] \n", is_triggering);
 	}
 
 	BRIDGE_SendActuatorPkt(1,actuators);
