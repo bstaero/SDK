@@ -46,6 +46,8 @@ class BSTProtocol : public CommunicationsProtocol {
 
 		void setAddressing(bool on_off);
 
+		uint32_t getLastAddress(void);
+
 	private:
 		std::queue<Packet> rx_queue;
 		std::queue<Packet> tx_queue;
@@ -62,6 +64,8 @@ class BSTProtocol : public CommunicationsProtocol {
 		void parseData(uint8_t byte);
 
 		bool uses_address;
+
+		uint32_t last_address;
 
 
 };
