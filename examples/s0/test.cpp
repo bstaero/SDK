@@ -36,6 +36,19 @@ bool sendPayloadData(uint8_t * data, uint8_t size);
 // packet for transmision
 Packet              tx_packet;
 
+
+#define CMD_BUF_SIZE 8
+Packet cmd_buf[CMD_BUF_SIZE];
+uint8_t cmd_buf_start = 0;
+uint8_t cmd_buf_end = 0;
+
+#define PKT_BUF_SIZE 8
+Packet pkt_buf[PKT_BUF_SIZE];
+uint8_t pkt_buf_start = 0;
+uint8_t pkt_buf_end = 0;
+
+extern CommunicationsInterface * comm_interface;
+
 extern TelemetryOrientation_t telemetry_orientation;
 extern TelemetryPosition_t    telemetry_position;
 extern TelemetryPressure_t    telemetry_pressure;
@@ -173,4 +186,54 @@ bool sendPayloadData(uint8_t * data, uint8_t size) {
 	}
 
 	return true;
+}
+
+uint16_t commWrite(uint8_t type, PacketAction_t action, void * data, uint16_t size, const void * parameter) {
+	uint16_t tx_size = 0, retval = 0;
+
+	if((type&0xF0) != 0x60 && (type <= 0xE8 || type >= 0xEF) && type != PAYLOAD_S0_SENSORS) {
+		if((cmd_buf_end + 1) % CMD_BUF_SIZE == cmd_buf_start) {
+			pmesg(VERBOSE_ERROR,"Command Buffer Overflow!\n");
+			retval = 0;
+		} else {
+			commConstruct(type, action, data, size, parameter, true, 
+					&cmd_buf[cmd_buf_end]);
+			retval = cmd_buf[cmd_buf_end].getSize();
+
+			cmd_buf_end =  (cmd_buf_end + 1) % CMD_BUF_SIZE;
+		}
+
+	} else {
+
+		if((pkt_buf_end + 1) % PKT_BUF_SIZE == pkt_buf_start) {
+			pmesg(VERBOSE_ERROR,"Packet Buffer Overflow!\n");
+			retval = 0;
+		} else {
+			commConstruct(type, action, data, size, parameter, true, 
+					&pkt_buf[pkt_buf_end]);
+			retval = pkt_buf[pkt_buf_end].getSize();
+
+			pkt_buf_end =  (pkt_buf_end + 1) % PKT_BUF_SIZE;
+		}
+	}
+
+	while(cmd_buf_start != cmd_buf_end) {
+		tx_size = comm_interface->write(cmd_buf[cmd_buf_start].getPacket(), cmd_buf[cmd_buf_start].getSize(), 0x5300);
+		if(tx_size == cmd_buf[cmd_buf_start].getSize()) {
+			cmd_buf_start = (cmd_buf_start + 1) % CMD_BUF_SIZE;
+		} else {
+			return retval;
+		}
+	}
+
+	while(pkt_buf_start != pkt_buf_end) {
+		tx_size = comm_interface->write(pkt_buf[pkt_buf_start].getPacket(), pkt_buf[pkt_buf_start].getSize(), 0x5300);
+		if(tx_size == pkt_buf[pkt_buf_start].getSize()) {
+			pkt_buf_start = (pkt_buf_start + 1) % PKT_BUF_SIZE;
+		} else {
+			return retval;
+		}
+	}
+
+	return retval;
 }
