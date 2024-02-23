@@ -60,6 +60,8 @@ typedef enum {
 	ACT_L_RUDDERVATOR,
 	ACT_L_ELEVON,
 	ACT_L_GEAR,
+	ACT_L_FRONT_PIVOT,
+	ACT_L_BACK_PIVOT,
 	ACT_R_AILERON,
 	ACT_R_ELEVATOR,
 	ACT_R_THROTTLE,
@@ -68,6 +70,8 @@ typedef enum {
 	ACT_R_RUDDERVATOR,
 	ACT_R_ELEVON,
 	ACT_R_GEAR,
+	ACT_R_FRONT_PIVOT,
+	ACT_R_BACK_PIVOT,
 	ACT_ROTOR,
 	ACT_PAYLOAD_1,
 	ACT_PAYLOAD_2,
@@ -162,6 +166,7 @@ typedef struct _Actuators_t {
 
 typedef enum {
 	/* SENSORS */
+	SENSORS_HUMIDITY=0,
 	SENSORS_GPS=1,
 	SENSORS_ACCELEROMETER=2,
 	SENSORS_GYROSCOPE=3,
@@ -285,7 +290,7 @@ typedef enum {
 
 /*--------[ Configuration ]--------*/
 
-#define COMMS_VERSION 3180
+#define COMMS_VERSION 3200
 
 #define MAX_ALTITUDE 20000
 
@@ -1601,7 +1606,7 @@ typedef struct _Limit_t {
 } __attribute__ ((packed)) Limit_t;
 
 typedef struct _Timeout_t {
-	uint8_t seconds;
+	uint16_t seconds;
 	uint8_t waypoint;
 
 #ifdef __cplusplus

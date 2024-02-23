@@ -34,9 +34,11 @@ static uint8_t can_tx_buffer[MAX_CAN_INTERFACES][CAN_BUF_SIZE];
 static Packet tx_packet[MAX_CAN_INTERFACES];
 static Packet rx_packet[MAX_CAN_INTERFACES];
 
+static bool is_interface_open[MAX_CAN_INTERFACES];
+
 void setupSimulatedCAN(CommunicationsInterface * interface) {
 	can_interface[num_can_interfaces] = interface;
-	can_interface[num_can_interfaces]->open();
+	is_interface_open[num_can_interfaces] = can_interface[num_can_interfaces]->open();
 
 	rx_packet[num_can_interfaces].setAddressing(false);
 	tx_packet[num_can_interfaces].setAddressing(false);
@@ -54,8 +56,17 @@ void setupSimulatedCAN(CommunicationsInterface * interface) {
 uint8_t simulatedCANRead(uint8_t p) {
 	if(p == 0 || p > num_can_interfaces) return 0;
 	if(can_interface[p-1] == NULL) return 0;
+	if(is_interface_open[p-1] == false) {
+		is_interface_open[p-1] = can_interface[p-1]->open();
+		return 0;
+	}
 
 	uint16_t num_read = can_interface[p-1]->read(can_rx_buffer[p-1],CAN_BUF_SIZE);
+	if(num_read == 65535) { // FIXME - deals with -1 returned,but should return an int16_t all of the way through if we want to do this
+		is_interface_open[p-1] = can_interface[p-1]->open();
+		return 0;
+	}
+
 	if(num_read > 0) {
 
 		uint16_t byte = 0;

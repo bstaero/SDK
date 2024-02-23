@@ -1945,6 +1945,7 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 		case DEPLOY_TUBE_PARA_DEPLOYED: sprintf(state, "PARA DP"); break;
 		case DEPLOY_TUBE_JETTISONED:    sprintf(state, "TUB JET"); break;
 		case DEPLOY_TUBE_AC_RELASED:    sprintf(state, "AC REL "); break;
+		case DEPLOY_TUBE_SHUTDOWN:      sprintf(state, "SHUTDWN"); break;
 		case DEPLOY_TUBE_ERROR:         sprintf(state, "ERROR  "); break;
 	}
 
@@ -2133,6 +2134,32 @@ uint8_t BRIDGE_SendMHPPkt(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_MHP_t));
 
 	return CAN_Write(p, CAN_PKT_MHP, &data, sizeof(CAN_MHP_t));
+}
+
+/**
+ * @brief	Send Wind packet
+ * @param	p CAN peripheral ID
+ * @retval None
+ */
+uint8_t BRIDGE_SendWindPkt(uint8_t p,
+		float u,  // [m/s]
+		float v,  // [m/s]
+		float w  // [m/s]
+		) {
+
+	uint8_t i=0;
+	static CAN_Wind_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+
+	data.u = u;
+	data.v = v;
+	data.w = w;
+
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_Wind_t));
+
+	return CAN_Write(p, CAN_PKT_WIND, &data, sizeof(CAN_Wind_t));
 }
 
 /**

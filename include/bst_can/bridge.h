@@ -95,6 +95,11 @@ uint8_t BRIDGE_SendMHPPkt(uint8_t p,
 		float ias,  // [m/s]
 		float tas  // [m/s]
 		);
+uint8_t BRIDGE_SendWindPkt(uint8_t p,
+		float u,  // [m/s]
+		float v,  // [m/s]
+		float w  // [m/s]
+		);
 uint8_t BRIDGE_SendIMUPkt(uint8_t p, 
 		float ax, float ay, float az, 
 		float gx, float gy, float gz, 

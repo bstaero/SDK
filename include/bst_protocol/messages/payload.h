@@ -69,6 +69,7 @@ typedef enum {
 	INTERFACE_MAVLINK,
 	INTERFACE_PAYLOAD_PASSTHRU,
 	INTERFACE_HWIL,
+	INTERFACE_AP_FUNCTION,
 }  __attribute__ ((packed)) PayloadInterface_t;
 
 typedef enum {
