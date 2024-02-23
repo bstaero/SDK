@@ -112,12 +112,12 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(PAYLOAD_STATUS, sizeof(PayloadStatus_t), false, true); 
 	registerDataType(PAYLOAD_SERIAL, sizeof(PayloadSerial_t), true, true); 
 
-	registerDataType(PAYLOAD_DATA_CHANNEL_0, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_DATA_CHANNEL_1, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_DATA_CHANNEL_2, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_DATA_CHANNEL_3, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_DATA_CHANNEL_4, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_DATA_CHANNEL_5, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_DATA_CHANNEL_6, sizeof(UserPayload_t), false, false); 
-	registerDataType(PAYLOAD_DATA_CHANNEL_7, sizeof(UserPayload_t), false, false); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_0, sizeof(UserPayload_t), true, true); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_1, sizeof(UserPayload_t), true, true); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_2, sizeof(UserPayload_t), true, true); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_3, sizeof(UserPayload_t), true, true); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_4, sizeof(UserPayload_t), true, true); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_5, sizeof(UserPayload_t), true, true); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_6, sizeof(UserPayload_t), true, true); 
+	registerDataType(PAYLOAD_DATA_CHANNEL_7, sizeof(UserPayload_t), true, true); 
 }
