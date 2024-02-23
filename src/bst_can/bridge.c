@@ -2147,7 +2147,6 @@ uint8_t BRIDGE_SendWindPkt(uint8_t p,
 		float w  // [m/s]
 		) {
 
-	uint8_t i=0;
 	static CAN_Wind_t data;
 
 	// fill packet
