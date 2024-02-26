@@ -25,6 +25,7 @@
 #include "main.h"
 #include "structs.h"
 
+#include "debug.h"
 #include "flight_plan.h"
 
 // variables
@@ -149,20 +150,7 @@ void updateTest() {
 		}
 	}
 
-	// show telemetry
-
-	if(show_telemetry)
-		printf("lla: %+06.02f %+07.02f %06.01f | %08.01f Pa %04.01f deg %04.01f %% <%+05.01f,%+05.01f,%+05.01f>\n",
-				telemetry_position.latitude,
-				telemetry_position.longitude,
-				telemetry_position.altitude,
-				telemetry_pressure.static_pressure,
-				telemetry_pressure.air_temperature,
-				telemetry_pressure.humidity,
-				telemetry_pressure.wind[0],
-				telemetry_pressure.wind[1],
-				telemetry_pressure.wind[2]
-				);
+	//if(show_telemetry)
 }
 
 void exitTest() {
@@ -186,6 +174,24 @@ bool sendPayloadData(uint8_t * data, uint8_t size) {
 	}
 
 	return true;
+}
+
+uint16_t commConstruct(uint8_t type, PacketAction_t action, void * data, uint16_t size, const void * parameter, bool uses_address, Packet * packet) { 
+	packet->clear();
+
+	if(uses_address) {
+		packet->setAddressing(true);
+		packet->setFromAddress(ALL_NODES);
+		packet->setToAddress(ALL_NODES); // FIXME - should find real address
+	} else {
+		packet->setAddressing(false);
+	}
+
+	packet->setType(type);
+	packet->setAction(action);
+	packet->setData((uint8_t *)data, size);
+
+	return 0;
 }
 
 uint16_t commWrite(uint8_t type, PacketAction_t action, void * data, uint16_t size, const void * parameter) {
