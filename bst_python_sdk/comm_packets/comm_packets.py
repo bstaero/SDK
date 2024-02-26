@@ -42,32 +42,36 @@ class ActuatorFunction (Enum):
 	ACT_L_RUDDERVATOR=6
 	ACT_L_ELEVON=7
 	ACT_L_GEAR=8
-	ACT_R_AILERON=9
-	ACT_R_ELEVATOR=10
-	ACT_R_THROTTLE=11
-	ACT_R_RUDDER=12
-	ACT_R_FLAP=13
-	ACT_R_RUDDERVATOR=14
-	ACT_R_ELEVON=15
-	ACT_R_GEAR=16
-	ACT_ROTOR=17
-	ACT_PAYLOAD_1=18
-	ACT_PAYLOAD_2=19
-	ACT_PAYLOAD_3=20
-	ACT_PAYLOAD_4=21
-	ACT_PAYLOAD_5=22
-	ACT_PAYLOAD_6=23
-	ACT_PAYLOAD_7=24
-	ACT_PAYLOAD_8=25
-	ACT_PAYLOAD_9=26
-	ACT_PAYLOAD_10=27
-	ACT_PAYLOAD_11=28
-	ACT_PAYLOAD_12=29
-	ACT_PAYLOAD_13=30
-	ACT_PAYLOAD_14=31
-	ACT_PAYLOAD_15=32
-	ACT_PAYLOAD_16=33
-	ACT_INVALID=34
+	ACT_L_FRONT_PIVOT=9
+	ACT_L_BACK_PIVOT=10
+	ACT_R_AILERON=11
+	ACT_R_ELEVATOR=12
+	ACT_R_THROTTLE=13
+	ACT_R_RUDDER=14
+	ACT_R_FLAP=15
+	ACT_R_RUDDERVATOR=16
+	ACT_R_ELEVON=17
+	ACT_R_GEAR=18
+	ACT_R_FRONT_PIVOT=19
+	ACT_R_BACK_PIVOT=20
+	ACT_ROTOR=21
+	ACT_PAYLOAD_1=22
+	ACT_PAYLOAD_2=23
+	ACT_PAYLOAD_3=24
+	ACT_PAYLOAD_4=25
+	ACT_PAYLOAD_5=26
+	ACT_PAYLOAD_6=27
+	ACT_PAYLOAD_7=28
+	ACT_PAYLOAD_8=29
+	ACT_PAYLOAD_9=30
+	ACT_PAYLOAD_10=31
+	ACT_PAYLOAD_11=32
+	ACT_PAYLOAD_12=33
+	ACT_PAYLOAD_13=34
+	ACT_PAYLOAD_14=35
+	ACT_PAYLOAD_15=36
+	ACT_PAYLOAD_16=37
+	ACT_INVALID=38
 
 class JoystickFunction (Enum):
 	UNUSED_JS=0
@@ -88,23 +92,25 @@ class SurfaceCommand (Enum):
 	RUDDER=3
 	FLAPS=4
 	GEAR=5
-	PAYLOAD_1=6
-	PAYLOAD_2=7
-	PAYLOAD_3=8
-	PAYLOAD_4=9
-	PAYLOAD_5=10
-	PAYLOAD_6=11
-	PAYLOAD_7=12
-	PAYLOAD_8=13
-	PAYLOAD_9=14
-	PAYLOAD_10=15
-	PAYLOAD_11=16
-	PAYLOAD_12=17
-	PAYLOAD_13=18
-	PAYLOAD_14=19
-	PAYLOAD_15=20
-	PAYLOAD_16=21
-	INVALID_SURFACE=22
+	L_PIVOT=6
+	R_PIVOT=7
+	PAYLOAD_1=8
+	PAYLOAD_2=9
+	PAYLOAD_3=10
+	PAYLOAD_4=11
+	PAYLOAD_5=12
+	PAYLOAD_6=13
+	PAYLOAD_7=14
+	PAYLOAD_8=15
+	PAYLOAD_9=16
+	PAYLOAD_10=17
+	PAYLOAD_11=18
+	PAYLOAD_12=19
+	PAYLOAD_13=20
+	PAYLOAD_14=21
+	PAYLOAD_15=22
+	PAYLOAD_16=23
+	INVALID_SURFACE=24
 
 class ActuatorCalibration:
 	SIZE = 8
@@ -192,6 +198,7 @@ class Actuators:
 class PacketTypes (Enum):
 	# SENSORS
 
+	SENSORS_HUMIDITY=0
 	SENSORS_GPS=1
 	SENSORS_ACCELEROMETER=2
 	SENSORS_GYROSCOPE=3
@@ -287,6 +294,9 @@ class PacketTypes (Enum):
 	TELEMETRY_PAYLOAD=104
 	TELEMETRY_GCS_SVIN=105
 
+	TELEMETRY_DEPLOYMENT_TUBE=121  # FIXME - TECHNICALLY IN HIWL ADDR SPACE
+
+
 	# HWIL
 
 	HWIL_SENSORS=112
@@ -339,7 +349,7 @@ class PacketTypes (Enum):
 
 #---------[ Configuration ]---------#
 
-COMMS_VERSION = 3160
+COMMS_VERSION = 3190
 MAX_ALTITUDE = 20000
 MAX_VEHICLES = 5
 
@@ -2618,65 +2628,67 @@ class HandsetFunction (Enum):
 	HS_FUNC_L_RUDDER=7
 	HS_FUNC_L_FLAP=8
 	HS_FUNC_L_GEAR=9
-	HS_FUNC_R_AILERON=10
-	HS_FUNC_R_ELEVATOR=11
-	HS_FUNC_R_THROTTLE=12
-	HS_FUNC_R_RUDDER=13
-	HS_FUNC_R_FLAP=14
-	HS_FUNC_R_GEAR=15
+	HS_FUNC_L_PIVOT=10
+	HS_FUNC_R_AILERON=11
+	HS_FUNC_R_ELEVATOR=12
+	HS_FUNC_R_THROTTLE=13
+	HS_FUNC_R_RUDDER=14
+	HS_FUNC_R_FLAP=15
+	HS_FUNC_R_GEAR=16
+	HS_FUNC_R_PIVOT=17
 
-	HS_FUNC_PAYLOAD_1=16
-	HS_FUNC_PAYLOAD_2=17
-	HS_FUNC_PAYLOAD_3=18
-	HS_FUNC_PAYLOAD_4=19
-	HS_FUNC_PAYLOAD_5=20
-	HS_FUNC_PAYLOAD_6=21
-	HS_FUNC_PAYLOAD_7=22
-	HS_FUNC_PAYLOAD_8=23
-	HS_FUNC_PAYLOAD_9=24
-	HS_FUNC_PAYLOAD_10=25
-	HS_FUNC_PAYLOAD_11=26
-	HS_FUNC_PAYLOAD_12=27
-	HS_FUNC_PAYLOAD_13=28
-	HS_FUNC_PAYLOAD_14=29
-	HS_FUNC_PAYLOAD_15=30
-	HS_FUNC_PAYLOAD_16=31
+	HS_FUNC_PAYLOAD_1=18
+	HS_FUNC_PAYLOAD_2=19
+	HS_FUNC_PAYLOAD_3=20
+	HS_FUNC_PAYLOAD_4=21
+	HS_FUNC_PAYLOAD_5=22
+	HS_FUNC_PAYLOAD_6=23
+	HS_FUNC_PAYLOAD_7=24
+	HS_FUNC_PAYLOAD_8=25
+	HS_FUNC_PAYLOAD_9=26
+	HS_FUNC_PAYLOAD_10=27
+	HS_FUNC_PAYLOAD_11=28
+	HS_FUNC_PAYLOAD_12=29
+	HS_FUNC_PAYLOAD_13=30
+	HS_FUNC_PAYLOAD_14=31
+	HS_FUNC_PAYLOAD_15=32
+	HS_FUNC_PAYLOAD_16=33
 
-	HS_FUNC_ROLL=32
-	HS_FUNC_PITCH=33
+	HS_FUNC_ROLL=34
+	HS_FUNC_PITCH=35
 
-	HS_FUNC_ROLL_RATE=34
-	HS_FUNC_PITCH_RATE=35
-	HS_FUNC_YAW_RATE=36
+	HS_FUNC_ROLL_RATE=36
+	HS_FUNC_PITCH_RATE=37
+	HS_FUNC_YAW_RATE=38
 
-	HS_FUNC_X_VEL=37
-	HS_FUNC_Y_VEL=38
-	HS_FUNC_Z_VEL=39
+	HS_FUNC_X_VEL=39
+	HS_FUNC_Y_VEL=40
+	HS_FUNC_Z_VEL=41
 
-	HS_FUNC_THRUST=40
+	HS_FUNC_THRUST=42
 
-	HS_FUNC_SET_MOTORS=41  # arm / disarm motors
+	HS_FUNC_SET_MOTORS=43  # arm / disarm motors
 
 
 	# pilot mode
 
-	HS_FUNC_SET_ACRO=42  # angular rates, and v-rate
+	HS_FUNC_SET_ACRO=44  # angular rates, and v-rate
 
-	HS_FUNC_SET_ANGLE=43  # angles, and v-rate
+	HS_FUNC_SET_ANGLE=45  # angles, and v-rate
 
-	HS_FUNC_SET_COORD=44  # coordinated turn
+	HS_FUNC_SET_COORD=46  # coordinated turn
 
 
 	# position mode
 
-	HS_FUNC_SET_BODY=45  # body frame velocity input
+	HS_FUNC_SET_BODY=47  # body frame velocity input
 
-	HS_FUNC_SET_WORLD=46  # world frame velocity input
+	HS_FUNC_SET_WORLD=48  # world frame velocity input
 
-	HS_FUNC_SET_BASE=47  # polar frame velocity inputs
+	HS_FUNC_SET_BASE=49  # polar frame velocity inputs
 
 
-	HS_FUNC_INVALID=48
+	HS_FUNC_INVALID=50
 
 class HandsetType (Enum):
 	HS_TYPE_LINEAR=0
@@ -3230,6 +3242,40 @@ class TelemetryControl:
 
 #---------[ Telemetry ]---------#
 
+class DeploymentTube:
+	SIZE = 3
+
+	def __init__ (self, state = 0, parachute_door = 0, error = 0):
+		self.state = state
+		self.parachute_door = parachute_door
+		self.error = error
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [DeploymentTube]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.state = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.parachute_door = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.error = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+	def getSize(self):
+		return self.SIZE
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.state))
+		buf.extend(struct.pack('<B', self.parachute_door))
+		buf.extend(struct.pack('<B', self.error))
+		return bytearray(buf)
+
 class TelemetryOrientation:
 	SIZE = 48
 
@@ -3280,14 +3326,11 @@ class TelemetryPosition:
 	SIZE = 72
 
 	def __init__ (self, latitude = 0.0, longitude = 0.0, altitude = 0.0,
-	height = 0.0, speed = 0.0, course = 0.0, position = 0, velocity = 0,
-	acceleration = 0):
+	height = 0.0, position = 0, velocity = 0, acceleration = 0):
 		self.latitude = latitude
 		self.longitude = longitude
 		self.altitude = altitude
 		self.height = height
-		self.speed = speed
-		self.course = course
 
 		self.position = ThreeAxisSensor(position)
 
@@ -3301,22 +3344,16 @@ class TelemetryPosition:
 
 		offset = 0
 
-		self.latitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
+		self.latitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset + struct.calcsize('<d')
 
-		self.longitude = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
+		self.longitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset + struct.calcsize('<d')
 
 		self.altitude = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 		self.height = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.speed = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.course = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 		self.position = ThreeAxisSensor()
@@ -3337,12 +3374,10 @@ class TelemetryPosition:
 	def serialize(self):
 		buf = []
 
-		buf.extend(struct.pack('<f', self.latitude))
-		buf.extend(struct.pack('<f', self.longitude))
+		buf.extend(struct.pack('<d', self.latitude))
+		buf.extend(struct.pack('<d', self.longitude))
 		buf.extend(struct.pack('<f', self.altitude))
 		buf.extend(struct.pack('<f', self.height))
-		buf.extend(struct.pack('<f', self.speed))
-		buf.extend(struct.pack('<f', self.course))
 		buf.extend(self.position.serialize())
 		buf.extend(self.velocity.serialize())
 		buf.extend(self.acceleration.serialize())

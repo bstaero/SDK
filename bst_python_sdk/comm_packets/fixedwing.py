@@ -308,6 +308,7 @@ class LaunchType (Enum):
 	LAUNCH_ROLLING=3
 	LAUNCH_CAR=4
 	LAUNCH_RAIL=5
+	LAUNCH_DROP=6
 
 class LandingParameters:
 	SIZE = 68

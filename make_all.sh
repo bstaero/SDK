@@ -7,18 +7,39 @@ cd $SCRIPT_DIR/lib
 make clean
 make
 
-#TEST
+cd $SCRIPT_DIR/examples/can_test
+make clean
+make
+
+cd $SCRIPT_DIR/examples/ch4
+make clean
+make
+
+cd $SCRIPT_DIR/examples/deployment_tube_test
+make clean
+make
+
 cd $SCRIPT_DIR/examples/gazebo
 make clean
 make
 
-#PAYLOAD
+cd $SCRIPT_DIR/examples/ldcr
+make clean
+make
+
+cd $SCRIPT_DIR/examples/mhp
+make clean
+make
+
 cd $SCRIPT_DIR/examples/payload
 make clean
 make
 
-#MHP
-cd $SCRIPT_DIR/examples/mhp
+cd $SCRIPT_DIR/examples/s0
+make clean
+make
+
+cd $SCRIPT_DIR/examples/sphere
 make clean
 make
 

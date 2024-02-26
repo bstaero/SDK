@@ -90,8 +90,10 @@ MHP9HTiming_t    mhp_9h_timing;
 volatile SensorType_t calibration_requested = UNKNOWN_SENSOR;
 volatile PacketTypes_t orientation_requested = (PacketTypes_t)0;
 volatile PacketTypes_t mag_cal_requested = (PacketTypes_t)0;
+volatile PacketTypes_t mag_i_cal_requested = (PacketTypes_t)0;
 volatile PacketAction_t orientation_action = PKT_ACTION_NACK;
 volatile PacketAction_t mag_cal_action = PKT_ACTION_NACK;
+volatile PacketAction_t mag_i_cal_action = PKT_ACTION_NACK;
 
 
 uint32_t product_cnt = 0;
@@ -130,6 +132,7 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 	CalibrateSensor_t * calibration_data;
 	AxisMapping_t * axis_mapping;
 	ThreeAxisSensorCalibration_t * mag_cal;
+	ThreeAxisFirstOrderCorrection_t * mag_i_cal;
 	MHPOld_t * mhp_old;
 	GPS_t * gps_old_data;
 
@@ -216,6 +219,34 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 
 			break;
 
+		case SENSORS_MAG_CURRENT_CAL:
+			switch(action) {
+				case PKT_ACTION_STATUS:
+					mag_i_cal = (ThreeAxisFirstOrderCorrection_t *)data;
+					printf("MAG: 0x%x\n",mag_i_cal->sensor);
+					printf("     X = | %+7.02f | Y = | %+7.02f | Z = | %+7.02f |\n"
+							   "         | %+7.02f |     | %+7.02f |     | %+7.02f |\n",
+							mag_i_cal->x[0],
+							mag_i_cal->y[0],
+							mag_i_cal->z[0],
+							mag_i_cal->x[1],
+							mag_i_cal->y[1],
+							mag_i_cal->z[1]);
+					break;
+
+				case PKT_ACTION_ACK:
+					mag_i_cal_action = PKT_ACTION_ACK;
+					mag_i_cal_requested = (PacketTypes_t)0;
+					break;
+
+				case PKT_ACTION_NACK:
+					mag_i_cal_action = PKT_ACTION_NACK;
+					mag_i_cal_requested = (PacketTypes_t)0;
+					break;
+			}
+
+			break;
+
 		case SENSORS_CALIBRATE:
 			calibration_data = (CalibrateSensor_t *)data;
 			if(calibration_data->state == CALIBRATED)
@@ -297,7 +328,8 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 						memcpy(&mhp_9h_timing,data,sizeof(MHP9HTiming_t));;
 
 						if(display_telemetry_timing)
-							printf("s %+0.02f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
+							printf("%+0.02f | s %+0.02f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
+									mhp_9h_timing.system_time,  // [s]
 									mhp_9h_timing.static_pressure_time,  // [s]
 									mhp_9h_timing.dynamic_pressure_time[0],  // [s]
 									mhp_9h_timing.dynamic_pressure_time[1],  // [s]
@@ -320,7 +352,7 @@ void handlePacket(uint8_t type, uint8_t action, const void * data, uint16_t size
 						memcpy(&mhp_timing,data,sizeof(MHPTiming_t));;
 
 						if(display_telemetry_timing)
-							printf("s %+0.02f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
+							printf("s %f d %+0.02f %+0.02f %+0.02f %+0.02f %+0.02f t %+0.02f h %+0.02f i %+0.02f m %+0.02f g %+0.02f\n\r",
 									mhp_timing.static_pressure_time,  // [s]
 									mhp_timing.dynamic_pressure_time[0],  // [s]
 									mhp_timing.dynamic_pressure_time[1],  // [s]
@@ -382,6 +414,8 @@ void sendCalibrate(SensorType_t sensor) {
 		case DYNAMIC_PRESSURE:
 			break;
 		case MAGNETOMETER:
+			break;
+		case HUMIDITY:
 			break;
 		default:
 			return;
@@ -445,6 +479,32 @@ void requestMagCalibration(void) {
 	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
 }
 
+void sendMagCurrentCalibraton(void) {
+	if(mag_i_cal_requested) return;
+
+	mag_i_cal_action = PKT_ACTION_NACK;
+	mag_i_cal_requested = (PacketTypes_t)1;
+
+	ThreeAxisFirstOrderCorrection_t calibrate_pkt;
+
+	calibrate_pkt.sensor = MAGNETOMETER;
+
+	calibrate_pkt.x[0] = MAG_I_X_0;
+	calibrate_pkt.x[1] = MAG_I_X_1;
+	calibrate_pkt.y[2] = MAG_I_Y_0;
+	calibrate_pkt.y[3] = MAG_I_Y_1;
+	calibrate_pkt.z[4] = MAG_I_Z_0;
+	calibrate_pkt.z[5] = MAG_I_Z_1;
+
+	tx_packet.setAddressing(false);
+	tx_packet.setType(SENSORS_MAG_CURRENT_CAL);
+	tx_packet.setAction(PKT_ACTION_COMMAND);
+	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(ThreeAxisFirstOrderCorrection_t));
+
+	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+	printf("Wrote %u bytes\n",tx_packet.getSize());
+}
+
 void requestPowerOn(void) {
 	PowerOn_t power_on_pkt;
 
@@ -452,6 +512,32 @@ void requestPowerOn(void) {
 	tx_packet.setType(SYSTEM_POWER_ON);
 	tx_packet.setAction(PKT_ACTION_REQUEST);
 	tx_packet.setData((uint8_t *)&power_on_pkt, sizeof(PowerOn_t));
+
+	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+}
+
+void sendCurrent(void) {
+	static SystemStatus_t system_status;
+
+	system_status.batt_current = system_status.batt_current+0.1;
+	printf("Setting current to %0.1f mA\n", system_status.batt_current);
+
+	tx_packet.setAddressing(false);
+	tx_packet.setType(SYSTEM_HEALTH_AND_STATUS);
+	tx_packet.setAction(PKT_ACTION_STATUS);
+	tx_packet.setData((uint8_t *)&system_status, sizeof(SystemStatus_t));
+
+	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
+	printf("Wrote %u bytes\n",tx_packet.getSize());
+}
+
+void requestMagCurrentCalibration(void) {
+	ThreeAxisFirstOrderCorrection_t calibrate_pkt;
+
+	tx_packet.setAddressing(false);
+	tx_packet.setType(SENSORS_MAG_CURRENT_CAL);
+	tx_packet.setAction(PKT_ACTION_REQUEST);
+	tx_packet.setData((uint8_t *)&calibrate_pkt, sizeof(ThreeAxisFirstOrderCorrection_t));
 
 	writeBytes(tx_packet.getPacket(), tx_packet.getSize());
 }

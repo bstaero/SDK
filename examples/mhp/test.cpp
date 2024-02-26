@@ -34,6 +34,7 @@ volatile bool display_telemetry_timing = false;
 volatile bool waiting_on_calibrate = false;
 volatile bool waiting_on_orientation = false;
 volatile bool waiting_on_mag = false;
+volatile bool waiting_on_i_mag = false;
 volatile bool write_file = false;
 
 // for command line (terminal) input
@@ -44,6 +45,7 @@ struct termios initial_settings, new_settings;
 void updateCalibration(void);
 void updateOrientation(void);
 void updateMagCal(void);
+void updateMagCurrentCal(void);
 /*<-End Local Functions--->*/
 
 void printTestHelp() {
@@ -55,13 +57,18 @@ void printTestHelp() {
 	printf("  g   : Request gyroscope calibration\n");
 	printf("  m   : Request magnetometer calibration\n");
 	printf("  M   : Send magnetometer calibration\n");
+	printf("  c   : Request magnetometer current calibration\n");
+	printf("  C   : Send magnetometer current calibration\n");
 	printf("  O   : Command magnetometer calibration\n");
+	printf("  H   : Command humidity recondition\n");
 	printf("\n");
 	printf("  u   : Request imu orientation\n");
 	printf("  U   : Set imu orientation with mount above probe\n");
 	printf("  B   : Set imu orientation with mount below probe\n");
 	printf("  n   : Request GNSS orientation\n");
 	printf("  N   : Set GNSS orientation with cable facing back\n");
+	printf("\n");
+	printf("  I   : Send simulated current data\n");
 	printf("\n");
 	printf("  s   : Request serial number and comms revision\n");
 	printf("\n");
@@ -111,6 +118,7 @@ void updateTest() {
 	if(waiting_on_calibrate) updateCalibration();
 	if(waiting_on_orientation) updateOrientation();
 	if(waiting_on_mag) updateMagCal();
+	if(waiting_on_i_mag) updateMagCurrentCal();
 
 	char input; 
 
@@ -164,6 +172,26 @@ void updateTest() {
 					requestMagCalibration();
 					break;
 
+				case 'C':
+					if(waiting_on_i_mag) break;
+					waiting_on_i_mag = true;
+
+					sendMagCurrentCalibraton();
+					printf("Magnetometer Current Calibration Sent.. ");
+					fflush(stdout);
+					break;
+
+				case 'c':
+					requestMagCurrentCalibration();
+					break;
+
+				case 'H':
+					sendCalibrate(HUMIDITY);
+					waiting_on_calibrate = true;
+					printf("Humidity Recondition Requested.. ");
+					fflush(stdout);
+					break;
+
 				case 'u':
 					requestOrientation(SENSORS_BOARD_ORIENTATION);
 					break;
@@ -173,9 +201,14 @@ void updateTest() {
 					waiting_on_orientation = true;
 
 					// mount pointing up - aeropods
-					temp_axis_mapping.axis[0] = -2;
-					temp_axis_mapping.axis[1] = -1;
-					temp_axis_mapping.axis[2] = -3;
+					//temp_axis_mapping.axis[0] = -2;
+					//temp_axis_mapping.axis[1] = -1;
+					//temp_axis_mapping.axis[2] = -3;
+
+					// v06a (Altius)
+					temp_axis_mapping.axis[0] = 1;
+					temp_axis_mapping.axis[1] = 2;
+					temp_axis_mapping.axis[2] = 3;
 
 					printf("Setting IMU orietation to [%i,%i,%i].. ",
 							temp_axis_mapping.axis[0],
@@ -237,6 +270,10 @@ void updateTest() {
 					setOrientation(SENSORS_GNSS_ORIENTATION, &temp_axis_mapping);
 					break;
 
+				case 'I':
+					sendCurrent();
+					break;
+
 				case 's':
 					requestPowerOn();
 					break;
@@ -269,6 +306,7 @@ void updateCalibration() {
 			case DYNAMIC_PRESSURE: end_time = getElapsedTime() + 2.0; break;
 			case GYROSCOPE:        end_time = getElapsedTime() + 2.0; break;
 			case MAGNETOMETER:     end_time = getElapsedTime() + 60.0; break;
+			case HUMIDITY:         end_time = getElapsedTime() + 260.0; break;
 		}
 	}
 
@@ -327,6 +365,27 @@ void updateMagCal() {
 
 	end_time = 0.0;
 	waiting_on_mag = false;
+}
+
+void updateMagCurrentCal() {
+	static float end_time = 0.0;
+	if(end_time == 0.0 && mag_i_cal_requested != 0) {
+		end_time = getElapsedTime() + 2.0;;
+	}
+
+	if(mag_i_cal_requested != 0 && getElapsedTime() < end_time)
+		return;
+
+	if(getElapsedTime() < end_time && mag_i_cal_action == PKT_ACTION_ACK) {
+		printf("SUCCESS\n");
+	} else {
+		printf("FAILED\n");
+	}
+
+	mag_i_cal_requested = (PacketTypes_t)0;
+
+	end_time = 0.0;
+	waiting_on_i_mag = false;
 }
 
 
