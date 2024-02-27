@@ -335,7 +335,7 @@ typedef struct _VehicleParameters_t {
 	float flight_time;  // [min]
 	float standard_bank;  // [rad]
 	float cruise_speed;  // [m/s]
-	float battery_cap;  // [mAH]
+	float battery_cap;  // [Wh]
 	uint8_t battery_num_cells;  //
 	BatteryChemistry_t batt_chem;  // set the type of battery
 	uint8_t num_rotors;  // [#]

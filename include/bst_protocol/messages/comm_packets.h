@@ -1285,6 +1285,7 @@ typedef struct _SystemStatus_t {
 	float batt_current;  // battery current
 	float batt_percent;  // battery capacity
 	float batt_coulomb_count;  // battery consumption
+	float batt_watt_hours;  // battery consumption
 	float flight_time;  // time aloft
 	int8_t rssi;  // from ground station
 	uint8_t lost_comm;  // set if UA lost comm with GCS
@@ -1297,6 +1298,7 @@ typedef struct _SystemStatus_t {
 		batt_current = 0.0;
 		batt_percent = 0.0;
 		batt_coulomb_count = 0.0;
+		batt_watt_hours = 0.0;
 		flight_time = 0.0;
 		rssi = 0;
 		lost_comm = 1;
@@ -1815,7 +1817,7 @@ typedef struct _TelemetrySystem_t {
 	uint32_t system_time;  // [s * 1000]
 	uint16_t batt_voltage;  // [V * 1000]
 	int16_t batt_current;  // [A * 100]
-	uint16_t batt_coulomb_count;  // [mAh]
+	uint16_t batt_watt_hours;  // [Wh]
 	uint16_t batt_percent;  // [% * 100]
 	uint16_t flight_time;  // [s]
 	uint16_t week;
@@ -1838,7 +1840,7 @@ typedef struct _TelemetrySystem_t {
 		system_time = 0;
 		batt_voltage = 0;
 		batt_current = 0;
-		batt_coulomb_count = 0;
+		batt_watt_hours = 0;
 		batt_percent = 0;
 		flight_time = 0;
 		week = 0;
