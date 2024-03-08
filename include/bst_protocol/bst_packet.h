@@ -189,7 +189,7 @@ class Packet {
 		bool operator == (const Packet& pkt) const;
 		bool operator != (const Packet& pkt) const;
 
-		inline void setAddressing(bool on_off) {uses_address = on_off;}
+		void setAddressing(bool on_off);
 	private:
 		void  initialize();
 		uint8_t packet[BST_MAX_PACKET_SIZE];
