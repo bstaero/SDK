@@ -58,6 +58,7 @@ extern uint32_t mag_cnt;
 
 extern uint32_t stat_p_cnt;
 
+#define TRIGGER_LENGTH 20.0
 
 #define CMD_BUF_SIZE 8
 Packet cmd_buf[CMD_BUF_SIZE];
@@ -81,17 +82,12 @@ struct termios initial_settings, new_settings;
 
 void printTestHelp() {
 	printf("Keys:\n");
-	printf("  t   : Toggle telemetry display\n");
+	printf("  t        : Toggle telemetry display\n");
 	printf("\n");
-	printf("  T   : take a picture\n");
-	printf("  1   : test channel 0\n");
-	printf("  2   : test channel 1\n");
-	printf("  3   : test channel 2\n");
-	printf("  4   : test channel 3\n");
-	printf("  5   : test channel 4\n");
-	printf("  6   : test channel 5\n");
+	printf("  T        : take a picture\n");
+	printf("  1 to A   : test channel n\n");
 	printf("\n");
-	printf("  p   : print this help\n");
+	printf("  p        : print this help\n");
 }
 
 bool inputAvailable()  
@@ -155,12 +151,22 @@ void updateTest() {
 					}
 					break;
 
+				case 'A':
+				case 'B':
+				case 'C':
+				case 'D':
+				case 'E':
+				case 'F':
+					input = input-'A'+1+'9';
 				case '1':
 				case '2':
 				case '3':
 				case '4':
 				case '5':
 				case '6':
+				case '7':
+				case '8':
+				case '9':
 					if(!is_triggering) {
 						printf("Triggerging channel %u\n",input - '0');
 						is_triggering = input - '0';
@@ -193,7 +199,7 @@ void updateTest() {
 			if(i < 6)
 				actuators[i] = 1800;
 			else
-				actuators[i] = 2000;
+				actuators[i] = 1500;
 		} else {
 			if(i < 6)
 				actuators[i] = 1200;
@@ -201,7 +207,7 @@ void updateTest() {
 				actuators[i] = 1000;
 		}
 	}
-	if(getElapsedTime() - trigger_time > 0.5) is_triggering = 0;
+	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) is_triggering = 0;
 
 
 	if(print_timing) {

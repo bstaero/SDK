@@ -87,6 +87,9 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(TELEMETRY_GCS_LOCATION, sizeof(TelemetryGCS_t), false, false);
 	registerDataType(TELEMETRY_PAYLOAD, sizeof(TelemetryPayload_t), false, false);
 	registerDataType(TELEMETRY_GCS_SVIN, sizeof(GCSSurveyIn_t), false, true);
+#if defined(VEHICLE_FIXEDWING)
+	registerDataType(TELEMETRY_DEPLOYMENT_TUBE, sizeof(DeploymentTube_t), false, false);
+#endif
 
 	/* HWIL */
 	//registerDataType(HWIL_SENSORS, sizeof(), false, false);

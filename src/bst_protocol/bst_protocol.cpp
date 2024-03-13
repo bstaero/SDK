@@ -6,12 +6,13 @@
 // FIXME -- remove #define
 #ifdef IMPLEMENTATION_firmware
 #include "firmware.h"
-#else
-uint16_t commWrite(uint8_t type, PacketAction_t action, 
-		void * data, uint16_t size, const void * parameter);
 #endif
 
 extern SystemInitialize_t system_initialize;
+
+extern "C" {
+  float getElapsedTime(); // defined elsewhere
+}
 
 BSTProtocol::BSTProtocol() : CommunicationsProtocol() {
 	pmesg(VERBOSE_ALLOC, "BSTProtocol::BSTProtocol()\n");
@@ -20,6 +21,8 @@ BSTProtocol::BSTProtocol() : CommunicationsProtocol() {
 	for(uint8_t i=0u; i<COMM_PROTOCOL_MAX_MODULES; i++)
 		modules[i] = NULL;
 	num_modules = 0;
+
+	last_tx = getElapsedTime();
 }
 
 void BSTProtocol::registerModule(BSTCommunicationsModule * a_module) {
@@ -30,11 +33,26 @@ void BSTProtocol::registerModule(BSTCommunicationsModule * a_module) {
 }
 
 void BSTProtocol::parseData(uint8_t byte) {
+	if(rx_queue.size() >= PACKET_BUFFER_SIZE) {
+		pmesg(VERBOSE_ERROR,"Receive Buffer Overflow!\n");
+		return;
+	}
+
 	if(rx_packet.isValid(byte)) {
 		rx_queue.push(rx_packet);
 		rx_packet.clear();
 	}
 }
+#define LOW_BANDWIDTH
+
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+  #define RADIO_TIMEOUT 0.15
+#endif
+
+#if defined (NO_DUPLEX_COMMS)
+#define CMD_TIMEOUT 3.0
+extern float last_cmd_rx;
+#endif
 
 uint16_t BSTProtocol::update() {
 	uint16_t n = CommunicationsProtocol::update();
@@ -45,8 +63,7 @@ uint16_t BSTProtocol::update() {
 		}
 	}
 
-	uint8_t cnt = 0;
-	while(rx_queue.size() > 0 && ++cnt <= 3) {
+	if(rx_queue.size() > 0) {
 		temp_packet = rx_queue.front();
 		last_address = temp_packet.getFromAddress();
 		rx_queue.pop();
@@ -55,6 +72,38 @@ uint16_t BSTProtocol::update() {
 			}
 		}
 	}
+
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+	if(getElapsedTime() - last_tx > RADIO_TIMEOUT) {
+#endif
+		if(tx_priority_queue.size() > 0) {
+			temp_packet = tx_priority_queue.front();
+			if(CommunicationsProtocol::write(temp_packet.getPacket(), temp_packet.getSize()) == temp_packet.getSize()) {
+				tx_priority_queue.pop();
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+				last_tx = getElapsedTime();
+#endif
+#if defined (NO_DUPLEX_COMMS)
+				last_cmd_rx = getElapsedTime();
+#endif
+			}
+		} else {
+#if defined (NO_DUPLEX_COMMS)
+			if(getElapsedTime() - last_cmd_rx < CMD_TIMEOUT) return 0;
+#endif
+			if(tx_queue.size() > 0) {
+				temp_packet = tx_queue.front();
+				if(CommunicationsProtocol::write(temp_packet.getPacket(), temp_packet.getSize()) == temp_packet.getSize()) {
+					tx_queue.pop();
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+					last_tx = getElapsedTime();
+#endif
+				}
+			}
+		}
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+	}
+#endif
 
 	//FIXME -- need lost comm
 	/*float now = getElapsedTime();
@@ -93,13 +142,12 @@ void BSTProtocol::request(uint8_t type, uint8_t parameter) {
 }
 
 uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t size, const void * parameter) {
-#if 0
-		tx_packet.clear();
+	tx_packet.clear();
 
 	if(uses_address) {
 		tx_packet.setAddressing(true);
-		tx_packet.setFromAddress(system_initialize.serial_num);
-		//tx_packet.setFromAddress(0xFF);
+		//tx_packet.setFromAddress(system_initialize.serial_num);
+		tx_packet.setFromAddress(ALL_NODES);
 		tx_packet.setToAddress(ALL_NODES); // FIXME - should find real address
 		//tx_packet.setToAddress(ALL_UAVS); // FIXME - should find real address
 	} else {
@@ -110,17 +158,28 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 	tx_packet.setAction((PacketAction_t)action);
 	tx_packet.setData((uint8_t *)data, size);
 
-// FIXME -- need a better way to implement logging all of the packets
+	if((type&0xF0) != 0x60 && (type <= 0xE8 || type >= 0xEF) && type != PAYLOAD_S0_SENSORS && type != TELEMETRY_DEPLOYMENT_TUBE) {
+		if(tx_priority_queue.size() > PACKET_BUFFER_SIZE) {
+			pmesg(VERBOSE_ERROR,"Prioity Transmit Command Buffer Overflow!\n");
+			return 0;
+		}
+
+		tx_priority_queue.push(tx_packet);
+	} else {
+		if(tx_queue.size() > PACKET_BUFFER_SIZE) {
+			pmesg(VERBOSE_ERROR,"Transmit Command Buffer Overflow!\n");
+			return 0;
+		}
+
+		tx_queue.push(tx_packet);
+	}
+
 #ifdef IMPLEMENTATION_firmware
 	if((type&0xF0) != 0x60) // Don't include telemetry packets
 		writeLogFile(type, (PacketAction_t)action, data, size, parameter);
 #endif
 
-	//return CommunicationsProtocol::write(tx_packet.getPacket(), tx_packet.getSize(), 0x5300);
-	return CommunicationsProtocol::write(tx_packet.getPacket(), tx_packet.getSize());
-#else
-	return commWrite(type, (PacketAction_t)action, data, size, parameter);
-#endif
+	return 1;
 }
 
 void BSTProtocol::setAddressing(bool on_off) {
