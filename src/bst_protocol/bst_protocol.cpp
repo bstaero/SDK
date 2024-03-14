@@ -158,7 +158,14 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 	tx_packet.setAction((PacketAction_t)action);
 	tx_packet.setData((uint8_t *)data, size);
 
-	if((type&0xF0) != 0x60 && (type <= 0xE8 || type >= 0xEF) && type != PAYLOAD_S0_SENSORS && type != TELEMETRY_DEPLOYMENT_TUBE) {
+	//if((type&0xF0) != 0x60 && (type < 0xE8 || type > 0xEF) && type != PAYLOAD_S0_SENSORS && type != TELEMETRY_DEPLOYMENT_TUBE) {
+	if((type & 0xF0) != 0x60 &&
+			type != 0xE8 &&
+			type != 0xEA &&
+			type != TELEMETRY_DEPLOYMENT_TUBE &&
+			type != 96 &&
+			type != PAYLOAD_S0_SENSORS ) {
+
 		if(tx_priority_queue.size() > PACKET_BUFFER_SIZE) {
 			pmesg(VERBOSE_ERROR,"Prioity Transmit Command Buffer Overflow!\n");
 			return 0;
