@@ -43,10 +43,9 @@ void BSTProtocol::parseData(uint8_t byte) {
 		rx_packet.clear();
 	}
 }
-#define LOW_BANDWIDTH
 
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-  #define RADIO_TIMEOUT 0.15
+  #define RADIO_TIMEOUT 0.25
 #endif
 
 #if defined (NO_DUPLEX_COMMS)

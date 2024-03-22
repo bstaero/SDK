@@ -246,7 +246,7 @@ class LogFlightControl:
 #---------[ Mission ]---------#
 
 class MissionParameters:
-	SIZE = 47
+	SIZE = 48
 
 	def __init__ (self, altitude = 0, comm = 0, max_range = 0.0,
 	safe_height = 0.0, flight_time = 0.0, battery_min = 0.0, initialized = 0,

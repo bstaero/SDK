@@ -109,6 +109,55 @@ class GCSStatus:
 		buf.extend(struct.pack('<B', self.error))
 		return bytearray(buf)
 
+class HDOBConfig:
+	SIZE = 35
+
+	def __init__ (self, vehicle_type = 0, mission_number = 0, storm_number = 0,
+	storm_name = [None] * 32):
+		self.vehicle_type = vehicle_type
+		self.mission_number = mission_number
+		self.storm_number = storm_number
+
+		if (len(storm_name) != 32):
+			raise ValueError('array storm_name expecting length '+str(32)+' got '+str(len(storm_name)))
+
+		self.storm_name = list(storm_name)
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [HDOBConfig]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.vehicle_type = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.mission_number = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.storm_number = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.storm_name = [];
+
+		for i in range(0,32):
+			self.storm_name.append(struct.unpack_from('<B',buf,offset)[0])
+			offset = offset+struct.calcsize('<B')
+
+	def getSize(self):
+		return self.SIZE
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.vehicle_type))
+		buf.extend(struct.pack('<B', self.mission_number))
+		buf.extend(struct.pack('<B', self.storm_number))
+
+		for val in self.storm_name:
+		    buf.extend(struct.pack('<B', val))
+		return bytearray(buf)
+
 class GCSSurveyIn:
 	SIZE = 17
 

@@ -116,7 +116,8 @@ class CAN_DeploymentTubeState (Enum):
 	DEPLOY_TUBE_PARA_DEPLOYED=4
 	DEPLOY_TUBE_JETTISONED=5
 	DEPLOY_TUBE_AC_RELASED=6
-	DEPLOY_TUBE_ERROR=7
+	DEPLOY_TUBE_SHUTDOWN=7
+	DEPLOY_TUBE_ERROR=8
 
 class CAN_DeploymentTubeCommand:
 	SIZE = 8
@@ -1929,17 +1930,19 @@ class CAN_Receiver:
 #---------[ Telemetry ]---------#
 
 class CAN_DeploymentTube:
-	SIZE = 6
+	SIZE = 7
 
 	def __init__ (self, startByte = 0,
 	state = CAN_DeploymentTubeState(0),
-	parachute_door = CAN_DeploymentTubeDoorStatus(0),
+	parachute_door = CAN_DeploymentTubeDoorStatus(0), batt_voltage = 0,
 	error = CAN_DeploymentTubeErrors(0), chk = 0):
 		self.startByte = startByte
 
 		self.state = CAN_DeploymentTubeState(state)
 
 		self.parachute_door = CAN_DeploymentTubeDoorStatus(parachute_door)
+
+		self.batt_voltage = batt_voltage
 
 		self.error = CAN_DeploymentTubeErrors(error)
 
@@ -1960,6 +1963,9 @@ class CAN_DeploymentTube:
 		self.parachute_door = CAN_DeploymentTubeDoorStatus(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
+		self.batt_voltage = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
 		self.error = CAN_DeploymentTubeErrors(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
@@ -1977,6 +1983,8 @@ class CAN_DeploymentTube:
 		buf.put(CAN_DeploymentTubeState.encode(self.state));
 
 		buf.put(CAN_DeploymentTubeDoorStatus.encode(self.parachute_door));
+
+		buf.extend(struct.pack('<B', self.batt_voltage))
 
 		buf.put(CAN_DeploymentTubeErrors.encode(self.error));
 

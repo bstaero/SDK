@@ -553,11 +553,104 @@ class ParticlesPlus:
 
 #---------[ Communication ]---------#
 
-class TelemetryPayload:
-	SIZE = 7
+class S0Sensors:
+	SIZE = 36
 
-	def __init__ (self, node_status = PayloadControl(0), num_triggers = 0,
-	percent_complete = 0.0):
+	def __init__ (self, system_time = 0, static_pressure = [None] * 2,
+	dynamic_pressure = [None] * 5, air_temperature = 0, humidity = 0,
+	laser_distance = 0, ground_temperature = 0, u = 0, v = 0, w = 0):
+		self.system_time = system_time
+
+		if (len(static_pressure) != 2):
+			raise ValueError('array static_pressure expecting length '+str(2)+' got '+str(len(static_pressure)))
+
+		self.static_pressure = list(static_pressure)
+
+		if (len(dynamic_pressure) != 5):
+			raise ValueError('array dynamic_pressure expecting length '+str(5)+' got '+str(len(dynamic_pressure)))
+
+		self.dynamic_pressure = list(dynamic_pressure)
+
+		self.air_temperature = air_temperature
+		self.humidity = humidity
+		self.laser_distance = laser_distance
+		self.ground_temperature = ground_temperature
+		self.u = u
+		self.v = v
+		self.w = w
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [S0Sensors]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.system_time = struct.unpack_from('<I',buf,offset)[0]
+		offset = offset + struct.calcsize('<I')
+
+		self.static_pressure = [];
+
+		for i in range(0,2):
+			self.static_pressure.append(struct.unpack_from('<I',buf,offset)[0])
+			offset = offset+struct.calcsize('<I')
+
+		self.dynamic_pressure = [];
+
+		for i in range(0,5):
+			self.dynamic_pressure.append(struct.unpack_from('<h',buf,offset)[0])
+			offset = offset+struct.calcsize('<h')
+
+		self.air_temperature = struct.unpack_from('<h',buf,offset)[0]
+		offset = offset + struct.calcsize('<h')
+
+		self.humidity = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+		self.laser_distance = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+		self.ground_temperature = struct.unpack_from('<h',buf,offset)[0]
+		offset = offset + struct.calcsize('<h')
+
+		self.u = struct.unpack_from('<h',buf,offset)[0]
+		offset = offset + struct.calcsize('<h')
+
+		self.v = struct.unpack_from('<h',buf,offset)[0]
+		offset = offset + struct.calcsize('<h')
+
+		self.w = struct.unpack_from('<h',buf,offset)[0]
+		offset = offset + struct.calcsize('<h')
+
+	def getSize(self):
+		return self.SIZE
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<I', self.system_time))
+
+		for val in self.static_pressure:
+		    buf.extend(struct.pack('<I', val))
+
+		for val in self.dynamic_pressure:
+		    buf.extend(struct.pack('<h', val))
+
+		buf.extend(struct.pack('<h', self.air_temperature))
+		buf.extend(struct.pack('<H', self.humidity))
+		buf.extend(struct.pack('<H', self.laser_distance))
+		buf.extend(struct.pack('<h', self.ground_temperature))
+		buf.extend(struct.pack('<h', self.u))
+		buf.extend(struct.pack('<h', self.v))
+		buf.extend(struct.pack('<h', self.w))
+		return bytearray(buf)
+
+class TelemetryPayload:
+	SIZE = 8
+
+	def __init__ (self, system_time = 0, node_status = PayloadControl(0),
+	num_triggers = 0, percent_complete = 0):
+		self.system_time = system_time
+
 		self.node_status = PayloadControl(node_status)
 
 		self.num_triggers = num_triggers
@@ -569,14 +662,17 @@ class TelemetryPayload:
 
 		offset = 0
 
+		self.system_time = struct.unpack_from('<I',buf,offset)[0]
+		offset = offset + struct.calcsize('<I')
+
 		self.node_status = PayloadControl(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
 		self.num_triggers = struct.unpack_from('<H',buf,offset)[0]
 		offset = offset + struct.calcsize('<H')
 
-		self.percent_complete = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
+		self.percent_complete = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 	def getSize(self):
 		return self.SIZE
@@ -584,10 +680,12 @@ class TelemetryPayload:
 	def serialize(self):
 		buf = []
 
+		buf.extend(struct.pack('<I', self.system_time))
+
 		buf.put(PayloadControl.encode(self.node_status));
 
 		buf.extend(struct.pack('<H', self.num_triggers))
-		buf.extend(struct.pack('<f', self.percent_complete))
+		buf.extend(struct.pack('<B', self.percent_complete))
 		return bytearray(buf)
 
 #---------[ Payload ]---------#
