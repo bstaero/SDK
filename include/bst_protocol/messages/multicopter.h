@@ -305,7 +305,7 @@ typedef struct _LaunchParameters_t {
 
 typedef struct _VehicleParameters_t {
 	char name[16];  // name of the vehicle
-	float battery_cap;  // [mAH]
+	float battery_cap;  // [Wh]
 	uint8_t battery_num_cells;  //
 	BatteryChemistry_t batt_chem;  // set the type of battery
 	uint8_t num_rotors;  // [#]

@@ -398,6 +398,24 @@ bool Packet::operator == (const Packet& pkt) const {
 	return false;
 }
 
+void Packet::setAddressing(bool on_off) {
+	if(getDataSize() > BST_MAX_PACKET_SIZE - OVERHEAD(uses_address)) return;
+
+	if(on_off == true && uses_address == false) {
+
+		uint16_t i = getDataSize();
+		while (i-- > 0)
+			packet[PKT_DATA(true) + i] = packet[PKT_DATA(false) + i];
+
+	}
+
+	if(on_off == false && uses_address == true)
+		memcpy(&packet[PKT_DATA(false)],&packet[PKT_DATA(true)],getDataSize());
+
+	uses_address = on_off;
+	setCheckSum();
+}
+
 bool Packet::checkFletcher16(uint8_t * data, uint16_t size) {
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;
