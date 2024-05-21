@@ -58,7 +58,7 @@ extern uint32_t mag_cnt;
 
 extern uint32_t stat_p_cnt;
 
-#define TRIGGER_LENGTH 20.0
+#define TRIGGER_LENGTH 1.0
 
 #define CMD_BUF_SIZE 8
 Packet cmd_buf[CMD_BUF_SIZE];
