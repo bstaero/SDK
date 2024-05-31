@@ -258,6 +258,7 @@ void updatePayloadTrigger(float system_time,
 void updateDeployTube(float ts, 
 		uint8_t state,
 		uint8_t parachute_door,
+		uint8_t batt_voltage,
 		uint8_t error);
 
 void handleDeployTubeCmd(float ts, uint8_t id, float value);
@@ -1929,6 +1930,7 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 	updateDeployTube(t0,
 			data->state,
 			data->parachute_door,
+			data->batt_voltage,
 			data->error);
 
 #ifdef VERBOSE
@@ -1943,6 +1945,7 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 		case DEPLOY_TUBE_PARA_DEPLOYED: sprintf(state, "PARA DP"); break;
 		case DEPLOY_TUBE_JETTISONED:    sprintf(state, "TUB JET"); break;
 		case DEPLOY_TUBE_AC_RELASED:    sprintf(state, "AC REL "); break;
+		case DEPLOY_TUBE_SHUTDOWN:      sprintf(state, "SHUTDWN"); break;
 		case DEPLOY_TUBE_ERROR:         sprintf(state, "ERROR  "); break;
 	}
 
@@ -1953,8 +1956,8 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 
 	//pmesg(VERBOSE_CAN, "DEPLOY TUBE: %0.02f s, state %u door %u error 0x%08x\n", 
 			//t0, data->state, data->parachute_door, data->error);
-	pmesg(VERBOSE_CAN, "DEPLOY TUBE: %0.02f s, state %s door %s error 0x%08x\n", 
-			t0, state, door, data->error);
+	pmesg(VERBOSE_CAN, "DEPLOY TUBE: %0.02f s, state %s door %s batt %0.1fV error 0x%08x\n", 
+			t0, state, door, (float)data->batt_voltage / 10.f, data->error);
 #endif
 
 	//----- packet specific code -----//
@@ -2131,6 +2134,31 @@ uint8_t BRIDGE_SendMHPPkt(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_MHP_t));
 
 	return CAN_Write(p, CAN_PKT_MHP, &data, sizeof(CAN_MHP_t));
+}
+
+/**
+ * @brief	Send Wind packet
+ * @param	p CAN peripheral ID
+ * @retval None
+ */
+uint8_t BRIDGE_SendWindPkt(uint8_t p,
+		float u,  // [m/s]
+		float v,  // [m/s]
+		float w  // [m/s]
+		) {
+
+	static CAN_Wind_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+
+	data.u = u;
+	data.v = v;
+	data.w = w;
+
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_Wind_t));
+
+	return CAN_Write(p, CAN_PKT_WIND, &data, sizeof(CAN_Wind_t));
 }
 
 /**
@@ -2605,6 +2633,7 @@ uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
 uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
 		uint8_t state,
 		uint8_t parachute_door,
+		uint8_t batt_voltage,
 		uint8_t error) {
 
 	CAN_DeploymentTube_t data;
@@ -2613,6 +2642,7 @@ uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
 	data.startByte = BRIDGE_START_BYTE;
 	data.state = (CAN_DeploymentTubeState_t)state;
 	data.parachute_door = (CAN_DeploymentTubeDoorStatus_t)parachute_door;
+	data.batt_voltage = batt_voltage;
 	data.error = (CAN_DeploymentTubeErrors_t)error;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTube_t));
 

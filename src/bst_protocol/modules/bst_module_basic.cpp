@@ -87,6 +87,9 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(TELEMETRY_GCS_LOCATION, sizeof(TelemetryGCS_t), false, false);
 	registerDataType(TELEMETRY_PAYLOAD, sizeof(TelemetryPayload_t), false, false);
 	registerDataType(TELEMETRY_GCS_SVIN, sizeof(GCSSurveyIn_t), false, true);
+#if defined(VEHICLE_FIXEDWING)
+	registerDataType(TELEMETRY_DEPLOYMENT_TUBE, sizeof(DeploymentTube_t), false, false);
+#endif
 
 	/* HWIL */
 	//registerDataType(HWIL_SENSORS, sizeof(), false, false);
@@ -101,6 +104,7 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 
 	/* MISSION */
 	registerDataType(MISSION_PARAMETERS, sizeof(MissionParameters_t), true, true);
+	registerDataType(MISSION_HDOB_CONFIG, sizeof(HDOBConfig_t), true, true);
 
 	/* PAYLOAD */
 	//registerDataType(PAYLOAD_NDVI, sizeof(NDVI_t), false, false); // FIXME
@@ -120,4 +124,6 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(PAYLOAD_DATA_CHANNEL_5, sizeof(UserPayload_t), true, true); 
 	registerDataType(PAYLOAD_DATA_CHANNEL_6, sizeof(UserPayload_t), true, true); 
 	registerDataType(PAYLOAD_DATA_CHANNEL_7, sizeof(UserPayload_t), true, true); 
+
+	registerDataType(PAYLOAD_S0_SENSORS, sizeof(S0Sensors_t), false, false); 
 }

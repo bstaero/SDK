@@ -680,7 +680,7 @@ class VehicleParameters:
 #---------[ Mission ]---------#
 
 class MissionParameters:
-	SIZE = 49
+	SIZE = 50
 
 	def __init__ (self, altitude = 0, comm = 0,
 	launch_type = LaunchType(0), land_type = LandType(0), max_range = 0.0,

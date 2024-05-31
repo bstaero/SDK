@@ -26,7 +26,7 @@
 
 #include <queue>
 
-#define PACKET_BUFFER_SIZE 10
+#define PACKET_BUFFER_SIZE 8
 
 class BSTCommunicationsModule; // FIXME -- shouldn't need forward declaration if written correctly
 
@@ -49,6 +49,8 @@ class BSTProtocol : public CommunicationsProtocol {
 		uint32_t getLastAddress(void);
 
 	private:
+		float last_tx;
+
 		std::queue<Packet> rx_queue;
 		std::queue<Packet> tx_queue;
 		std::queue<Packet> tx_priority_queue;

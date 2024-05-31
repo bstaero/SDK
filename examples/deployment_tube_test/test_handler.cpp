@@ -189,10 +189,12 @@ void updatePayloadTrigger(float system_time,
 void updateDeployTube(float system_time,
 		uint8_t state,
 		uint8_t parachute_door,
+		uint8_t batt_voltage,
 		uint8_t error) {
 
 	deployment_tube.state = (CAN_DeploymentTubeState_t)state;
 	deployment_tube.parachute_door = (CAN_DeploymentTubeDoorStatus_t)parachute_door;
+	deployment_tube.batt_voltage = batt_voltage;
 	deployment_tube.error = (CAN_DeploymentTubeErrors_t)error;
 
 	new_deployment_tube_data = 1;

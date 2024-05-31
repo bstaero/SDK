@@ -10,6 +10,10 @@ LDFLAGS=-lrt
 FLAGS = $(CFLAGS) $(LDFLAGS) -DVERBOSE -DSDK
 #FLAGS = $(CFLAGS) $(LDFLAGS) -DSDK
 
+ifeq ($(LOW_BANDWIDTH),1)
+FLAGS += -DLOW_BANDWIDTH
+endif
+
 INCLUDES+=-I. \
 			    -I./netuas_lib \
 			    -I../include/bst_can \

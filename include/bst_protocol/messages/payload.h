@@ -289,15 +289,52 @@ typedef struct _ParticlesPlus_t {
 
 /*--------[ Communication ]--------*/
 
+typedef struct _S0Sensors_t {
+	uint32_t system_time;  // [s * 1000]
+	uint32_t static_pressure[2];  // [Pa * 10]
+	int16_t dynamic_pressure[5];  // [Pa * 10]
+	int16_t air_temperature;  // [deg C * 10]
+	uint16_t humidity;  // [% * 100]
+	uint16_t laser_distance;  // [m * 100]
+	int16_t ground_temperature;  // [deg C * 100]
+	int16_t u;  // [m/s * 100]
+	int16_t v;  // [m/s * 100]
+	int16_t w;  // [m/s * 100]
+
+#ifdef __cplusplus
+	_S0Sensors_t() {
+		uint8_t _i;
+
+		system_time = 0;
+
+		for (_i = 0; _i < 2; ++_i)
+			static_pressure[_i] = 0;
+
+		for (_i = 0; _i < 5; ++_i)
+			dynamic_pressure[_i] = 0;
+
+		air_temperature = 0;
+		humidity = 0;
+		laser_distance = 0;
+		ground_temperature = 0;
+		u = 0;
+		v = 0;
+		w = 0;
+	}
+#endif
+} __attribute__ ((packed)) S0Sensors_t;
+
 typedef struct _TelemetryPayload_t {
+	uint32_t system_time;  // [ms]
 	PayloadControl_t node_status;  // status of external payload node
 	uint16_t num_triggers;  // if we are mapping, number of triggers
-	float percent_complete;  // if we are mapping, percent path complete
+	uint8_t percent_complete;  // [%] if we are mapping, percent path complete
 
 #ifdef __cplusplus
 	_TelemetryPayload_t() {
+		system_time = 0;
 		num_triggers = 0;
-		percent_complete = 0.0;
+		percent_complete = 0;
 	}
 #endif
 } __attribute__ ((packed)) TelemetryPayload_t;

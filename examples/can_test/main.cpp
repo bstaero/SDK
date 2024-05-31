@@ -62,6 +62,8 @@ SystemInitialize_t system_initialize;
 extern "C"  {
 	uint8_t p_new_gps_data = 0;
 }
+
+extern bool auto_test;
 /*<-End Global Variables-->*/
 
 enum {COMM_SERIAL, COMM_SOCKET, COMM_UNKNOWN, COMM_INVALID};
@@ -90,8 +92,11 @@ int main(int argc, char *argv[])
 	bzero(outfile,132);
 
 	char c;
-	while ((c = getopt(argc, argv, "b:d:i:o:p:t:x:h")) != -1) {
+	while ((c = getopt(argc, argv, "ab:d:i:o:p:t:x:h")) != -1) {
 		switch(c) {
+			case 'a':
+				auto_test = true;
+				break;
 			case 'b':
 				strcpy(&param[1][0],optarg);
 				comm_type != COMM_SOCKET ? comm_type = COMM_SERIAL : comm_type = COMM_INVALID;
