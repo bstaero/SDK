@@ -713,9 +713,13 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 								memcpy(&rx_temp_plan[temp_wp.num],&temp_wp,sizeof(Waypoint_t));
 								last_waypoint_req = last_wpt_received = getElapsedTime();
 
+								// FIXME - put back in and remove below when this works well with low rate comms
+								//parent->write(type,PKT_ACTION_ACK,data,size,NULL);
+
 								if(last_requested_waypoint == temp_wp.num) {
 									pmesg(VERBOSE_FP,"GOT MISSING WAYPOINT\n");
 									last_waypoint_req = getElapsedTime() - waypoint_timeout + waypoint_timeout/20.0;
+								// FIXME -remove here for above
 									parent->write(type,PKT_ACTION_ACK,data,size,NULL);
 								}
 
