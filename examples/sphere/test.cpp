@@ -154,9 +154,9 @@ void updateTest() {
 				telemetry_pressure.static_pressure,
 				telemetry_pressure.air_temperature,
 				telemetry_pressure.humidity,
-				telemetry_pressure.wind.x,
-				telemetry_pressure.wind.y,
-				telemetry_pressure.wind.z
+				telemetry_pressure.wind[0],
+				telemetry_pressure.wind[1],
+				telemetry_pressure.wind[2]
 				);*/
 
 		//printf("%06.1f: (%+07.02f %+06.02f, %+05.01f) <%+06.02f %+06.02f %+06.02f> m/s %05.01f %% %05.01f deg C\n\r",

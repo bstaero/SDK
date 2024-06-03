@@ -145,8 +145,8 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 
 	if(uses_address) {
 		tx_packet.setAddressing(true);
-		//tx_packet.setFromAddress(system_initialize.serial_num);
-		tx_packet.setFromAddress(ALL_NODES);
+		tx_packet.setFromAddress(system_initialize.serial_num);
+		//tx_packet.setFromAddress(ALL_NODES);
 		tx_packet.setToAddress(ALL_NODES); // FIXME - should find real address
 		//tx_packet.setToAddress(ALL_UAVS); // FIXME - should find real address
 	} else {
@@ -159,8 +159,7 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 
 	//if((type&0xF0) != 0x60 && (type < 0xE8 || type > 0xEF) && type != PAYLOAD_S0_SENSORS && type != TELEMETRY_DEPLOYMENT_TUBE) {
 	if((type & 0xF0) != 0x60 &&
-			type != 0xE8 &&
-			type != 0xEA &&
+			((type >= 0xE8 && type <= 0xEF) && action != PKT_ACTION_STATUS) &&
 			type != TELEMETRY_DEPLOYMENT_TUBE &&
 			type != 96 &&
 			type != PAYLOAD_S0_SENSORS ) {

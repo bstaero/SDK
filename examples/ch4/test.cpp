@@ -233,9 +233,9 @@ void updateTest() {
 						telemetry_pressure.air_temperature,
 						telemetry_pressure.static_pressure,
 						telemetry_pressure.humidity,
-						telemetry_pressure.wind.x,
-						telemetry_pressure.wind.y,
-						telemetry_pressure.wind.z
+						telemetry_pressure.wind[0],
+						telemetry_pressure.wind[1],
+						telemetry_pressure.wind[2]
 						);
 
 			}
