@@ -50,7 +50,7 @@ void BSTProtocol::parseData(uint8_t byte) {
 
 #if defined (NO_DUPLEX_COMMS)
 #define CMD_TIMEOUT 3.0
-extern float last_cmd_rx;
+float last_cmd_rx = -1.0;
 #endif
 
 uint16_t BSTProtocol::update() {
@@ -66,6 +66,22 @@ uint16_t BSTProtocol::update() {
 		temp_packet = rx_queue.front();
 		last_address = temp_packet.getFromAddress();
 		rx_queue.pop();
+
+#if defined (NO_DUPLEX_COMMS)
+		if((temp_packet.getType() & 0xF0) != 0x60 &&
+				temp_packet.getType() != TELEMETRY_DEPLOYMENT_TUBE &&
+				temp_packet.getType() != PAYLOAD_S0_SENSORS ) {
+
+			last_cmd_rx = getElapsedTime();
+		} else {
+			if(temp_packet.getType() >= PAYLOAD_DATA_CHANNEL_0 && temp_packet.getType() <= PAYLOAD_DATA_CHANNEL_7) {
+				if(temp_packet.getAction() != PKT_ACTION_STATUS) {
+					last_cmd_rx = getElapsedTime();
+				} 
+			}
+		}
+#endif
+
 		for(uint8_t i =0; i< num_modules; i++) { if(modules[i] && modules[i]->handles(temp_packet.getType())) {
 				modules[i]->parse(temp_packet.getType(), temp_packet.getAction(), (uint8_t *)temp_packet.getDataPtr(), temp_packet.getDataSize());
 			}
@@ -82,13 +98,12 @@ uint16_t BSTProtocol::update() {
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
 				last_tx = getElapsedTime();
 #endif
-#if defined (NO_DUPLEX_COMMS)
-				last_cmd_rx = getElapsedTime();
-#endif
 			}
 		} else {
 #if defined (NO_DUPLEX_COMMS)
-			if(getElapsedTime() - last_cmd_rx < CMD_TIMEOUT) return 0;
+			if(last_cmd_rx >= 0 && getElapsedTime() - last_cmd_rx < CMD_TIMEOUT) {
+				return 0;
+			}
 #endif
 			if(tx_queue.size() > 0) {
 				temp_packet = tx_queue.front();
@@ -157,11 +172,8 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 	tx_packet.setAction((PacketAction_t)action);
 	tx_packet.setData((uint8_t *)data, size);
 
-	//if((type&0xF0) != 0x60 && (type < 0xE8 || type > 0xEF) && type != PAYLOAD_S0_SENSORS && type != TELEMETRY_DEPLOYMENT_TUBE) {
 	if((type & 0xF0) != 0x60 &&
-			((type >= 0xE8 && type <= 0xEF) && action != PKT_ACTION_STATUS) &&
 			type != TELEMETRY_DEPLOYMENT_TUBE &&
-			type != 96 &&
 			type != PAYLOAD_S0_SENSORS ) {
 
 		if(tx_priority_queue.size() > PACKET_BUFFER_SIZE) {
@@ -171,12 +183,23 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 
 		tx_priority_queue.push(tx_packet);
 	} else {
-		if(tx_queue.size() > PACKET_BUFFER_SIZE) {
-			pmesg(VERBOSE_ERROR,"Transmit Command Buffer Overflow!\n");
-			return 0;
-		}
+		if(type >= PAYLOAD_DATA_CHANNEL_0 && type <= PAYLOAD_DATA_CHANNEL_7) {
+			if(action != PKT_ACTION_STATUS) {
+				if(tx_priority_queue.size() > PACKET_BUFFER_SIZE) {
+					pmesg(VERBOSE_ERROR,"Prioity Transmit Command Buffer Overflow!\n");
+					return 0;
+				}
 
-		tx_queue.push(tx_packet);
+				tx_priority_queue.push(tx_packet);
+			} 
+		} else {
+			if(tx_queue.size() > PACKET_BUFFER_SIZE) {
+				pmesg(VERBOSE_ERROR,"Transmit Command Buffer Overflow!\n");
+				return 0;
+			}
+
+			tx_queue.push(tx_packet);
+		}
 	}
 
 #ifdef IMPLEMENTATION_firmware

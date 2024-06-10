@@ -46,6 +46,7 @@ class BSTModuleFlightPlan : public BSTCommunicationsModule {
 
 		void setWaypointTimeout(float timeout);
 		void setDefaultWaypointTimeout();
+		float getDefaultWaypointTimeout();
 
 		FPSendState_t get_send_state() { return fp_send_state; }
 

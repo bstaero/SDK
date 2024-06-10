@@ -785,3 +785,7 @@ void BSTModuleFlightPlan::setWaypointTimeout(float timeout) {
 void BSTModuleFlightPlan::setDefaultWaypointTimeout(void) {
 	waypoint_timeout = WAYPOINT_RX_TIMEOUT;
 }
+
+float BSTModuleFlightPlan::getDefaultWaypointTimeout(void) {
+	return WAYPOINT_RX_TIMEOUT;
+}
