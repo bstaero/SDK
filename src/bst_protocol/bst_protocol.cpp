@@ -72,12 +72,12 @@ uint16_t BSTProtocol::update() {
 				temp_packet.getType() != TELEMETRY_DEPLOYMENT_TUBE &&
 				temp_packet.getType() != PAYLOAD_S0_SENSORS ) {
 
-			last_cmd_rx = getElapsedTime();
-		} else {
 			if(temp_packet.getType() >= PAYLOAD_DATA_CHANNEL_0 && temp_packet.getType() <= PAYLOAD_DATA_CHANNEL_7) {
 				if(temp_packet.getAction() != PKT_ACTION_STATUS) {
 					last_cmd_rx = getElapsedTime();
 				} 
+			} else {
+				last_cmd_rx = getElapsedTime();
 			}
 		}
 #endif
@@ -176,13 +176,6 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 			type != TELEMETRY_DEPLOYMENT_TUBE &&
 			type != PAYLOAD_S0_SENSORS ) {
 
-		if(tx_priority_queue.size() > PACKET_BUFFER_SIZE) {
-			pmesg(VERBOSE_ERROR,"Prioity Transmit Command Buffer Overflow!\n");
-			return 0;
-		}
-
-		tx_priority_queue.push(tx_packet);
-	} else {
 		if(type >= PAYLOAD_DATA_CHANNEL_0 && type <= PAYLOAD_DATA_CHANNEL_7) {
 			if(action != PKT_ACTION_STATUS) {
 				if(tx_priority_queue.size() > PACKET_BUFFER_SIZE) {
@@ -191,15 +184,29 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 				}
 
 				tx_priority_queue.push(tx_packet);
-			} 
-		} else {
-			if(tx_queue.size() > PACKET_BUFFER_SIZE) {
-				pmesg(VERBOSE_ERROR,"Transmit Command Buffer Overflow!\n");
+			} else {
+				if(tx_queue.size() > PACKET_BUFFER_SIZE) {
+					pmesg(VERBOSE_ERROR,"Transmit Command Buffer Overflow!\n");
+					return 0;
+				}
+
+				tx_queue.push(tx_packet);
+			}
+		}  else {
+			if(tx_priority_queue.size() > PACKET_BUFFER_SIZE) {
+				pmesg(VERBOSE_ERROR,"Prioity Transmit Command Buffer Overflow!\n");
 				return 0;
 			}
 
-			tx_queue.push(tx_packet);
+			tx_priority_queue.push(tx_packet);
 		}
+	} else {
+		if(tx_queue.size() > PACKET_BUFFER_SIZE) {
+			pmesg(VERBOSE_ERROR,"Transmit Command Buffer Overflow!\n");
+			return 0;
+		}
+
+		tx_queue.push(tx_packet);
 	}
 
 #ifdef IMPLEMENTATION_firmware
