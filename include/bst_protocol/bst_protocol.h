@@ -69,6 +69,8 @@ class BSTProtocol : public CommunicationsProtocol {
 
 		uint32_t last_address;
 
+		uint8_t last_request;
+
 
 };
 

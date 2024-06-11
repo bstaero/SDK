@@ -23,6 +23,8 @@ BSTProtocol::BSTProtocol() : CommunicationsProtocol() {
 	num_modules = 0;
 
 	last_tx = getElapsedTime();
+
+	last_request = INVALID_PACKET;
 }
 
 void BSTProtocol::registerModule(BSTCommunicationsModule * a_module) {
@@ -75,9 +77,11 @@ uint16_t BSTProtocol::update() {
 			if(temp_packet.getType() >= PAYLOAD_DATA_CHANNEL_0 && temp_packet.getType() <= PAYLOAD_DATA_CHANNEL_7) {
 				if(temp_packet.getAction() != PKT_ACTION_STATUS) {
 					last_cmd_rx = getElapsedTime();
+					last_request = temp_packet.getType();
 				} 
 			} else {
 				last_cmd_rx = getElapsedTime();
+				last_request = temp_packet.getType();
 			}
 		}
 #endif
@@ -156,6 +160,9 @@ void BSTProtocol::request(uint8_t type, uint8_t parameter) {
 }
 
 uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t size, const void * parameter) {
+	uint8_t temp_request = last_request;
+	last_request = INVALID_PACKET;
+
 	tx_packet.clear();
 
 	if(uses_address) {
@@ -177,7 +184,7 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 			type != PAYLOAD_S0_SENSORS ) {
 
 		if(type >= PAYLOAD_DATA_CHANNEL_0 && type <= PAYLOAD_DATA_CHANNEL_7) {
-			if(action != PKT_ACTION_STATUS) {
+			if(action != PKT_ACTION_STATUS || temp_request == type) {
 				if(tx_priority_queue.size() > PACKET_BUFFER_SIZE) {
 					pmesg(VERBOSE_ERROR,"Prioity Transmit Command Buffer Overflow!\n");
 					return 0;
