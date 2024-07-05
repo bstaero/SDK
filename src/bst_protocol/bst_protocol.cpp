@@ -47,7 +47,7 @@ void BSTProtocol::parseData(uint8_t byte) {
 }
 
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-  #define RADIO_TIMEOUT 0.25
+  #define RADIO_TIMEOUT 0.10
 #endif
 
 #if defined (NO_DUPLEX_COMMS)
