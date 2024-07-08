@@ -47,12 +47,12 @@ void BSTProtocol::parseData(uint8_t byte) {
 }
 
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-  #define RADIO_TIMEOUT 0.10
+static float RADIO_TIMEOUT = 0.25;
 #endif
 
 #if defined (NO_DUPLEX_COMMS)
-#define CMD_TIMEOUT 3.0
-float last_cmd_rx = -1.0;
+static float CMD_TIMEOUT = 3.0;
+static float last_cmd_rx = -1.0;
 #endif
 
 uint16_t BSTProtocol::update() {
@@ -78,10 +78,44 @@ uint16_t BSTProtocol::update() {
 				if(temp_packet.getAction() != PKT_ACTION_STATUS) {
 					last_cmd_rx = getElapsedTime();
 					last_request = temp_packet.getType();
+#if defined (NO_DUPLEX_COMMS)
+					if(temp_packet.getType() == FLIGHT_PLAN ||
+						 temp_packet.getType() == FLIGHT_PLAN_MAP ||
+						 temp_packet.getType() == LAST_MAPPING_WAYPOINT ||
+						 temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
+						 temp_packet.getType() == SYSTEM_INITIALIZE) {
+						CMD_TIMEOUT = 3.0;
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+						RADIO_TIMEOUT = 0.25;
+#endif
+					} else {
+						CMD_TIMEOUT = 1.0;
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+						RADIO_TIMEOUT = 0.02;
+#endif
+					}
+#endif
 				} 
 			} else {
 				last_cmd_rx = getElapsedTime();
 				last_request = temp_packet.getType();
+#if defined (NO_DUPLEX_COMMS)
+				if(temp_packet.getType() == FLIGHT_PLAN ||
+						temp_packet.getType() == FLIGHT_PLAN_MAP ||
+						temp_packet.getType() == LAST_MAPPING_WAYPOINT ||
+						temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
+						temp_packet.getType() == SYSTEM_INITIALIZE) {
+					CMD_TIMEOUT = 3.0;
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+					RADIO_TIMEOUT = 0.25;
+#endif
+				} else {
+					CMD_TIMEOUT = 1.0;
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+					RADIO_TIMEOUT = 0.02;
+#endif
+				}
+#endif
 			}
 		}
 #endif
@@ -113,6 +147,24 @@ uint16_t BSTProtocol::update() {
 				temp_packet = tx_queue.front();
 				if(CommunicationsProtocol::write(temp_packet.getPacket(), temp_packet.getSize()) == temp_packet.getSize()) {
 					tx_queue.pop();
+#if defined (NO_DUPLEX_COMMS)
+					if(temp_packet.getType() == FLIGHT_PLAN ||
+							temp_packet.getType() == FLIGHT_PLAN_MAP ||
+							temp_packet.getType() == LAST_MAPPING_WAYPOINT ||
+							temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
+							temp_packet.getType() == SYSTEM_INITIALIZE) {
+						//last_cmd_rx = getElapsedTime();
+						CMD_TIMEOUT = 3.0;
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+						RADIO_TIMEOUT = 0.25;
+#endif
+					} else {
+						CMD_TIMEOUT = 1.0;
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+						RADIO_TIMEOUT = 0.02;
+#endif
+					}
+#endif
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
 					last_tx = getElapsedTime();
 #endif
