@@ -292,7 +292,7 @@ typedef enum {
 
 /*--------[ Configuration ]--------*/
 
-#define COMMS_VERSION 3200
+#define COMMS_VERSION 3210
 
 #define MAX_ALTITUDE 20000
 
@@ -317,6 +317,11 @@ typedef struct _EstimatorParameters_t {
 	float agl_filter_rate;
 	float agl_filter_cutoff;
 
+	float ias_detect_k0;
+	float ias_detect_kth;
+	float ias_detect_kpitch;
+	float ias_detect_kvz;
+
 #ifdef __cplusplus
 	_EstimatorParameters_t() {
 		cf_acc_gain = 0.0;
@@ -331,6 +336,10 @@ typedef struct _EstimatorParameters_t {
 		ax_filter_beta = 0.0;
 		agl_filter_rate = 0.0;
 		agl_filter_cutoff = 0.0;
+		ias_detect_k0 = 0.0;
+		ias_detect_kth = 0.0;
+		ias_detect_kpitch = 0.0;
+		ias_detect_kvz = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) EstimatorParameters_t;

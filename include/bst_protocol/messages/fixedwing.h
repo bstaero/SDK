@@ -120,6 +120,8 @@ typedef struct _FlightControlParameters_t {
 	float k_cruise;  // K-value for altitude hold mode: default=0.5
 	float k_climb;  // K-value for climbout mode: default=1.8
 	float k_speed_hold;  // K-value with large speed error
+	float no_ias_a;
+	float no_ias_b;
 	/* need to adjust param.h if need more space */
 
 #ifdef __cplusplus
@@ -139,6 +141,8 @@ typedef struct _FlightControlParameters_t {
 		k_cruise = 0.0;
 		k_climb = 0.0;
 		k_speed_hold = 0.0;
+		no_ias_a = 0.0;
+		no_ias_b = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) FlightControlParameters_t;
