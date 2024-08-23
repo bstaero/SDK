@@ -352,20 +352,21 @@ class PacketTypes (Enum):
 
 #---------[ Configuration ]---------#
 
-COMMS_VERSION = 3200
+COMMS_VERSION = 3210
 MAX_ALTITUDE = 20000
 MAX_VEHICLES = 5
 
 #---------[ Estimator ]---------#
 
 class EstimatorParameters:
-	SIZE = 48
+	SIZE = 64
 
 	def __init__ (self, cf_acc_gain = 0.0, cf_mag_gain = 0.0,
 	cf_press_gain = 0.0, altitude_filter_Ph = 0.0, altitude_filter_R = 0.0,
 	altitude_filter_Q1 = 0.0, altitude_filter_Q2 = 0.0,
 	altitude_filter_Q3 = 0.0, ax_filter_alpha = 0.0, ax_filter_beta = 0.0,
-	agl_filter_rate = 0.0, agl_filter_cutoff = 0.0):
+	agl_filter_rate = 0.0, agl_filter_cutoff = 0.0, ias_detect_k0 = 0.0,
+	ias_detect_kth = 0.0, ias_detect_kpitch = 0.0, ias_detect_kvz = 0.0):
 		self.cf_acc_gain = cf_acc_gain
 		self.cf_mag_gain = cf_mag_gain
 		self.cf_press_gain = cf_press_gain
@@ -378,6 +379,10 @@ class EstimatorParameters:
 		self.ax_filter_beta = ax_filter_beta
 		self.agl_filter_rate = agl_filter_rate
 		self.agl_filter_cutoff = agl_filter_cutoff
+		self.ias_detect_k0 = ias_detect_k0
+		self.ias_detect_kth = ias_detect_kth
+		self.ias_detect_kpitch = ias_detect_kpitch
+		self.ias_detect_kvz = ias_detect_kvz
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
@@ -421,6 +426,18 @@ class EstimatorParameters:
 		self.agl_filter_cutoff = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
+		self.ias_detect_k0 = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.ias_detect_kth = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.ias_detect_kpitch = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.ias_detect_kvz = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
 	def getSize(self):
 		return self.SIZE
 
@@ -439,6 +456,10 @@ class EstimatorParameters:
 		buf.extend(struct.pack('<f', self.ax_filter_beta))
 		buf.extend(struct.pack('<f', self.agl_filter_rate))
 		buf.extend(struct.pack('<f', self.agl_filter_cutoff))
+		buf.extend(struct.pack('<f', self.ias_detect_k0))
+		buf.extend(struct.pack('<f', self.ias_detect_kth))
+		buf.extend(struct.pack('<f', self.ias_detect_kpitch))
+		buf.extend(struct.pack('<f', self.ias_detect_kvz))
 		return bytearray(buf)
 
 class State:

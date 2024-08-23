@@ -140,13 +140,14 @@ class FilterParameters:
 		return bytearray(buf)
 
 class FlightControlParameters:
-	SIZE = 60
+	SIZE = 68
 
 	def __init__ (self, tecs_Kv = 0.0, tecs_Kh = 0.0,
 	tecs_max_vx_dot = 0.0, min_ground_speed = 0.0, nav_lookahead = 0.0,
 	min_nav_lookahead_dist = 0.0, tuning_ias = 0.0, max_height_error_mode = 0.0,
 	max_v_error_mode = 0.0, k_height_tracking = 0.0, k_flare = 0.0,
-	k_land = 0.0, k_cruise = 0.0, k_climb = 0.0, k_speed_hold = 0.0):
+	k_land = 0.0, k_cruise = 0.0, k_climb = 0.0, k_speed_hold = 0.0,
+	no_ias_a = 0.0, no_ias_b = 0.0):
 		self.tecs_Kv = tecs_Kv
 		self.tecs_Kh = tecs_Kh
 		self.tecs_max_vx_dot = tecs_max_vx_dot
@@ -162,6 +163,8 @@ class FlightControlParameters:
 		self.k_cruise = k_cruise
 		self.k_climb = k_climb
 		self.k_speed_hold = k_speed_hold
+		self.no_ias_a = no_ias_a
+		self.no_ias_b = no_ias_b
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
@@ -214,6 +217,12 @@ class FlightControlParameters:
 		self.k_speed_hold = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
+		self.no_ias_a = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.no_ias_b = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
 	def getSize(self):
 		return self.SIZE
 
@@ -235,6 +244,8 @@ class FlightControlParameters:
 		buf.extend(struct.pack('<f', self.k_cruise))
 		buf.extend(struct.pack('<f', self.k_climb))
 		buf.extend(struct.pack('<f', self.k_speed_hold))
+		buf.extend(struct.pack('<f', self.no_ias_a))
+		buf.extend(struct.pack('<f', self.no_ias_b))
 		return bytearray(buf)
 
 class SurfaceMixing:
