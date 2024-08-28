@@ -176,6 +176,9 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 		uint8_t id,
 		float value);
 
+uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
+		uint8_t armed);
+
 uint32_t BRIDGE_GetPktDrop(void);
 /**
   * @}

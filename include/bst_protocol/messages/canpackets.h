@@ -89,9 +89,12 @@ typedef enum {
 	/* SYSTEM */
 	CAN_PKT_SUPPLY=64,
 	CAN_PKT_POWER_ON=65,
+	CAN_PKT_REMOTE_ID=66,
+	CAN_PKT_ARM_RID=67,
 
 	/* TELEMETRY */
 	CAN_PKT_DEPLOYMENT_TUBE=128,
+	CAN_PKT_GCS_LOCATION=176,
 
 	/* HWIL */
 
@@ -955,6 +958,22 @@ typedef struct _CAN_Receiver_t {
 
 /*--------[ Telemetry ]--------*/
 
+typedef struct _CAN_ArmRemoteID_t {
+	uint8_t startByte;
+
+	uint8_t armed;
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_ArmRemoteID_t() {
+		startByte = 0;
+		armed = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_ArmRemoteID_t;
+
 typedef struct _CAN_DeploymentTube_t {
 	uint8_t startByte;
 
@@ -973,6 +992,92 @@ typedef struct _CAN_DeploymentTube_t {
 	}
 #endif
 } __attribute__ ((packed)) CAN_DeploymentTube_t;
+
+typedef struct _CAN_GCSLocation_t {
+	uint8_t startByte;
+
+	double lat;
+	double lon;
+	float altitude;
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GCSLocation_t() {
+		startByte = 0;
+		lat = 0.0;
+		lon = 0.0;
+		altitude = 0.0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GCSLocation_t;
+
+typedef struct _CAN_OperatorID_t {
+	uint8_t startByte;
+
+	char operator_id[20];
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_OperatorID_t() {
+		uint8_t _i;
+
+		startByte = 0;
+
+		for (_i = 0; _i < 20; ++_i)
+			operator_id[_i] = 0;
+
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_OperatorID_t;
+
+typedef struct _CAN_RemoteID_t {
+	uint8_t startByte;
+
+	uint8_t ua_type;
+	uint8_t op_loc;
+	uint8_t base_mode;
+	uint8_t state;
+	uint8_t autopilot_type;
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_RemoteID_t() {
+		startByte = 0;
+		ua_type = 0;
+		op_loc = 0;
+		base_mode = 0;
+		state = 0;
+		autopilot_type = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_RemoteID_t;
+
+typedef struct _CAN_SerialNumber_t {
+	uint8_t startByte;
+
+	char serial_number[20];
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_SerialNumber_t() {
+		uint8_t _i;
+
+		startByte = 0;
+
+		for (_i = 0; _i < 20; ++_i)
+			serial_number[_i] = 0;
+
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_SerialNumber_t;
 
 #ifdef __cplusplus
 } /* namespace canpackets */
