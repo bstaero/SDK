@@ -418,7 +418,6 @@ void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size);
-
 void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size);
 
@@ -494,10 +493,11 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_TRIGGER:    BRIDGE_HandleTriggerPkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE:    BRIDGE_HandleDeplyTubePkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE_CMD:    BRIDGE_HandleDeplyTubeCmdPkt(data,size); break;
-		
+
 		case CAN_PKT_REMOTE_ID:  BRIDGE_HandleRIDPacket(data, size); break;
 		case CAN_PKT_GCS_LOCATION: BRIDGE_HandleGCSLocation(data, size); break;
 		case CAN_PKT_ARM_RID:		 BRIDGE_HandleArmRemoteID(data, size); break;
+		case CAN_PKT_SERIAL_ID:	 BRIDGE_HandleSerialNumber(data, size); break;
 
 		default: break;
 	}
@@ -2063,6 +2063,7 @@ void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size)
 
 void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size)
 {
+		printf("handle serial \n");
 #if defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_SerialNumber_t);
 
