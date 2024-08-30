@@ -1037,8 +1037,7 @@ typedef struct _CAN_OperatorID_t {
 typedef struct _CAN_RemoteID_t {
 	uint8_t startByte;
 
-	uint8_t ua_type;
-	uint8_t op_loc;
+	uint8_t aircraft_type;
 	uint8_t base_mode;
 	uint8_t state;
 	uint8_t autopilot_type;
@@ -1048,8 +1047,7 @@ typedef struct _CAN_RemoteID_t {
 #ifdef __cplusplus
 	_CAN_RemoteID_t() {
 		startByte = 0;
-		ua_type = 0;
-		op_loc = 0;
+		aircraft_type = 0;
 		base_mode = 0;
 		state = 0;
 		autopilot_type = 0;

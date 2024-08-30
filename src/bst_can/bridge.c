@@ -262,8 +262,7 @@ void updateDeployTube(float ts,
 		uint8_t error);
 
 void updateRemoteID(float ts, 
-		uint8_t ua_type, 
-		uint8_t op_loc, 
+		uint8_t aircraft_type, 
 		uint8_t base_mode, 
 		uint8_t state, 
 		uint8_t autopilot_type);
@@ -2043,7 +2042,7 @@ void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size)
 
 void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size)
 {
-#ifdef BOARD_RID
+#if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_OperatorID_t);
 
 	static uint8_t buffer[sizeof(CAN_OperatorID_t)];
@@ -2063,7 +2062,7 @@ void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size)
 
 void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size)
 {
-#ifdef BOARD_RID
+#if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_SerialNumber_t);
 
 	static uint8_t buffer[sizeof(CAN_SerialNumber_t)];
@@ -2083,7 +2082,7 @@ void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size)
 
 void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size)
 {
-#ifdef BOARD_RID
+#if defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_RemoteID_t);
 
 	static uint8_t buffer[sizeof(CAN_RemoteID_t)];
@@ -2093,13 +2092,13 @@ void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size)
 		CAN_RemoteID_t * data = (CAN_RemoteID_t *) buffer;
 		float t0 = getElapsedTime();
 		updateRemoteID(t0,
-				data->serial_number,
 				data->aircraft_type,
-				data->basemode,
+				data->base_mode,
 				data->state,
 				data->autopilot_type);
+
 #ifdef VERBOSE
-	pmesg(VERBOSE_CAN, "RID PACKET: %0.02f s, aircraft type %d, autopilot type %d, basemode %d, state: %d\n", t0, data->aircraft_type, data->autopilot_type, data->basemode, data->state);
+	pmesg(VERBOSE_CAN, "RID PACKET: %0.02f s, aircraft type %d, autopilot type %d, base_mode %d, state: %d\n", t0, data->aircraft_type, data->autopilot_type, data->base_mode, data->state);
 #endif
 
 	BRIDGE_BUFFER_CONCLUSION
@@ -2109,7 +2108,7 @@ void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size)
 void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size)
 {
 
-#ifdef BOARD_RID
+#if defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_GCSLocation_t);
 
 	static uint8_t buffer[sizeof(CAN_GCSLocation_t)];
@@ -2119,12 +2118,12 @@ void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size)
 		CAN_GCSLocation_t * data = (CAN_GCSLocation_t *) buffer;
 		float t0 = getElapsedTime();
 		updateGCSLocation(t0,
-				data->operator_id,
-				data->latitude,
-				data->longitude,
+				//data->operator_id,
+				data->lat,
+				data->lon,
 				data->altitude);
 #ifdef VERBOSE
-	pmesg(VERBOSE_CAN, "GCS LOCATION PACKET: %0.02f s, latitude %0.02lf, longitude %0.02lf, altitude %0.02f\n", t0, data->latitude, data->longitude, data->altitude);
+	pmesg(VERBOSE_CAN, "GCS LOCATION PACKET: %0.02f s, latitude %0.02lf, longitude %0.02lf, altitude %0.02f\n", t0, data->lat, data->lon, data->altitude);
 #endif
 
 	BRIDGE_BUFFER_CONCLUSION
@@ -2133,7 +2132,7 @@ void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size)
 
 void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size)
 {
-#ifdef BOARD_RID
+#if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_ArmRemoteID_t);
 
 	static uint8_t buffer[sizeof(CAN_ArmRemoteID_t)];
@@ -2143,10 +2142,10 @@ void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size)
 		CAN_ArmRemoteID_t * data = (CAN_ArmRemoteID_t *) buffer;
 		float t0 = getElapsedTime();
 		handleArmRemoteID(t0,
-				data->ready_to_arm);
+				data->armed);
 
 #ifdef VERBOSE
-	pmesg(VERBOSE_CAN, "ARM REMOTE ID PACKET: %0.02f s, Remote ID %d\n", t0, data_ready_to_arm);
+	pmesg(VERBOSE_CAN, "ARM REMOTE ID PACKET: %0.02f s, Remote ID %d\n", t0, data->armed);
 #endif
 
 	BRIDGE_BUFFER_CONCLUSION
@@ -2804,19 +2803,6 @@ uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
 	return CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE, &data, sizeof(CAN_DeploymentTube_t));
 }
 
-uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
-		uint8_t armed) {
-
-	CAN_ArmRemoteID_t data;
-
-	// fill packet
-	data.startByte = BRIDGE_START_BYTE;
-	data.armed = armed;
-	setFletcher16((uint8_t *)(&data), sizeof(CAN_ArmRemoteID_t));
-
-	return CAN_Write(p, CAN_PKT_ARM_RID, &data, sizeof(CAN_ArmRemoteID_t));
-}
-
 
 uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 		uint8_t id,
@@ -2831,6 +2817,54 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTubeCommand_t));
 
 	return CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE_CMD, &data, sizeof(CAN_DeploymentTubeCommand_t));
+}
+
+uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
+		uint8_t armed) {
+
+	CAN_ArmRemoteID_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.armed = armed;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_ArmRemoteID_t));
+
+	return CAN_Write(p, CAN_PKT_ARM_RID, &data, sizeof(CAN_ArmRemoteID_t));
+}
+
+uint8_t BRIDGE_SendGCSLocation(uint8_t p,
+		double latitude,
+		double longitude,
+		float altitude) {
+
+	CAN_GCSLocation_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.lat = latitude;
+	data.lon = longitude;
+	data.altitude = altitude;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_GCSLocation_t));
+
+	return CAN_Write(p, CAN_PKT_GCS_LOCATION, &data, sizeof(CAN_GCSLocation_t));
+}
+
+uint8_t BRIDGE_SendRIDPacket(uint8_t p,
+		uint8_t aircraft_type,
+		uint8_t base_mode,
+		uint8_t state,
+		uint8_t autopilot_type) {
+
+	CAN_RemoteID_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.aircraft_type = aircraft_type;
+	data.base_mode = base_mode;
+	data.state = state;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_RemoteID_t));
+
+	return CAN_Write(p, CAN_PKT_REMOTE_ID, &data, sizeof(CAN_RemoteID_t));
 }
 
 
