@@ -187,6 +187,9 @@ uint8_t BRIDGE_SendGCSLocation(uint8_t p,
 		double longitude,
 		float altitude);
 
+uint8_t BRIDGE_SendSerialNumber(uint8_t p,
+		char serial_number[20]);
+
 uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
 		uint8_t armed);
 

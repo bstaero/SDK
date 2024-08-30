@@ -2054,6 +2054,7 @@ void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size)
 		updateOperatorID(t0,
 				data->operator_id);
 #ifdef VERBOSE
+	pmesg(VERBOSE_CAN, "OPERATOR ID: %s\n", t0, data->operator_id);
 #endif
 
 	BRIDGE_BUFFER_CONCLUSION
@@ -2062,7 +2063,7 @@ void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size)
 
 void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size)
 {
-#if defined BOARD_core
+#if defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_SerialNumber_t);
 
 	static uint8_t buffer[sizeof(CAN_SerialNumber_t)];
@@ -2074,6 +2075,7 @@ void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size)
 		updateSerialNumber(t0,
 				data->serial_number);
 #ifdef VERBOSE
+	pmesg(VERBOSE_CAN, "SERIAL NUMBER: %s\n", t0, data->serial_number);
 #endif
 
 	BRIDGE_BUFFER_CONCLUSION
@@ -2865,6 +2867,19 @@ uint8_t BRIDGE_SendRIDPacket(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_RemoteID_t));
 
 	return CAN_Write(p, CAN_PKT_REMOTE_ID, &data, sizeof(CAN_RemoteID_t));
+}
+
+uint8_t BRIDGE_SendSerialNumber(uint8_t p,
+		char serial_number[20]) {
+
+	CAN_SerialNumber_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	memcpy(data.serial_number,serial_number,20);
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_SerialNumber_t));
+
+	return CAN_Write(p, CAN_PKT_SERIAL_ID, &data, sizeof(CAN_SerialNumber_t));
 }
 
 
