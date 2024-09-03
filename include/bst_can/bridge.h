@@ -176,6 +176,23 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 		uint8_t id,
 		float value);
 
+uint8_t BRIDGE_SendRIDPacket(uint8_t p,
+		uint8_t aircraft_type,
+		uint8_t base_mode,
+		uint8_t state,
+		uint8_t autopilot_type);
+
+uint8_t BRIDGE_SendGCSLocation(uint8_t p,
+		double latitude,
+		double longitude,
+		float altitude);
+
+uint8_t BRIDGE_SendSerialNumber(uint8_t p,
+		char serial_number[20]);
+
+uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
+		uint8_t armed);
+
 uint32_t BRIDGE_GetPktDrop(void);
 /**
   * @}
