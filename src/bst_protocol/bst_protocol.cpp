@@ -34,7 +34,18 @@ void BSTProtocol::registerModule(BSTCommunicationsModule * a_module) {
 	}
 }
 
+//FIXME have to do this otherwise it will go into lost comms when asking for parameters or sending flight plans
+#if defined NO_DUPLEX_COMMS
+extern float last_heartbeat;
+#endif
+
 void BSTProtocol::parseData(uint8_t byte) {
+
+//FIXME have to do this otherwise it will go into lost comms when asking for parameters or sending flight plans
+#ifdef NO_DUPLEX_COMMS
+	last_heartbeat = getElapsedTime();
+#endif
+
 	if(rx_queue.size() >= PACKET_BUFFER_SIZE) {
 		pmesg(VERBOSE_ERROR,"Receive Buffer Overflow!\n");
 		return;
