@@ -44,11 +44,12 @@ class BSTPacket:
 
     HAS_ADDRESS = False
 
-    def parse(self, buf):
+    def parse(self, buf, has_address=False):
         if len(buf) < self.OVERHEAD: return False
 
-        i = 0
+        self.set_addressing(has_address)
 
+        i = 0
         while i < len(buf):
             hwil = False
             header_bytes = buf[i:i + 2]
@@ -161,7 +162,6 @@ class BSTPacket:
 
         if len(raw_data) != total_size:
             raise ValueError('Bad checksum size: ',len(raw_data),' vs ',total_size)
-            return False
 
         for i in range(0, total_size):
             sum1 = (sum1 + struct.unpack_from('<B', raw_data, i)[0]) % 255

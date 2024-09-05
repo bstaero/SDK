@@ -19,3 +19,6 @@ venv/
 *.egg-info/
 build/
 dist/
+
+# Test files
+*.pkt

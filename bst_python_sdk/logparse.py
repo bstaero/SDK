@@ -37,7 +37,15 @@ LANDING = 6
 LANDED = 7
 
 
-def parse_log(filename, handler):
+def parse_log(filename, handler, has_addressing=False):
+    parsed_log: dict = {}
+
+    def _add_to_dict(pkt_type, pkt_data):
+        if pkt_type in parsed_log:
+            parsed_log[pkt_type].append(pkt_data)
+        else:
+            parsed_log[pkt_type] = [pkt_data]
+
     try:
         with open(filename, "rb") as binary_file:
             binary_file.seek(0, 2)  # Seek the end
@@ -49,8 +57,10 @@ def parse_log(filename, handler):
                 binary_file.seek(i)
                 pkt_data = binary_file.read(BSTPacket.BST_MAX_PACKET_SIZE)
 
-                if pkt.parse(pkt_data):
-                    handler(pkt)
+                if pkt.parse(pkt_data, has_addressing):
+                    parsed_pkt = handler(pkt)
+                    if parsed_pkt is not None:
+                        _add_to_dict(pkt.TYPE, parsed_pkt)
 
                     i = i + pkt.SIZE + pkt.OVERHEAD
                 else:
@@ -59,8 +69,10 @@ def parse_log(filename, handler):
     except IOError:
         print("Could not open file: " + filename)
 
+    return parsed_log
 
-def find_system_info(filename):
+
+def find_system_info(filename, has_addressing=False):
     try:
         with open(filename, "rb") as binary_file:
             binary_file.seek(0, 2)  # Seek the end
@@ -72,7 +84,7 @@ def find_system_info(filename):
                 binary_file.seek(i)
                 pkt_data = binary_file.read(BSTPacket.BST_MAX_PACKET_SIZE)
 
-                if pkt.parse(pkt_data):
+                if pkt.parse(pkt_data, has_addressing):
                     if pkt.TYPE is PacketTypes.SYSTEM_INITIALIZE:
                         return pkt
 

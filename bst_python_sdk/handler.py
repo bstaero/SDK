@@ -23,17 +23,24 @@
 # *#=+--+=#=+--                 --+=#=+--+=#=+--                 --+=#=+--+=#* #
 
 from .comm_packets.comm_packets import *
+from .comm_packets.gcs import *
 from .comm_packets.payload import *
 from .comm_packets.fixedwing import *
 from .comm_packets.canpackets import *
 
 packet_mapping = {
+    # GCS Packets
+    PacketTypes.TELEMETRY_GCS.value: GCSStatus(),
+    PacketTypes.TELEMETRY_GCS_SVIN.value: GCSSurveyIn(),
+    PacketTypes.TELEMETRY_GCS_LOCATION: TelemetryGCS(),
+
+    # Aircraft Packets
     PacketTypes.TELEMETRY_CONTROL.value: TelemetryControl(),
     PacketTypes.TELEMETRY_ORIENTATION.value: TelemetryOrientation(),
+    PacketTypes.TELEMETRY_PAYLOAD.value: TelemetryPayload(),
     PacketTypes.TELEMETRY_POSITION.value: TelemetryPosition(),
     PacketTypes.TELEMETRY_PRESSURE.value: TelemetryPressure(),
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem(),
-    PacketTypes.TELEMETRY_PAYLOAD.value: TelemetryPayload(),
     PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload()
 }
 
@@ -54,20 +61,19 @@ def simulated_can_handler(pkt):
 
 
 def standard_handler(pkt):
-    if (pkt.FROM & 0xFF000000) == 0x41000000:
-        packet_data = None
+    packet_data = None
 
-        if pkt.TYPE.value not in packet_mapping:
-            print('Packet type ',pkt.TYPE.value,' not yet set up for parsing')
-            return None
+    if pkt.TYPE.value not in packet_mapping:
+        # print('Warning: Packet type ', pkt.TYPE.value, ' not yet set up for parsing')
+        return None
 
-        try:
-            if pkt.TYPE.value >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
-                packet_mapping[pkt.TYPE.value].buffer = [None] * 64
+    try:
+        if pkt.TYPE.value >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
+            packet_mapping[pkt.TYPE.value].buffer = [None] * 64
 
-            packet_mapping[pkt.TYPE.value].parse(pkt.DATA)
-            packet_data = packet_mapping[pkt.TYPE.value]
-        except BufferError as ErrorMessage:
-            print(ErrorMessage)
+        packet_mapping[pkt.TYPE.value].parse(pkt.DATA)
+        packet_data = packet_mapping[pkt.TYPE.value]
+    except BufferError as ErrorMessage:
+        print(ErrorMessage)
 
-        return packet_data
+    return packet_data
