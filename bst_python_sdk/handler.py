@@ -117,7 +117,6 @@ def standard_handler(pkt):
     if pkt.TYPE.value not in packet_mapping:
         if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT and 'HWIL' not in pkt.TYPE.name:
             print(f'Parsing not set up for "{pkt.TYPE.name}" packet...')
-            raise TypeError("OK")
         return None
 
     try:
