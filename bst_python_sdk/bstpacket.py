@@ -27,6 +27,7 @@ import struct
 from .comm_packets.comm_packets import PacketTypes
 from .comm_packets.payload import PayloadID
 
+
 class BSTPacket:
     BST_MAX_PACKET_SIZE = 128
 
@@ -69,7 +70,7 @@ class BSTPacket:
                     try:
                         self.TYPE = PayloadID(pkt_type)
                     except ValueError:
-                        raise ValueError("No such type: " + str(pkt_type))
+                        return False
 
                 # PKT_ACTION
                 self.ACTION = buf[i]
@@ -161,13 +162,18 @@ class BSTPacket:
         total_size = self.OVERHEAD + self.SIZE
 
         if len(raw_data) != total_size:
-            raise ValueError('Bad checksum size: ',len(raw_data),' vs ',total_size)
+            # raise ValueError(f'[{self.TYPE.name}] -- Bad checksum size: {len(raw_data)} vs {total_size}')
+            print(f'[{self.TYPE.name}] -- Bad checksum size: {len(raw_data)} vs {total_size}')
+            return False
 
         for i in range(0, total_size):
             sum1 = (sum1 + struct.unpack_from('<B', raw_data, i)[0]) % 255
             sum2 = (sum2 + sum1) % 255
 
-        return ((sum2 << 8) | sum1) == 0
+        checksum_passed = ((sum2 << 8) | sum1) == 0
+        if not checksum_passed:
+            print(f'[{self.TYPE.name}] -- Failed checksum')
+        return checksum_passed
 
     def set_fletcher_16(self, data=None, size=None):
         sum1 = 0

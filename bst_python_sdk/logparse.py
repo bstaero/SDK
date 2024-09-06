@@ -54,13 +54,18 @@ def parse_log(filename, handler, has_addressing=False):
             i = 0
 
             while i < num_bytes:
+                pkt = BSTPacket()
                 binary_file.seek(i)
                 pkt_data = binary_file.read(BSTPacket.BST_MAX_PACKET_SIZE)
+                parsed_pkt = pkt.parse(pkt_data, has_addressing)
+                if not parsed_pkt:
+                    pkt = BSTPacket()
+                    parsed_pkt = pkt.parse(pkt_data, not has_addressing)
 
-                if pkt.parse(pkt_data, has_addressing):
-                    parsed_pkt = handler(pkt)
-                    if parsed_pkt is not None:
-                        _add_to_dict(pkt.TYPE, parsed_pkt)
+                if parsed_pkt:
+                    parsed_data = handler(pkt)
+                    if parsed_data is not None:
+                        _add_to_dict(pkt.TYPE, parsed_data)
 
                     i = i + pkt.SIZE + pkt.OVERHEAD
                 else:
