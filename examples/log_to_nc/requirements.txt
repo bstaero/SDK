@@ -1,0 +1,6 @@
+BSTPythonSDK==3.21.0.dev1
+certifi==2024.8.30
+cftime==1.6.4
+netCDF4==1.7.1.post2
+numpy==2.1.1
+scipy==1.14.1
