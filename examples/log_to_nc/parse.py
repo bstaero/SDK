@@ -1,8 +1,8 @@
-from bst_python_sdk.comm_packets.comm_packets import ThreeAxisSensor
 from bst_python_sdk.logparse import parse_log
 from bst_python_sdk.handler import standard_handler
 
 from enum import Enum
+import inspect
 
 from netCDF4 import Dataset
 import os.path
@@ -21,10 +21,11 @@ def read_var(pkt, var_name):
 		return getattr(pkt, var_name)
 
 	var_attrs = var_name.split('.')
-	top_attr = var_attrs[0]
-	sub_attr = var_attrs[1]
-
-	return getattr(getattr(pkt, top_attr), sub_attr)
+	result = getattr(pkt, var_attrs[0])
+	for i in range(1, len(var_attrs)):
+		result = getattr(result, var_attrs[i])
+	
+	return result
 
 
 def convert(filename, parsed_log):
@@ -44,7 +45,7 @@ def convert(filename, parsed_log):
 			continue
 
 		for field in pkts[0].__dict__:
-			def _parse_group(field):
+			def _parse_field(field):
 				if field == 'buffer':
 					return
 
@@ -56,17 +57,17 @@ def convert(filename, parsed_log):
 					add_list_to_nc(field, field_val, pkt_grp, pkts)
 				elif field_type in type_conv:
 					add_primitive_to_nc(field, field_type, pkt_grp, pkts)
-				elif field_type == ThreeAxisSensor:
+				elif inspect.isclass(field_type):
 					for sub_field in field_val.__dict__:
 						field_name = f'{field}.{sub_field}'
-						_parse_group(field_name)
+						_parse_field(field_name)
 				else:
 					if field_type == list:
 						print(f'Unsupported list type: {type(field_val)}')
 					else:
 						print(f'Unsupported type: {field_type}')
 
-			_parse_group(field)
+			_parse_field(field)
 
 
 def add_enum_to_nc(field, pkt_grp, pkts):
