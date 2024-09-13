@@ -46,6 +46,7 @@ packet_mapping = {
     PacketTypes.FLIGHT_PLAN_MAP.value: FlightPlanMap(),
     PacketTypes.FLIGHT_PLAN_WAYPOINT.value: Waypoint(),
     PacketTypes.HANDSET_CALIBRATION.value: HandsetCalibration(),
+    PacketTypes.INPUT_HANDSET_VALUES.value: HandsetValues(),
     PacketTypes.LAST_MAPPING_WAYPOINT.value: int,
     PacketTypes.MISSION_PARAMETERS.value: MissionParameters(),
     PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload(),

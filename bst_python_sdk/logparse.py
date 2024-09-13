@@ -37,8 +37,9 @@ LANDING = 6
 LANDED = 7
 
 
-def parse_log(filename, handler, has_addressing=False):
+def parse_log(filename, handler, has_addressing=False, verbose=False):
     parsed_log: dict = {}
+    failed_pkts: dict = {}
 
     def _add_to_dict(pkt_type, pkt_data):
         if pkt_type in parsed_log:
@@ -69,11 +70,24 @@ def parse_log(filename, handler, has_addressing=False):
 
                     i = i + pkt.SIZE + pkt.OVERHEAD
                 else:
+                    if pkt.TYPE not in failed_pkts:
+                        failed_pkts[pkt.TYPE] = 1
+                    else:
+                        failed_pkts[pkt.TYPE] += 1
                     i = i + 1
 
     except IOError:
         print("Could not open file: " + filename)
 
+    if len(failed_pkts):
+        print("Failures:")
+        for key, value in failed_pkts.items():
+            total = value
+            if key in parsed_log:
+                total = len(parsed_log[key]) + value
+            print(f"\t{key.name}: {value}/{total} failed")
+    else:
+        print("All packets parsed successfully")
     return parsed_log
 
 

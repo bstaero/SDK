@@ -12,6 +12,7 @@ examples/gazebo/test
 examples/gazebo/fp_test
 examples/payload/test
 examples/mhp/test
+examples/log_to_nc/data
 .idea/
 venv/
 

@@ -44,6 +44,7 @@ class BSTPacket:
     OVERHEAD = 8
 
     HAS_ADDRESS = False
+    VERBOSE = False
 
     def parse(self, buf, has_address=False):
         if len(buf) < self.OVERHEAD: return False
@@ -123,6 +124,9 @@ class BSTPacket:
             self.OVERHEAD = 8
             self.HAS_ADDRESS = False
 
+    def set_verbose(self, on_off):
+        self.VERBOSE = on_off
+
     def serialize(self):
         buf = []
 
@@ -163,7 +167,8 @@ class BSTPacket:
 
         if len(raw_data) != total_size:
             # raise ValueError(f'[{self.TYPE.name}] -- Bad checksum size: {len(raw_data)} vs {total_size}')
-            print(f'[{self.TYPE.name}] -- Bad checksum size: {len(raw_data)} vs {total_size}')
+            if self.VERBOSE:
+                print(f'[{self.TYPE.name}] -- Bad checksum size: {len(raw_data)} vs {total_size}')
             return False
 
         for i in range(0, total_size):
@@ -171,7 +176,7 @@ class BSTPacket:
             sum2 = (sum2 + sum1) % 255
 
         checksum_passed = ((sum2 << 8) | sum1) == 0
-        if not checksum_passed:
+        if self.VERBOSE:
             print(f'[{self.TYPE.name}] -- Failed checksum')
         return checksum_passed
 

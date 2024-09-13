@@ -30,6 +30,7 @@ def read_var(pkt, var_name):
 
 def convert(filename, parsed_log):
 	nc_name = '.'.join(filename.split('.')[:-1]) + '.nc'
+	nc_name = nc_name.split('/')[-1]
 	root_grp = Dataset(nc_name, 'w', format='NETCDF4')
 
 	for pkt_type, pkts in parsed_log.items():
