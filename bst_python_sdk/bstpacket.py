@@ -115,6 +115,7 @@ class BSTPacket:
             else:
                 # print("Dropping byte")
                 i = i + 1
+        return False, False
 
     def set_addressing(self, on_off):
         if on_off:
