@@ -40,8 +40,17 @@ LANDED = 7
 def parse_log(filename, handler, has_addressing=False, verbose=False):
     parsed_log: dict = {}
     failed_pkts: dict = {}
+    results: list = [{}]
 
-    def _add_to_dict(pkt_type, pkt_data):
+    def _add_to_dict(pkt_type, pkt_data, is_new_flight):
+        if is_new_flight:
+            results.append({})
+
+        if pkt_type in results[len(results)-1]:
+            results[len(results)-1][pkt_type].append(pkt_data)
+        else:
+            results[len(results)-1][pkt_type] = [pkt_data]
+
         if pkt_type in parsed_log:
             parsed_log[pkt_type].append(pkt_data)
         else:
@@ -58,15 +67,15 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
                 pkt = BSTPacket()
                 binary_file.seek(i)
                 pkt_data = binary_file.read(BSTPacket.BST_MAX_PACKET_SIZE)
-                parsed_pkt = pkt.parse(pkt_data, has_addressing)
+                parsed_pkt, is_new_flight = pkt.parse(pkt_data, has_addressing)
                 if not parsed_pkt:
                     pkt = BSTPacket()
-                    parsed_pkt = pkt.parse(pkt_data, not has_addressing)
+                    parsed_pkt, is_new_flight = pkt.parse(pkt_data, not has_addressing)
 
                 if parsed_pkt:
                     parsed_data = handler(pkt)
                     if parsed_data is not None:
-                        _add_to_dict(pkt.TYPE, parsed_data)
+                        _add_to_dict(pkt.TYPE, parsed_data, is_new_flight)
 
                     i = i + pkt.SIZE + pkt.OVERHEAD
                 else:
@@ -88,7 +97,7 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
             print(f"\t{key.name}: {value}/{total} failed")
     else:
         print("All packets parsed successfully")
-    return parsed_log
+    return results
 
 
 def find_system_info(filename, has_addressing=False):

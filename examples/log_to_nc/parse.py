@@ -13,7 +13,8 @@ type_conv = {int: 'i8', float: 'f8'}
 
 def parse(filename):
 	parsed_log = parse_log(filename, standard_handler, True)
-	convert(filename, parsed_log)
+	for i in range(len(parsed_log)):
+		convert(filename, parsed_log[i], i)
 
 
 def read_var(pkt, var_name):
@@ -28,8 +29,9 @@ def read_var(pkt, var_name):
 	return result
 
 
-def convert(filename, parsed_log):
-	nc_name = '.'.join(filename.split('.')[:-1]) + '.nc'
+def convert(filename, parsed_log, flight_num=1):
+	print(f'\n### Converting flight #{flight_num}')
+	nc_name = '.'.join(filename.split('.')[:-1]) + f'_flight_{flight_num}.nc'
 	nc_name = nc_name.split('/')[-1]
 	root_grp = Dataset(nc_name, 'w', format='NETCDF4')
 
