@@ -37,19 +37,37 @@ LANDING = 6
 LANDED = 7
 
 
+unknown_ac: str = "unknown_ac"
+current_ac: str = unknown_ac
+results: dict = {current_ac: {}}
+
 def parse_log(filename, handler, has_addressing=False, verbose=False):
     parsed_log: dict = {}
     failed_pkts: dict = {}
-    results: list = [{}]
 
-    def _add_to_dict(pkt_type, pkt_data, is_new_flight):
-        if is_new_flight:
-            results.append({})
+    def _add_to_dict(pkt_type, pkt_data):
+        global current_ac
+        global results
 
-        if pkt_type in results[len(results)-1]:
-            results[len(results)-1][pkt_type].append(pkt_data)
+        if pkt_type == PacketTypes.SYSTEM_INITIALIZE:
+            sys_init_pkt: SystemInitialize = pkt_data
+            name_arr = sys_init_pkt.name
+            while name_arr[len(name_arr)-1] == 0:
+                del name_arr[len(name_arr)-1]
+            ac_name = "".join(map(chr, sys_init_pkt.name))
+            if current_ac == unknown_ac:
+                current_ac = ac_name
+                results = {current_ac: results[unknown_ac]}
+            else:
+                current_ac = ac_name
+
+        if current_ac not in results:
+            results[current_ac] = {}
+
+        if pkt_type in results[current_ac]:
+            results[current_ac][pkt_type].append(pkt_data)
         else:
-            results[len(results)-1][pkt_type] = [pkt_data]
+            results[current_ac][pkt_type] = [pkt_data]
 
         if pkt_type in parsed_log:
             parsed_log[pkt_type].append(pkt_data)
@@ -67,15 +85,15 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
                 pkt = BSTPacket()
                 binary_file.seek(i)
                 pkt_data = binary_file.read(BSTPacket.BST_MAX_PACKET_SIZE)
-                parsed_pkt, is_new_flight = pkt.parse(pkt_data, has_addressing)
+                parsed_pkt = pkt.parse(pkt_data, has_addressing)
                 if not parsed_pkt:
                     pkt = BSTPacket()
-                    parsed_pkt, is_new_flight = pkt.parse(pkt_data, not has_addressing)
+                    parsed_pkt = pkt.parse(pkt_data, not has_addressing)
 
                 if parsed_pkt:
                     parsed_data = handler(pkt)
                     if parsed_data is not None:
-                        _add_to_dict(pkt.TYPE, parsed_data, is_new_flight)
+                        _add_to_dict(pkt.TYPE, parsed_data)
 
                     i = i + pkt.SIZE + pkt.OVERHEAD
                 else:
