@@ -47,7 +47,7 @@ class BSTPacket:
     VERBOSE = False
 
     def parse(self, buf, has_address=False):
-        if len(buf) < self.OVERHEAD: return False, False
+        if len(buf) < self.OVERHEAD: return False
 
         self.set_addressing(has_address)
 
@@ -58,7 +58,7 @@ class BSTPacket:
             if header_bytes == b"U$":
                 i = i + 2
 
-                if self.OVERHEAD > len(buf) - i: return False, False
+                if self.OVERHEAD > len(buf) - i: return False
 
                 # PKT_TYPE
                 pkt_type = buf[i]
@@ -91,7 +91,7 @@ class BSTPacket:
                     self.CAN_PKT_SIZE = struct.unpack_from('<B', bytes(buf[i:i + 2]))[0]
                     i = i + 2
 
-                if not hwil and self.SIZE + self.CHECKSUM_SIZE > len(buf) - i: return False, False
+                if not hwil and self.SIZE + self.CHECKSUM_SIZE > len(buf) - i: return False
 
                 if self.HAS_ADDRESS:
                     # PKT_TO
@@ -111,11 +111,11 @@ class BSTPacket:
                 self.CHKSUM = buf[i:i + 2]
                 i = i + 2
 
-                return hwil or self.check_fletcher_16(), self.TYPE == PacketTypes.SYSTEM_INITIALIZE
+                return hwil or self.check_fletcher_16()
             else:
                 # print("Dropping byte")
                 i = i + 1
-        return False, False
+        return False
 
     def set_addressing(self, on_off):
         if on_off:
