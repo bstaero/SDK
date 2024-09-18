@@ -219,6 +219,16 @@ void updateADSB(float system_time,
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel) {}
 
+void updateRemoteID(float ts, 
+		uint8_t aircraft_type, 
+		uint8_t base_mode, 
+		uint8_t state, 
+		uint8_t autopilot_type) {}
+
+void updateOperatorID(float ts, 
+		char operator_id[20]) {}
+
+void handleArmRemoteID(float ts, uint8_t arm_status) {}
 
 void printData() {
 	static bool first_run = true;
