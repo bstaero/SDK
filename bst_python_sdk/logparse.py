@@ -37,20 +37,42 @@ LANDING = 6
 LANDED = 7
 
 
+gcs_name: str = "SwiftStation"
 unknown_ac: str = "unknown_ac"
 current_ac: str = unknown_ac
-results: dict = {current_ac: {}}
+results: dict = {gcs_name: {}, current_ac: {}}
 
 def parse_log(filename, handler, has_addressing=False, verbose=False):
     parsed_log: dict = {}
     failed_pkts: dict = {}
-    sys_time = 0
+    ac_sys_time = 0
+    gcs_sys_time = 0
 
-    def _add_to_dict(pkt_type, pkt_data):
+    def _append_to_results(pkt_type, pkt_data, entry_name):
+        global results
+        if entry_name not in results:
+            results[entry_name] = {}
+
+        if pkt_type in results[entry_name]:
+            results[entry_name][pkt_type].append(pkt_data)
+        else:
+            results[entry_name][pkt_type] = [pkt_data]
+
+        if pkt_type in parsed_log:
+            parsed_log[pkt_type].append(pkt_data)
+        else:
+            parsed_log[pkt_type] = [pkt_data]
+
+    def _add_to_dict(pkt: BSTPacket, pkt_data):
         global current_ac
         global results
 
-        if pkt_type == PacketTypes.SYSTEM_INITIALIZE:
+        if (pkt.FROM & 0xFF000000) != 0x41000000:
+            # GCS packet
+            _append_to_results(pkt.TYPE, pkt_data, gcs_name)
+            return
+
+        if pkt.TYPE == PacketTypes.SYSTEM_INITIALIZE:
             sys_init_pkt: SystemInitialize = pkt_data
             name_arr = sys_init_pkt.name
 
@@ -61,22 +83,11 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
             ac_name = "".join(map(chr, sys_init_pkt.name))
             if current_ac == unknown_ac:
                 current_ac = ac_name
-                results = {current_ac: results[unknown_ac]}
+                results = {gcs_name: results[gcs_name], current_ac: results[unknown_ac]}
             else:
                 current_ac = ac_name
 
-        if current_ac not in results:
-            results[current_ac] = {}
-
-        if pkt_type in results[current_ac]:
-            results[current_ac][pkt_type].append(pkt_data)
-        else:
-            results[current_ac][pkt_type] = [pkt_data]
-
-        if pkt_type in parsed_log:
-            parsed_log[pkt_type].append(pkt_data)
-        else:
-            parsed_log[pkt_type] = [pkt_data]
+        _append_to_results(pkt.TYPE, pkt_data, current_ac)
 
     try:
         with open(filename, "rb") as binary_file:
@@ -95,9 +106,15 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
                     parsed_pkt = pkt.parse(pkt_data, not has_addressing)
 
                 if parsed_pkt:
-                    parsed_data, sys_time = handler(pkt, sys_time)
+                    if (pkt.FROM & 0xFF000000) == 0x41000000:
+                        # AC packet
+                        parsed_data, ac_sys_time = handler(pkt, ac_sys_time)
+                    else:
+                        # GCS packet
+                        parsed_data, gcs_sys_time = handler(pkt, gcs_sys_time)
+
                     if parsed_data is not None:
-                        _add_to_dict(pkt.TYPE, parsed_data)
+                        _add_to_dict(pkt, parsed_data)
 
                     i = i + pkt.SIZE + pkt.OVERHEAD
                 else:
