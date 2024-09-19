@@ -112,7 +112,7 @@ def simulated_can_handler(pkt):
             pass
 
 
-def standard_handler(pkt):
+def standard_handler(pkt, sys_time=0):
     packet_data = None
 
     if pkt.TYPE.value not in packet_mapping:
@@ -133,4 +133,8 @@ def standard_handler(pkt):
     except BufferError as ErrorMessage:
         print(ErrorMessage)
 
-    return packet_data
+    if hasattr(packet_data, "system_time") and packet_data.system_time > 0:
+        return packet_data, packet_data.system_time
+    else:
+        packet_data.set_system_time(sys_time)
+    return packet_data, sys_time

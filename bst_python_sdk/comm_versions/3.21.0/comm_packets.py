@@ -150,6 +150,9 @@ class ActuatorCalibration:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -185,6 +188,9 @@ class Actuators:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -441,6 +447,9 @@ class EstimatorParameters:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -558,6 +567,9 @@ class State:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -673,6 +685,9 @@ class Waypoint:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -809,6 +824,9 @@ class DubinsPath:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -869,6 +887,9 @@ class FlightPlanMap:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -987,6 +1008,9 @@ class AxisMapping:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1054,6 +1078,9 @@ class MHP:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1142,6 +1169,9 @@ class MHP9HSensors:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1218,6 +1248,9 @@ class MHP9HTiming:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1304,6 +1337,9 @@ class MHPSensors:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1401,6 +1437,9 @@ class MHPSensorsGNSS:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1480,6 +1519,9 @@ class MHPTiming:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1522,6 +1564,9 @@ class Pressure:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1558,6 +1603,9 @@ class RTCM:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1620,6 +1668,9 @@ class SensorOffsets:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1656,6 +1707,9 @@ class SingleAxisSensorCalibration:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1680,6 +1734,9 @@ class SingleValue:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1708,6 +1765,9 @@ class SingleValueSensor:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1745,6 +1805,9 @@ class ThreeAxisSensor:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1789,6 +1852,9 @@ class ThreeAxisSensorCalibration:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1885,6 +1951,9 @@ class ADSB:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1933,6 +2002,9 @@ class CalibrateSensor:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -2022,6 +2094,9 @@ class GPS:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -2081,6 +2156,9 @@ class IMU:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -2142,6 +2220,9 @@ class ThreeAxisFirstOrderCorrection:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -2213,6 +2294,9 @@ class Sensors:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -2412,6 +2496,9 @@ class HardwareError:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -2449,6 +2536,9 @@ class PowerOn:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -2512,6 +2602,9 @@ class SystemStatus:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -2608,6 +2701,9 @@ class SystemInitialize:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -2748,6 +2844,9 @@ class HandsetValues:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -2921,6 +3020,9 @@ class Command:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -2975,6 +3077,9 @@ class HandsetCalibration:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -3013,6 +3118,9 @@ class Limit:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -3041,6 +3149,9 @@ class Timeout:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -3084,6 +3195,9 @@ class PID:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -3129,6 +3243,9 @@ class TabletJoystick:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -3245,6 +3362,9 @@ class TelemetryControl:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -3308,6 +3428,9 @@ class DeploymentTube:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -3368,6 +3491,9 @@ class TelemetryOrientation:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -3450,6 +3576,9 @@ class TelemetryPosition:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -3531,6 +3660,9 @@ class TelemetryPressure:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -3652,6 +3784,9 @@ class TelemetrySystem:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []

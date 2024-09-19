@@ -44,6 +44,7 @@ results: dict = {current_ac: {}}
 def parse_log(filename, handler, has_addressing=False, verbose=False):
     parsed_log: dict = {}
     failed_pkts: dict = {}
+    sys_time = 0
 
     def _add_to_dict(pkt_type, pkt_data):
         global current_ac
@@ -52,8 +53,11 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
         if pkt_type == PacketTypes.SYSTEM_INITIALIZE:
             sys_init_pkt: SystemInitialize = pkt_data
             name_arr = sys_init_pkt.name
+
+            # Trim trailing 0s in name byte array
             while name_arr[len(name_arr)-1] == 0:
                 del name_arr[len(name_arr)-1]
+
             ac_name = "".join(map(chr, sys_init_pkt.name))
             if current_ac == unknown_ac:
                 current_ac = ac_name
@@ -91,7 +95,7 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
                     parsed_pkt = pkt.parse(pkt_data, not has_addressing)
 
                 if parsed_pkt:
-                    parsed_data = handler(pkt)
+                    parsed_data, sys_time = handler(pkt, sys_time)
                     if parsed_data is not None:
                         _add_to_dict(pkt.TYPE, parsed_data)
 

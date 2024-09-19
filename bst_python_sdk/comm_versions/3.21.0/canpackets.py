@@ -82,6 +82,7 @@ class CAN_PacketTypes (Enum):
 	CAN_PKT_POWER_ON=65
 	CAN_PKT_REMOTE_ID=66
 	CAN_PKT_ARM_RID=67
+	CAN_PKT_SERIAL_ID=68
 
 	# TELEMETRY
 
@@ -153,6 +154,9 @@ class CAN_DeploymentTubeCommand:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -206,6 +210,9 @@ class CAN_NDVI:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -311,6 +318,9 @@ class CAN_ADSB:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -370,6 +380,9 @@ class CAN_AGL:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -418,6 +431,9 @@ class CAN_Accelerometer:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -468,6 +484,9 @@ class CAN_AirData:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -565,6 +584,9 @@ class CAN_GNSS:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -616,6 +638,9 @@ class CAN_GNSS_HEALTH:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -672,6 +697,9 @@ class CAN_GNSS_HEALTH_2:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -730,6 +758,9 @@ class CAN_GNSS_VEL:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -780,6 +811,9 @@ class CAN_Gyroscope:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -854,6 +888,9 @@ class CAN_IMU:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -967,6 +1004,9 @@ class CAN_MHP:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1033,6 +1073,9 @@ class CAN_MHP_Products:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1078,6 +1121,9 @@ class CAN_MHP_Raw:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1125,6 +1171,9 @@ class CAN_Magnetometer:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1168,6 +1217,9 @@ class CAN_Orientation:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1215,6 +1267,9 @@ class CAN_Pressure:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1259,6 +1314,9 @@ class CAN_Proximity:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1305,6 +1363,9 @@ class CAN_Trigger:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1348,6 +1409,9 @@ class CAN_Wind:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1399,6 +1463,9 @@ class CAN_Supply:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1470,6 +1537,9 @@ class CAN_AxisMapping:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1515,6 +1585,9 @@ class CAN_CalibrateSensor:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1581,6 +1654,9 @@ class CAN_PowerOn:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1624,6 +1700,9 @@ class CAN_GNSS_LLA:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1673,6 +1752,9 @@ class CAN_GNSS_RTCM:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1729,6 +1811,9 @@ class CAN_GNSS_SVIN:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1775,6 +1860,9 @@ class CAN_GNSS_UTC:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1825,6 +1913,9 @@ class CAN_GNSS_UTC_W:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1871,6 +1962,9 @@ class CAN_Actuator:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1919,6 +2013,9 @@ class CAN_Receiver:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1931,6 +2028,43 @@ class CAN_Receiver:
 		return bytearray(buf)
 
 #---------[ Telemetry ]---------#
+
+class CAN_ArmRemoteID:
+	SIZE = 4
+
+	def __init__ (self, startByte = 0, armed = 0, chk = 0):
+		self.startByte = startByte
+		self.armed = armed
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_ArmRemoteID]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.armed = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+		buf.extend(struct.pack('<B', self.armed))
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
 
 class CAN_DeploymentTube:
 	SIZE = 7
@@ -1978,6 +2112,9 @@ class CAN_DeploymentTube:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1990,6 +2127,204 @@ class CAN_DeploymentTube:
 		buf.extend(struct.pack('<B', self.batt_voltage))
 
 		buf.put(CAN_DeploymentTubeErrors.encode(self.error));
+
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
+
+class CAN_GCSLocation:
+	SIZE = 23
+
+	def __init__ (self, startByte = 0, lat = 0.0, lon = 0.0, altitude = 0.0,
+	chk = 0):
+		self.startByte = startByte
+		self.lat = lat
+		self.lon = lon
+		self.altitude = altitude
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_GCSLocation]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.lat = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset + struct.calcsize('<d')
+
+		self.lon = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset + struct.calcsize('<d')
+
+		self.altitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+		buf.extend(struct.pack('<d', self.lat))
+		buf.extend(struct.pack('<d', self.lon))
+		buf.extend(struct.pack('<f', self.altitude))
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
+
+class CAN_OperatorID:
+	SIZE = 23
+
+	def __init__ (self, startByte = 0, operator_id = [None] * 20, chk = 0):
+		self.startByte = startByte
+
+		if (len(operator_id) != 20):
+			raise ValueError('array operator_id expecting length '+str(20)+' got '+str(len(operator_id)))
+
+		self.operator_id = list(operator_id)
+
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_OperatorID]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.operator_id = [];
+
+		for i in range(0,20):
+			self.operator_id.append(struct.unpack_from('<B',buf,offset)[0])
+			offset = offset+struct.calcsize('<B')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+
+		for val in self.operator_id:
+		    buf.extend(struct.pack('<B', val))
+
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
+
+class CAN_RemoteID:
+	SIZE = 7
+
+	def __init__ (self, startByte = 0, aircraft_type = 0, base_mode = 0,
+	state = 0, autopilot_type = 0, chk = 0):
+		self.startByte = startByte
+		self.aircraft_type = aircraft_type
+		self.base_mode = base_mode
+		self.state = state
+		self.autopilot_type = autopilot_type
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_RemoteID]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.aircraft_type = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.base_mode = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.state = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.autopilot_type = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+		buf.extend(struct.pack('<B', self.aircraft_type))
+		buf.extend(struct.pack('<B', self.base_mode))
+		buf.extend(struct.pack('<B', self.state))
+		buf.extend(struct.pack('<B', self.autopilot_type))
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
+
+class CAN_SerialNumber:
+	SIZE = 23
+
+	def __init__ (self, startByte = 0, serial_number = [None] * 20,
+	chk = 0):
+		self.startByte = startByte
+
+		if (len(serial_number) != 20):
+			raise ValueError('array serial_number expecting length '+str(20)+' got '+str(len(serial_number)))
+
+		self.serial_number = list(serial_number)
+
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_SerialNumber]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.serial_number = [];
+
+		for i in range(0,20):
+			self.serial_number.append(struct.unpack_from('<B',buf,offset)[0])
+			offset = offset+struct.calcsize('<B')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+
+		for val in self.serial_number:
+		    buf.extend(struct.pack('<B', val))
 
 		buf.extend(struct.pack('<H', self.chk))
 		return bytearray(buf)

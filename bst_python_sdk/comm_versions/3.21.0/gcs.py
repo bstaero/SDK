@@ -93,6 +93,9 @@ class GCSStatus:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -147,6 +150,9 @@ class HDOBConfig:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -193,6 +199,9 @@ class GCSSurveyIn:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -260,6 +269,9 @@ class TelemetryGCS:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []

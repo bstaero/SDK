@@ -124,6 +124,9 @@ class FlightControlParameters:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -206,6 +209,9 @@ class VehicleLimits:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -248,6 +254,9 @@ class LogFlightControl:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -320,6 +329,9 @@ class MissionParameters:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -415,6 +427,9 @@ class RotorParameters:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -499,6 +514,9 @@ class LandingParameters:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -543,6 +561,9 @@ class LaunchParameters:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -626,6 +647,9 @@ class VehicleParameters:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []

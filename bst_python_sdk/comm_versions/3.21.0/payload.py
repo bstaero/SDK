@@ -134,6 +134,9 @@ class K30:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -219,6 +222,9 @@ class MiniGAS:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -269,6 +275,9 @@ class ParticlesPlusChannel:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -422,6 +431,9 @@ class LDCR:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -531,6 +543,9 @@ class ParticlesPlus:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -624,6 +639,9 @@ class S0Sensors:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -676,6 +694,9 @@ class TelemetryPayload:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -748,6 +769,9 @@ class NDVI:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -823,6 +847,9 @@ class PayloadParam:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -865,6 +892,9 @@ class PayloadSerial:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -925,6 +955,9 @@ class PayloadTrigger:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -972,6 +1005,9 @@ class UserPayload:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
@@ -1031,6 +1067,9 @@ class CameraTag:
 	def getSize(self):
 		return self.SIZE
 
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
 	def serialize(self):
 		buf = []
 
@@ -1076,6 +1115,9 @@ class PayloadStatus:
 
 	def getSize(self):
 		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
 
 	def serialize(self):
 		buf = []
