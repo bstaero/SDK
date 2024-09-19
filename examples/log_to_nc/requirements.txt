@@ -1,4 +1,4 @@
-BSTPythonSDK==3.21.0.dev8
+BSTPythonSDK==3.21.0.dev9
 certifi==2024.8.30
 cftime==1.6.4
 netCDF4==1.7.1.post2

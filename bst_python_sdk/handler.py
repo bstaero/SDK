@@ -96,6 +96,10 @@ packet_mapping = {
     PacketTypes.VEHICLE_PARAMS.value: VehicleParameters,
 }
 
+primitive_pkts = [
+    PacketTypes.LAST_MAPPING_WAYPOINT.value,
+]
+
 can_actuators = CAN_Actuator()
 
 
@@ -118,7 +122,7 @@ def standard_handler(pkt, sys_time=0):
     if pkt.TYPE.value not in packet_mapping:
         if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT and 'HWIL' not in pkt.TYPE.name:
             print(f'Parsing not set up for "{pkt.TYPE.name}" packet...')
-        return None
+        return None, sys_time
 
     try:
         if pkt.TYPE.value >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
@@ -132,9 +136,11 @@ def standard_handler(pkt, sys_time=0):
             packet_data = pkt_cls
     except BufferError as ErrorMessage:
         print(ErrorMessage)
+        return None, sys_time
 
-    if hasattr(packet_data, "system_time") and packet_data.system_time > 0:
-        return packet_data, packet_data.system_time
-    else:
+    if hasattr(packet_data, "system_time"):
+        if packet_data.system_time > 0:
+            return packet_data, packet_data.system_time
+    elif pkt.TYPE.value not in primitive_pkts:
         packet_data.set_system_time(sys_time)
     return packet_data, sys_time
