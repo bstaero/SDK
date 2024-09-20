@@ -25,7 +25,8 @@
 from .comm_packets.comm_packets import *
 from .comm_packets.gcs import *
 from .comm_packets.payload import *
-from .comm_packets.fixedwing import *
+from .comm_packets import fixedwing
+from .comm_packets import multicopter
 from .comm_packets.canpackets import *
 
 packet_mapping = {
@@ -36,11 +37,8 @@ packet_mapping = {
 
     # Aircraft Packets
     PacketTypes.ACTUATORS_CALIBRATION.value: ActuatorCalibration,
-    PacketTypes.ACTUATORS_MIXING_PARAMS.value: SurfaceMixing,
     PacketTypes.ACTUATORS_VALUES.value: Actuators,
     PacketTypes.CONTROL_COMMAND.value: Command,
-    PacketTypes.CONTROL_FILTER_PARAMS.value: FilterParameters,
-    PacketTypes.CONTROL_FLIGHT_PARAMS.value: FlightControlParameters,
     PacketTypes.CONTROL_PID.value: PID,
     PacketTypes.DUBIN_PATH.value: DubinsPath,
     PacketTypes.FLIGHT_PLAN_MAP.value: FlightPlanMap,
@@ -48,7 +46,6 @@ packet_mapping = {
     PacketTypes.HANDSET_CALIBRATION.value: HandsetCalibration,
     PacketTypes.INPUT_HANDSET_VALUES.value: HandsetValues,
     PacketTypes.LAST_MAPPING_WAYPOINT.value: int,
-    PacketTypes.MISSION_PARAMETERS.value: MissionParameters,
     PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_1.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_2.value: UserPayload,
@@ -90,14 +87,34 @@ packet_mapping = {
     PacketTypes.TELEMETRY_POSITION.value: TelemetryPosition,
     PacketTypes.TELEMETRY_PRESSURE.value: TelemetryPressure,
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem,
-    PacketTypes.VEHICLE_LAND_PARAMS.value: LandingParameters,
-    PacketTypes.VEHICLE_LAUNCH_PARAMS.value: LaunchParameters,
-    PacketTypes.VEHICLE_LIMITS.value: VehicleLimits,
-    PacketTypes.VEHICLE_PARAMS.value: VehicleParameters,
+}
+
+fw_mapping = {
+    PacketTypes.ACTUATORS_MIXING_PARAMS.value: fixedwing.SurfaceMixing,
+    PacketTypes.CONTROL_FILTER_PARAMS.value: fixedwing.FilterParameters,
+    PacketTypes.CONTROL_FLIGHT_PARAMS.value: fixedwing.FlightControlParameters,
+    PacketTypes.MISSION_PARAMETERS.value: fixedwing.MissionParameters,
+    PacketTypes.VEHICLE_LAND_PARAMS.value: fixedwing.LandingParameters,
+    PacketTypes.VEHICLE_LAUNCH_PARAMS.value: fixedwing.LaunchParameters,
+    PacketTypes.VEHICLE_LIMITS.value: fixedwing.VehicleLimits,
+    PacketTypes.VEHICLE_PARAMS.value: fixedwing.VehicleParameters,
+}
+
+mr_mapping = {
+    PacketTypes.MISSION_PARAMETERS.value: multicopter.MissionParameters,
+    PacketTypes.ACTUATORS_ROTOR_PARAMS.value: multicopter.RotorParameters,
+    PacketTypes.VEHICLE_LAND_PARAMS.value: multicopter.LandingParameters,
+    PacketTypes.VEHICLE_LAUNCH_PARAMS.value: multicopter.LaunchParameters,
+    PacketTypes.VEHICLE_LIMITS.value: multicopter.VehicleLimits,
+    PacketTypes.VEHICLE_PARAMS.value: multicopter.VehicleParameters,
 }
 
 primitive_pkts = [
     PacketTypes.LAST_MAPPING_WAYPOINT.value,
+]
+
+ignore_pkts = [
+    PacketTypes.TELEMETRY_HEARTBEAT.value
 ]
 
 can_actuators = CAN_Actuator()
@@ -116,22 +133,33 @@ def simulated_can_handler(pkt):
             pass
 
 
-def standard_handler(pkt, sys_time=0):
+def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
     packet_data = None
 
-    if pkt.TYPE.value not in packet_mapping:
-        if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT and 'HWIL' not in pkt.TYPE.name:
-            print(f'Parsing not set up for "{pkt.TYPE.name}" packet...')
-        return None, sys_time
+    pkt_map = packet_mapping
+    if pkt.TYPE.value not in pkt_map:
+        if vehicle_type != VehicleType.VEHICLE_UNKNOWN:
+            if vehicle_type == VehicleType.FIXED_WING and pkt.TYPE.value in fw_mapping:
+                pkt_map = fw_mapping
+            elif vehicle_type == VehicleType.MULTI_COPTER and pkt.TYPE.value in mr_mapping:
+                pkt_map = mr_mapping
+            else:
+                if pkt.TYPE.value not in ignore_pkts:
+                    print(f'Parsing not set up for "{vehicle_type.name}.{pkt.TYPE.name}" packet...')
+                return None, sys_time
+        else:
+            if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT and 'HWIL' not in pkt.TYPE.name:
+                print(f'Parsing not set up for "{pkt.TYPE.name}" packet...')
+            return None, sys_time
 
     try:
         if pkt.TYPE.value >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
-            packet_mapping[pkt.TYPE.value].buffer = [None] * 64
+            pkt_map[pkt.TYPE.value].buffer = [None] * 64
 
-        if packet_mapping[pkt.TYPE.value] == int:
+        if pkt_map[pkt.TYPE.value] == int:
             packet_data = int.from_bytes(pkt.DATA)
         else:
-            pkt_cls = packet_mapping[pkt.TYPE.value]()
+            pkt_cls = pkt_map[pkt.TYPE.value]()
             pkt_cls.parse(pkt.DATA)
             packet_data = pkt_cls
     except BufferError as ErrorMessage:

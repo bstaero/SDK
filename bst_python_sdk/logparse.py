@@ -45,6 +45,7 @@ results: dict = {gcs_name: {}, current_ac: {}}
 def parse_log(filename, handler, has_addressing=False, verbose=False):
     parsed_log: dict = {}
     failed_pkts: dict = {}
+    ac_vehicle_type = VehicleType.VEHICLE_UNKNOWN
     ac_sys_current_time = 0
     ac_sys_previous_time = 0
     gcs_sys_time = 0
@@ -68,6 +69,7 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
         global current_ac
         global results
         nonlocal ac_sys_previous_time
+        nonlocal ac_vehicle_type
 
         if (pkt.FROM & 0xFF000000) != 0x41000000:
             # GCS packet
@@ -76,6 +78,7 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
 
         if pkt.TYPE == PacketTypes.SYSTEM_INITIALIZE:
             sys_init_pkt: SystemInitialize = pkt_data
+            ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type)
             name_arr = sys_init_pkt.name
 
             # Trim trailing 0s in name byte array
@@ -119,10 +122,10 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
                         # AC packet
                         if ac_sys_current_time > ac_sys_previous_time:
                             ac_sys_previous_time = ac_sys_current_time
-                        parsed_data, ac_sys_current_time = handler(pkt, ac_sys_current_time)
+                        parsed_data, ac_sys_current_time = handler(pkt, ac_sys_current_time, ac_vehicle_type)
                     else:
                         # GCS packet
-                        parsed_data, gcs_sys_time = handler(pkt, gcs_sys_time)
+                        parsed_data, gcs_sys_time = handler(pkt, gcs_sys_time, ac_vehicle_type)
 
                     if parsed_data is not None:
                         _add_to_dict(pkt, parsed_data)
