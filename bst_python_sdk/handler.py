@@ -139,8 +139,7 @@ def standard_handler(pkt, sys_time=0):
         return None, sys_time
 
     if hasattr(packet_data, "system_time"):
-        if packet_data.system_time > 0:
-            return packet_data, packet_data.system_time
+        return packet_data, packet_data.system_time
     elif pkt.TYPE.value not in primitive_pkts:
         packet_data.set_system_time(sys_time)
     return packet_data, sys_time

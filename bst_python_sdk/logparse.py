@@ -39,13 +39,14 @@ LANDED = 7
 
 gcs_name: str = "SwiftStation"
 unknown_ac: str = "unknown_ac"
-current_ac: str = unknown_ac
+current_ac: str = f'{unknown_ac}_log_1'
 results: dict = {gcs_name: {}, current_ac: {}}
 
 def parse_log(filename, handler, has_addressing=False, verbose=False):
     parsed_log: dict = {}
     failed_pkts: dict = {}
-    ac_sys_time = 0
+    ac_sys_current_time = 0
+    ac_sys_previous_time = 0
     gcs_sys_time = 0
 
     def _append_to_results(pkt_type, pkt_data, entry_name):
@@ -66,6 +67,7 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
     def _add_to_dict(pkt: BSTPacket, pkt_data):
         global current_ac
         global results
+        nonlocal ac_sys_previous_time
 
         if (pkt.FROM & 0xFF000000) != 0x41000000:
             # GCS packet
@@ -81,11 +83,18 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
                 del name_arr[len(name_arr)-1]
 
             ac_name = "".join(map(chr, sys_init_pkt.name))
-            if current_ac == unknown_ac:
-                current_ac = ac_name
-                results = {gcs_name: results[gcs_name], current_ac: results[unknown_ac]}
+            if current_ac.startswith(unknown_ac):
+                # First aircraft log
+                new_ac = current_ac.replace(unknown_ac, ac_name)
+                results = {gcs_name: results[gcs_name], new_ac: results[current_ac]}
+                current_ac = new_ac
+            elif current_ac.startswith(ac_name) and sys_init_pkt.system_time < ac_sys_previous_time:
+                # Same aircraft, new sys init -- increment log
+                current_ac = f'{ac_name}_log_{int(current_ac.split("_")[-1])+1}'
+                ac_sys_previous_time = sys_init_pkt.system_time
             else:
-                current_ac = ac_name
+                # New aircraft log
+                current_ac = f'{ac_name}_log_1'
 
         _append_to_results(pkt.TYPE, pkt_data, current_ac)
 
@@ -108,7 +117,9 @@ def parse_log(filename, handler, has_addressing=False, verbose=False):
                 if parsed_pkt:
                     if (pkt.FROM & 0xFF000000) == 0x41000000:
                         # AC packet
-                        parsed_data, ac_sys_time = handler(pkt, ac_sys_time)
+                        if ac_sys_current_time > ac_sys_previous_time:
+                            ac_sys_previous_time = ac_sys_current_time
+                        parsed_data, ac_sys_current_time = handler(pkt, ac_sys_current_time)
                     else:
                         # GCS packet
                         parsed_data, gcs_sys_time = handler(pkt, gcs_sys_time)
