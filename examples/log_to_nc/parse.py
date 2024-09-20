@@ -49,9 +49,6 @@ def convert(filename, parsed_log, ac_name):
 
 		for field in pkts[0].__dict__:
 			def _parse_field(field):
-				if field == 'buffer':
-					return
-
 				field_val = read_var(pkts[0], field)
 				field_type = type(field_val)
 				if isinstance(field_val, Enum):
