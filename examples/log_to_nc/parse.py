@@ -96,7 +96,7 @@ def add_primitive_to_nc(field, field_type, pkt_grp, pkts):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
-		prog='Log -> NC',
+		prog='./parse.py',
 		description='Convert GCS and aircraft logs to netCDF format')
 	parser.add_argument('filepath', help='Path to the log file')
 	parser.add_argument('-a', '--addr', action='store_true', default=False,
