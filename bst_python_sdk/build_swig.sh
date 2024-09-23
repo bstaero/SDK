@@ -1,4 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+
+if ! command -v swig 2>&1 >/dev/null
+then
+    echo "SWIG is not installed. Aborting..."
+    exit 1
+fi
+
 
 PYTHON_PATH="/usr/include/python3"
 PYTHON_VERSION=""
