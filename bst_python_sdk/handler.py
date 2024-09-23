@@ -137,37 +137,41 @@ def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
     packet_data = None
 
     pkt_map = packet_mapping
-    if pkt.TYPE.value not in pkt_map:
+
+    if pkt.TYPE not in pkt_map:
         if vehicle_type != VehicleType.VEHICLE_UNKNOWN:
-            if vehicle_type == VehicleType.FIXED_WING and pkt.TYPE.value in fw_mapping:
+            if vehicle_type == VehicleType.FIXED_WING and pkt.TYPE in fw_mapping:
                 pkt_map = fw_mapping
-            elif vehicle_type == VehicleType.MULTI_COPTER and pkt.TYPE.value in mr_mapping:
+            elif vehicle_type == VehicleType.MULTI_COPTER and pkt.TYPE in mr_mapping:
                 pkt_map = mr_mapping
             else:
-                if pkt.TYPE.value not in ignore_pkts:
-                    print(f'Parsing not set up for "{vehicle_type.name}.{pkt.TYPE.name}" packet...')
+                if pkt.TYPE not in ignore_pkts:
+                    print(f'Parsing not set up for {vehicle_type.name} packet {pkt.TYPE}...')
                 return None, sys_time
         else:
-            if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT and 'HWIL' not in pkt.TYPE.name:
-                print(f'Parsing not set up for "{pkt.TYPE.name}" packet...')
+            if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT.value:
+                print(f'Parsing not set up for packet {pkt.TYPE}...')
             return None, sys_time
 
     try:
-        if pkt.TYPE.value >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
-            pkt_map[pkt.TYPE.value].buffer = [None] * 64
+        if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
+            pkt_map[pkt.TYPE].buffer = [None] * 64
 
-        if pkt_map[pkt.TYPE.value] == int:
-            packet_data = int.from_bytes(pkt.DATA)
+        if pkt_map[pkt.TYPE] == int:
+            packet_data = int.from_bytes(bytearray(pkt.DATA))
         else:
-            pkt_cls = pkt_map[pkt.TYPE.value]()
-            pkt_cls.parse(pkt.DATA)
+            pkt_cls = pkt_map[pkt.TYPE]()
+            pkt_cls.parse(bytearray(pkt.DATA))
             packet_data = pkt_cls
     except BufferError as ErrorMessage:
+        print(ErrorMessage)
+        return None, sys_time
+    except ValueError as ErrorMessage:
         print(ErrorMessage)
         return None, sys_time
 
     if hasattr(packet_data, "system_time"):
         return packet_data, packet_data.system_time
-    elif pkt.TYPE.value not in primitive_pkts:
+    elif pkt.TYPE not in primitive_pkts:
         packet_data.set_system_time(sys_time)
     return packet_data, sys_time

@@ -25,3 +25,7 @@ dist/
 *.pkt
 *.bin
 *.nc
+
+# SWIG output
+bst_python_sdk/*.cxx
+bst_python_sdk/swig_parser.py

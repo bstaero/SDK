@@ -46,6 +46,21 @@ class BSTPacket:
     HAS_ADDRESS = False
     VERBOSE = False
 
+    def __init__(
+            self,
+            pkt_type = PacketTypes.INVALID_PACKET,
+            action = 0,
+            size = 0,
+            addr_to = 0,
+            addr_from = 0,
+            data = bytearray()):
+        self.TYPE = pkt_type
+        self.ACTION = action
+        self.SIZE = size
+        self.TO = addr_to
+        self.FROM = addr_from
+        self.DATA = bytearray(data)
+
     def parse(self, buf, has_address=False):
         if len(buf) < self.OVERHEAD: return False
 
@@ -64,14 +79,15 @@ class BSTPacket:
                 pkt_type = buf[i]
                 i = i + 1
 
-                try:
-                    self.TYPE = PacketTypes(pkt_type)
-                    hwil = 'HWIL_' in self.TYPE.name
-                except ValueError:
-                    try:
-                        self.TYPE = PayloadID(pkt_type)
-                    except ValueError:
-                        return False, False
+                self.TYPE = pkt_type
+                # try:
+                #     self.TYPE = PacketTypes(pkt_type)
+                #     hwil = 'HWIL_' in self.TYPE.name
+                # except ValueError:
+                #     try:
+                #         self.TYPE = PayloadID(pkt_type)
+                #     except ValueError:
+                #         return False, False
 
                 # PKT_ACTION
                 self.ACTION = buf[i]
@@ -133,7 +149,7 @@ class BSTPacket:
 
         buf.extend('U')
         buf.extend('$')
-        buf.extend(struct.pack('<B', self.TYPE.value))
+        buf.extend(struct.pack('<B', self.TYPE))
         buf.extend(struct.pack('<B', self.ACTION))
         buf.extend(struct.pack('<H', self.SIZE))
 

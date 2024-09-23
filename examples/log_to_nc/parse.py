@@ -1,6 +1,9 @@
-from bst_python_sdk.logparse import parse_log
+#!/usr/bin/env python
+
+from bst_python_sdk.logparse import Parser
 from bst_python_sdk.handler import standard_handler
 
+import argparse
 from enum import Enum
 import inspect
 
@@ -11,8 +14,9 @@ import sys
 type_conv = {int: 'i8', float: 'f8'}
 
 
-def parse(filename):
-	parsed_log = parse_log(filename, standard_handler, True)
+def parse(filename, use_swig: bool, has_addr: bool):
+	parser = Parser(use_swig=use_swig, has_addr=has_addr)
+	parsed_log = parser.parse_log(filename)
 	for name in parsed_log.keys():
 		convert(filename, parsed_log[name], name)
 
@@ -25,7 +29,7 @@ def read_var(pkt, var_name):
 	result = getattr(pkt, var_attrs[0])
 	for i in range(1, len(var_attrs)):
 		result = getattr(result, var_attrs[i])
-	
+
 	return result
 
 
@@ -91,13 +95,18 @@ def add_primitive_to_nc(field, field_type, pkt_grp, pkts):
 
 
 if __name__ == '__main__':
-	if len(sys.argv) < 2:
-		print('Not enough arguments: python parse.py <log name>')
+	parser = argparse.ArgumentParser(
+		prog='Log -> NC',
+		description='Convert GCS and aircraft logs to netCDF format')
+	parser.add_argument('filepath', help='Path to the log file')
+	parser.add_argument('-a', '--addr', action='store_true', default=False,
+					 help='Enables addressing')
+	parser.add_argument('-s', '--swig', action='store_true', default=False,
+					 help='Enables SWIG log processing (must compile first)')
+	args = parser.parse_args()
+
+	if not os.path.isfile(args.filepath):
+		print(f'File "{args.filepath}" not found')
 		sys.exit(1)
 
-	log_name = sys.argv[1]
-	if not os.path.isfile(log_name):
-		print(f'File "{log_name}" not found')
-		sys.exit(1)
-
-	parse(log_name)
+	parse(args.filepath, args.swig, args.addr)

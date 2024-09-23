@@ -23,6 +23,7 @@
 # *#=+--+=#=+--                 --+=#=+--+=#=+--                 --+=#=+--+=#* #
 
 from .bstpacket import BSTPacket
+from .handler import standard_handler
 from .comm_packets.comm_packets import *
 import numpy as np
 import scipy.io as spio
@@ -39,118 +40,119 @@ LANDED = 7
 
 gcs_name: str = "SwiftStation"
 unknown_ac: str = "unknown_ac"
-current_ac: str = f'{unknown_ac}_log_1'
-results: dict = {gcs_name: {}, current_ac: {}}
+log_suffix: str = '_log_1'
 
-def parse_log(filename, handler, has_addressing=False, verbose=False):
-    parsed_log: dict = {}
-    failed_pkts: dict = {}
-    ac_vehicle_type = VehicleType.VEHICLE_UNKNOWN
-    ac_sys_current_time = 0
-    ac_sys_previous_time = 0
-    gcs_sys_time = 0
 
-    def _append_to_results(pkt_type, pkt_data, entry_name):
-        global results
-        if entry_name not in results:
-            results[entry_name] = {}
+class Parser:
+    def __init__(self, use_swig=False, has_addr=True, verbose=False):
+        self.use_swig = use_swig
+        self.has_addr = has_addr
+        self.verbose = verbose
 
-        if pkt_type in results[entry_name]:
-            results[entry_name][pkt_type].append(pkt_data)
+        self.parsed_logs = {}
+        self.failed_pkts = {}
+        self.ac_vehicle_type = VehicleType.VEHICLE_UNKNOWN
+        self.ac_sys_current_time = 0
+        self.ac_sys_previous_time = 0
+        self.gcs_sys_time = 0
+
+        self.current_ac = unknown_ac
+        if has_addr:
+            self.current_ac = f'{unknown_ac}{log_suffix}'
+
+        self.results = {gcs_name: {}, self.current_ac:{}}
+
+    def parse_log(self, filename: str) -> dict:
+        bst_packets = []
+        if self.use_swig:
+            # This is dynamically imported since it won't always be compiled
+            # by the developer beforehand
+            from . import swig_parser
+            bst_packets = swig_parser.parse(filename, self.has_addr)
         else:
-            results[entry_name][pkt_type] = [pkt_data]
+            with open(filename, "rb") as binary_file:
+                binary_file.seek(0, 2)  # Seek the end
+                num_bytes = binary_file.tell()  # Get the file size
 
-        if pkt_type in parsed_log:
-            parsed_log[pkt_type].append(pkt_data)
-        else:
-            parsed_log[pkt_type] = [pkt_data]
+                i = 0
 
-    def _add_to_dict(pkt: BSTPacket, pkt_data):
-        global current_ac
-        global results
-        nonlocal ac_sys_previous_time
-        nonlocal ac_vehicle_type
-
-        if (pkt.FROM & 0xFF000000) != 0x41000000:
-            # GCS packet
-            _append_to_results(pkt.TYPE, pkt_data, gcs_name)
-            return
-
-        if pkt.TYPE == PacketTypes.SYSTEM_INITIALIZE:
-            sys_init_pkt: SystemInitialize = pkt_data
-            ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type)
-            name_arr = sys_init_pkt.name
-
-            # Trim trailing 0s in name byte array
-            while name_arr[len(name_arr)-1] == 0:
-                del name_arr[len(name_arr)-1]
-
-            ac_name = "".join(map(chr, sys_init_pkt.name))
-            if current_ac.startswith(unknown_ac):
-                # First aircraft log
-                new_ac = current_ac.replace(unknown_ac, ac_name)
-                results = {gcs_name: results[gcs_name], new_ac: results[current_ac]}
-                current_ac = new_ac
-            elif current_ac.startswith(ac_name) and sys_init_pkt.system_time < ac_sys_previous_time:
-                # Same aircraft, new sys init -- increment log
-                current_ac = f'{ac_name}_log_{int(current_ac.split("_")[-1])+1}'
-                ac_sys_previous_time = sys_init_pkt.system_time
-            else:
-                # New aircraft log
-                current_ac = f'{ac_name}_log_1'
-
-        _append_to_results(pkt.TYPE, pkt_data, current_ac)
-
-    try:
-        with open(filename, "rb") as binary_file:
-            binary_file.seek(0, 2)  # Seek the end
-            num_bytes = binary_file.tell()  # Get the file size
-
-            i = 0
-
-            while i < num_bytes:
-                pkt = BSTPacket()
-                binary_file.seek(i)
-                pkt_data = binary_file.read(BSTPacket.BST_MAX_PACKET_SIZE)
-                parsed_pkt = pkt.parse(pkt_data, has_addressing)
-                if not parsed_pkt:
+                while i < num_bytes:
                     pkt = BSTPacket()
-                    parsed_pkt = pkt.parse(pkt_data, not has_addressing)
-
-                if parsed_pkt:
-                    if (pkt.FROM & 0xFF000000) == 0x41000000:
-                        # AC packet
-                        if ac_sys_current_time > ac_sys_previous_time:
-                            ac_sys_previous_time = ac_sys_current_time
-                        parsed_data, ac_sys_current_time = handler(pkt, ac_sys_current_time, ac_vehicle_type)
+                    binary_file.seek(i)
+                    pkt_data = binary_file.read(BSTPacket.BST_MAX_PACKET_SIZE)
+                    parsed_pkt = pkt.parse(pkt_data, self.has_addr)
+                    if parsed_pkt:
+                        bst_packets.append(pkt)
+                        i = i + pkt.SIZE + pkt.OVERHEAD
                     else:
-                        # GCS packet
-                        parsed_data, gcs_sys_time = handler(pkt, gcs_sys_time, ac_vehicle_type)
+                        i = i + 1
 
-                    if parsed_data is not None:
-                        _add_to_dict(pkt, parsed_data)
+        for pkt in bst_packets:
+            if (pkt.FROM & 0xFF000000) == 0x41000000:
+                # AC packet
+                if self.ac_sys_current_time > self.ac_sys_previous_time:
+                    self.ac_sys_previous_time = self.ac_sys_current_time
+                parsed_data, self.ac_sys_current_time = standard_handler(
+                    pkt,
+                    self.ac_sys_current_time,
+                    self.ac_vehicle_type)
+            else:
+                # GCS packet
+                parsed_data, self.gcs_sys_time = standard_handler(
+                    pkt,
+                    self.gcs_sys_time,
+                    self.ac_vehicle_type)
 
-                    i = i + pkt.SIZE + pkt.OVERHEAD
+            if parsed_data is not None:
+                self.add_packet(pkt, parsed_data)
+
+        return self.results
+
+    def add_packet(self, pkt, pkt_data):
+        from_aircraft = (pkt.FROM & 0xFF000000) == 0x41000000
+        is_sys_init = pkt.TYPE == PacketTypes.SYSTEM_INITIALIZE.value
+
+        if from_aircraft or not self.has_addr:
+            if is_sys_init:
+                sys_init_pkt: SystemInitialize = pkt_data
+                self.ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type)
+
+                # Extract name and trim trailing 0s in name byte array
+                name_arr = sys_init_pkt.name
+                while name_arr[len(name_arr)-1] == 0:
+                    del name_arr[len(name_arr)-1]
+
+                is_new_sys_time = sys_init_pkt.system_time < self.ac_sys_previous_time
+
+                ac_name = "".join(map(chr, sys_init_pkt.name))
+                if self.current_ac.startswith(unknown_ac):
+                    # First aircraft log
+                    new_ac = self.current_ac.replace(unknown_ac, ac_name)
+                    self.results = {
+                        gcs_name: self.results[gcs_name],
+                        new_ac: self.results[self.current_ac]
+                    }
+                    self.current_ac = new_ac
+                elif self.current_ac.startswith(ac_name) and is_new_sys_time:
+                    # Same aircraft, new sys init -- increment log
+                    new_log_num = int(self.current_ac.split('_')[-1]) + 1
+                    self.current_ac = f'{ac_name}_log_{new_log_num}'
+                    self.ac_sys_previous_time = sys_init_pkt.system_time
                 else:
-                    if pkt.TYPE not in failed_pkts:
-                        failed_pkts[pkt.TYPE] = 1
-                    else:
-                        failed_pkts[pkt.TYPE] += 1
-                    i = i + 1
+                    # New aircraft log
+                    self.current_ac = f'{ac_name}_log_1'
+            entry_name = self.current_ac
+        else:
+            entry_name = gcs_name
 
-    except IOError:
-        print("Could not open file: " + filename)
+        if entry_name not in self.results:
+            self.results[entry_name] = {}
 
-    if len(failed_pkts):
-        print("Failures:")
-        for key, value in failed_pkts.items():
-            total = value
-            if key in parsed_log:
-                total = len(parsed_log[key]) + value
-            print(f"\t{key.name}: {value}/{total} failed")
-    else:
-        print("All packets parsed successfully")
-    return results
+        pkt_type = PacketTypes(pkt.TYPE)
+        if pkt_type in self.results[entry_name]:
+            self.results[entry_name][pkt_type].append(pkt_data)
+        else:
+            self.results[entry_name][pkt_type] = [pkt_data]
 
 
 def find_system_info(filename, has_addressing=False):
