@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cstring>
 
-std::vector<Packet> parse(const char* file_path, bool has_addr) {
+std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode) {
     std::ifstream file(file_path, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << file_path << std::endl;
@@ -31,6 +31,12 @@ std::vector<Packet> parse(const char* file_path, bool has_addr) {
             std::vector<uint8_t> packet_data;
 
             packet.TYPE = buf[i++];
+
+            // In quick mode, only parse SYS_INIT and CONTROL_COMMAND
+            if (quick_mode && packet.TYPE != 33 && packet.TYPE != 81) {
+                continue;
+            }
+
             packet.ACTION = buf[i++];
             packet.SIZE = buf[i] | (buf[i + 1] << 8);
             i += 2;
@@ -49,6 +55,12 @@ std::vector<Packet> parse(const char* file_path, bool has_addr) {
 
             packet.DATA.assign(buf.begin() + i, buf.begin() + i + packet.SIZE);
             i += packet.SIZE;
+
+            if (quick_mode && packet.TYPE == 33) {
+                if (packet.DATA.at(0) != 1) { // Skip non-flight mode commands
+                    continue;
+                }
+            }
 
             if (i + 2 <= buf.size()) {
                 packet.CHKSUM.assign(buf.begin() + i, buf.begin() + i + 2);

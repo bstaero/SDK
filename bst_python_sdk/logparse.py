@@ -44,10 +44,11 @@ log_suffix: str = '_log_1'
 
 
 class Parser:
-    def __init__(self, use_swig=False, has_addr=True, verbose=False):
+    def __init__(self, use_swig=False, has_addr=True, quick_mode=False, verbose=False):
         self.use_swig = use_swig
         self.has_addr = has_addr
         self.verbose = verbose
+        self.quick_mode = quick_mode
 
         self.parsed_logs = {}
         self.failed_pkts = {}
@@ -68,7 +69,7 @@ class Parser:
             # This is dynamically imported since it won't always be compiled
             # by the developer beforehand
             from . import swig_parser
-            bst_packets = swig_parser.parse(filename, self.has_addr)
+            bst_packets = swig_parser.parse(filename, self.has_addr, self.quick_mode)
         else:
             with open(filename, "rb") as binary_file:
                 binary_file.seek(0, 2)  # Seek the end
@@ -142,7 +143,7 @@ class Parser:
                         new_ac: self.results[self.current_ac]
                     }
                     self.current_ac = new_ac
-                else:
+                elif not self.current_ac.startswith(ac_name):
                     # New aircraft log
                     self.current_ac = f'{ac_name}_log_1'
             entry_name = self.current_ac

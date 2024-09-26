@@ -14,12 +14,16 @@ import sys
 type_conv = {int: 'i8', float: 'f8'}
 
 
-def parse(filename, use_swig: bool, has_addr: bool):
-	parser = Parser(use_swig=use_swig, has_addr=has_addr)
+def parse(filename, use_swig: bool, has_addr: bool, quick_mode: bool) -> list[str]:
+	parser = Parser(use_swig=use_swig, has_addr=has_addr, quick_mode=quick_mode)
 	parsed_log = parser.parse_log(filename)
+	converted = []
 	for name in parsed_log.keys():
-		convert(filename, parsed_log[name], name)
+		nc_name = convert(filename, parsed_log[name], name)
+		if len(nc_name) > 0:
+			converted.append(nc_name)
 
+	return converted
 
 def read_var(pkt, var_name):
 	if '.' not in var_name:
@@ -33,8 +37,11 @@ def read_var(pkt, var_name):
 	return result
 
 
-def convert(filename, parsed_log, ac_name):
-	print(f'\n### Converting #{ac_name} log')
+def convert(filename, parsed_log, ac_name) -> str:
+	if len(parsed_log.items()) == 0:
+		return ''
+
+	print(f'\n### Converting {ac_name}')
 	nc_name = '.'.join(filename.split('.')[:-1]) + f'_{ac_name}.nc'
 	nc_name = nc_name.split('/')[-1]
 	root_grp = Dataset(nc_name, 'w', format='NETCDF4')
@@ -72,6 +79,7 @@ def convert(filename, parsed_log, ac_name):
 						print(f'Unsupported type: {field_type}')
 
 			_parse_field(field)
+	return nc_name
 
 
 def add_enum_to_nc(field, pkt_grp, pkts):
@@ -103,10 +111,17 @@ if __name__ == '__main__':
 					 help='Enables addressing')
 	parser.add_argument('-s', '--swig', action='store_true', default=False,
 					 help='Enables SWIG log processing (must compile first)')
+	parser.add_argument('-q', '--quick', action='store_true', default=False,
+					 help='Enables "quick mode", which only outputs SYS_INIT '+
+					 'and CONTROL_COMMAND packets with a flight_mode command')
 	args = parser.parse_args()
 
 	if not os.path.isfile(args.filepath):
 		print(f'File "{args.filepath}" not found')
 		sys.exit(1)
 
-	parse(args.filepath, args.swig, args.addr)
+	converted = parse(args.filepath, args.swig, args.addr, args.quick)
+
+	print('\nOutput:')
+	for filename in converted:
+		print(filename)

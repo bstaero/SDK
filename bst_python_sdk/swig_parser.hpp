@@ -14,5 +14,5 @@ struct Packet {
     int CAN_PKT_SIZE;
 };
 
-std::vector<Packet> parse(const char* file_path, bool has_addr);
+std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode);
 bool check_fletcher_16(const std::vector<uint8_t>& data, int data_size);
