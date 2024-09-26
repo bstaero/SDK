@@ -119,10 +119,13 @@ class Parser:
             if is_new_sys_time:
                 # Same aircraft, new log data
                 split_name = self.current_ac.split('_')
-                ac_name = '_'.join(split_name[0:len(split_name)-1])
-                new_log_num = int(split_name[-1]) + 1
-                self.current_ac = f'{ac_name}_{new_log_num}'
-                self.ac_sys_previous_time = pkt_data.system_time
+                try:
+                    ac_name = '_'.join(split_name[0:len(split_name)-1])
+                    new_log_num = int(split_name[-1]) + 1
+                    self.current_ac = f'{ac_name}_{new_log_num}'
+                    self.ac_sys_previous_time = pkt_data.system_time
+                except:
+                    pass
             elif is_sys_init:
                 sys_init_pkt: SystemInitialize = pkt_data
                 self.ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type)

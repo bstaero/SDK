@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from bst_python_sdk.logparse import Parser
-from bst_python_sdk.handler import standard_handler
 
 import argparse
 from enum import Enum
@@ -19,11 +18,13 @@ def parse(filename, use_swig: bool, has_addr: bool, quick_mode: bool) -> list[st
 	parsed_log = parser.parse_log(filename)
 	converted = []
 	for name in parsed_log.keys():
+		if len(parsed_log[name].items()) == 0:
+			continue
 		nc_name = convert(filename, parsed_log[name], name)
-		if len(nc_name) > 0:
-			converted.append(nc_name)
+		converted.append(nc_name)
 
 	return converted
+
 
 def read_var(pkt, var_name):
 	if '.' not in var_name:
@@ -38,9 +39,6 @@ def read_var(pkt, var_name):
 
 
 def convert(filename, parsed_log, ac_name) -> str:
-	if len(parsed_log.items()) == 0:
-		return ''
-
 	print(f'\n### Converting {ac_name}')
 	nc_name = '.'.join(filename.split('.')[:-1]) + f'_{ac_name}.nc'
 	nc_name = nc_name.split('/')[-1]

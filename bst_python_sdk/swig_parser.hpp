@@ -1,6 +1,5 @@
 #include <vector>
 #include <cstdint>
-#include <cstddef>
 
 struct Packet {
     int TYPE;
