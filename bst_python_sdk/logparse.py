@@ -111,9 +111,18 @@ class Parser:
     def add_packet(self, pkt, pkt_data):
         from_aircraft = (pkt.FROM & 0xFF000000) == 0x41000000
         is_sys_init = pkt.TYPE == PacketTypes.SYSTEM_INITIALIZE.value
+        has_sys_time = hasattr(pkt_data, 'system_time')
+        is_new_sys_time = has_sys_time and pkt_data.system_time < self.ac_sys_previous_time
 
         if from_aircraft or not self.has_addr:
-            if is_sys_init:
+            if is_new_sys_time:
+                # Same aircraft, new log data
+                split_name = self.current_ac.split('_')
+                ac_name = '_'.join(split_name[0:len(split_name)-1])
+                new_log_num = int(split_name[-1]) + 1
+                self.current_ac = f'{ac_name}_{new_log_num}'
+                self.ac_sys_previous_time = pkt_data.system_time
+            elif is_sys_init:
                 sys_init_pkt: SystemInitialize = pkt_data
                 self.ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type)
 
@@ -133,11 +142,6 @@ class Parser:
                         new_ac: self.results[self.current_ac]
                     }
                     self.current_ac = new_ac
-                elif self.current_ac.startswith(ac_name) and is_new_sys_time:
-                    # Same aircraft, new sys init -- increment log
-                    new_log_num = int(self.current_ac.split('_')[-1]) + 1
-                    self.current_ac = f'{ac_name}_log_{new_log_num}'
-                    self.ac_sys_previous_time = sys_init_pkt.system_time
                 else:
                     # New aircraft log
                     self.current_ac = f'{ac_name}_log_1'
