@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-from .bst_python_sdk.logparse import Parser
+try:
+	from .bst_python_sdk.logparse import Parser
+except ImportError:
+	from bst_python_sdk.logparse import Parser
 
 import argparse
 from enum import Enum
@@ -13,14 +16,22 @@ import sys
 type_conv = {int: 'i8', float: 'f8'}
 
 
-def parse(filename, use_swig: bool, has_addr: bool, quick_mode: bool) -> list[str]:
+def parse(
+	filename: str,
+	use_swig: bool,
+	has_addr: bool,
+	quick_mode: bool,
+	out_dir: str='.',
+) -> list[str]:
+	while out_dir.endswith('/'):
+		out_dir = out_dir[:len(out_dir)-1]
 	parser = Parser(use_swig=use_swig, has_addr=has_addr, quick_mode=quick_mode)
 	parsed_log = parser.parse_log(filename)
 	converted = []
 	for name in parsed_log.keys():
 		if len(parsed_log[name].items()) == 0:
 			continue
-		nc_name = convert(filename, parsed_log[name], name)
+		nc_name = convert(filename, parsed_log[name], name, out_dir)
 		converted.append(nc_name)
 
 	return converted
@@ -38,9 +49,10 @@ def read_var(pkt, var_name):
 	return result
 
 
-def convert(filename, parsed_log, ac_name) -> str:
+def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
 	print(f'\n### Converting {ac_name}')
-	nc_name = '.'.join(filename.split('.')[:-1]) + f'_{ac_name}.nc'
+	log_name = '.'.join(filename.split('.')[:-1])
+	nc_name = f'{out_dir}/{log_name}_{ac_name}.nc'
 	nc_name = nc_name.split('/')[-1]
 	root_grp = Dataset(nc_name, 'w', format='NETCDF4')
 
