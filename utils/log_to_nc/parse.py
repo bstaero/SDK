@@ -18,9 +18,9 @@ type_conv = {int: 'i8', float: 'f8'}
 
 def parse(
 	filename: str,
-	use_swig: bool,
-	has_addr: bool,
-	quick_mode: bool,
+	use_swig: bool=False,
+	has_addr: bool=False,
+	quick_mode: bool=False,
 	out_dir: str='.',
 ) -> list[str]:
 	while out_dir.endswith('/'):
@@ -52,8 +52,8 @@ def read_var(pkt, var_name):
 def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
 	print(f'\n### Converting {ac_name}')
 	log_name = '.'.join(filename.split('.')[:-1])
-	nc_name = f'{out_dir}/{log_name}_{ac_name}.nc'
-	nc_name = nc_name.split('/')[-1]
+	nc_name = f'{log_name}_{ac_name}.nc'
+	nc_name = f'{out_dir}/{nc_name.split('/')[-1]}'
 	root_grp = Dataset(nc_name, 'w', format='NETCDF4')
 
 	for pkt_type, pkts in parsed_log.items():
