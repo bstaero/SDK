@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from bst_python_sdk.logparse import Parser
+from .bst_python_sdk.logparse import Parser
 
 import argparse
 from enum import Enum
