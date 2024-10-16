@@ -38,11 +38,11 @@ class CommunicationsInterface {
 		virtual bool open(void);
 		virtual bool close(void);
 
-		virtual uint16_t read(uint8_t * buffer, uint16_t size) = 0;
-		virtual uint16_t write(uint8_t * buffer, uint16_t size) = 0;
+		virtual int16_t read(uint8_t * buffer, uint16_t size) = 0;
+		virtual int16_t write(uint8_t * buffer, uint16_t size) = 0;
 
-		virtual uint16_t read(uint8_t * buffer, uint16_t size, uint64_t *addr);
-		virtual uint16_t write(uint8_t * buffer, uint16_t size, uint64_t addr);
+		virtual int16_t read(uint8_t * buffer, uint16_t size, uint64_t *addr);
+		virtual int16_t write(uint8_t * buffer, uint16_t size, uint64_t addr);
 
 		virtual bool isConnected();
 

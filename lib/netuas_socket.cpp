@@ -115,7 +115,7 @@ bool NetuasSocket::checkFDActive(Socket::SocketWait * status, bool is_tx) {
 	return false;
 }
 
-uint16_t NetuasSocket::read(uint8_t * buf, uint16_t buf_size) {
+int16_t NetuasSocket::read(uint8_t * buf, uint16_t buf_size) {
 	Socket::SocketWait status;
 	int n = 0;
 	int i = 0;
@@ -182,7 +182,7 @@ uint16_t NetuasSocket::read(uint8_t * buf, uint16_t buf_size) {
 }
 
 
-uint16_t NetuasSocket::write(uint8_t * buf, uint16_t buf_size) {
+int16_t NetuasSocket::write(uint8_t * buf, uint16_t buf_size) {
 	Socket::SocketWait status;
 
 	if( mode_type == Socket::CLIENT ) {

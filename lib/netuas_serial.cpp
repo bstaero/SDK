@@ -56,7 +56,7 @@ bool NetuasSerial::setFlowControl() {
 	return false;
 }
 
-uint16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
+int16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
 	int maxFD, val;
 	fd_set readFDs;
 	struct timeval timeout;
@@ -103,7 +103,7 @@ uint16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
 }
 
 
-uint16_t NetuasSerial::write(uint8_t * buf, uint16_t buf_size) {
+int16_t NetuasSerial::write(uint8_t * buf, uint16_t buf_size) {
 	int maxFD, val, n=0;
 	fd_set writeFDs;
 	//SerialPort::SerialWait status;

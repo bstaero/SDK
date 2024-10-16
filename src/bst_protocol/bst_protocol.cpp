@@ -41,17 +41,17 @@ extern float last_heartbeat;
 
 void BSTProtocol::parseData(uint8_t byte) {
 
-//FIXME have to do this otherwise it will go into lost comms when asking for parameters or sending flight plans
-#ifdef NO_DUPLEX_COMMS
-	last_heartbeat = getElapsedTime();
-#endif
-
 	if(rx_queue.size() >= PACKET_BUFFER_SIZE) {
 		pmesg(VERBOSE_ERROR,"Receive Buffer Overflow!\n");
 		return;
 	}
 
 	if(rx_packet.isValid(byte)) {
+//FIXME have to do this otherwise it will go into lost comms when asking for parameters or sending flight plans
+#ifdef NO_DUPLEX_COMMS
+		if(rx_packet.getType() != TELEMETRY_GCS_LOCATION)
+			last_heartbeat = getElapsedTime();
+#endif
 		rx_queue.push(rx_packet);
 		rx_packet.clear();
 	}

@@ -46,13 +46,13 @@ bool CommunicationsInterface::initialize(const char * param1, const char * param
 bool CommunicationsInterface::open(void) { return true; }
 bool CommunicationsInterface::close(void) { return true; }
 
-uint16_t CommunicationsInterface::read(uint8_t * buffer, uint16_t size, uint64_t *addr) {
+int16_t CommunicationsInterface::read(uint8_t * buffer, uint16_t size, uint64_t *addr) {
 	if(addr) addr = 0;
 	return this->read(buffer, size);
 	
 }
 
-uint16_t CommunicationsInterface::write(uint8_t * buffer, uint16_t size, uint64_t addr) {
+int16_t CommunicationsInterface::write(uint8_t * buffer, uint16_t size, uint64_t addr) {
 	return this->write(buffer, size);
 }
 

@@ -261,27 +261,7 @@ void updateDeployTube(float ts,
 		uint8_t batt_voltage,
 		uint8_t error);
 
-void updateRemoteID(float ts, 
-		uint8_t aircraft_type, 
-		uint8_t base_mode, 
-		uint8_t state, 
-		uint8_t autopilot_type);
-
-void updateGCSLocation(float ts,
-		double latitude,
-		double lonitude,
-		float altitude);
-
-void updateOperatorID(float ts, 
-		char operator_id[20]);
-
-void updateSerialNumber(float ts, 
-		char serial_number[20]);
-
 void handleDeployTubeCmd(float ts, uint8_t id, float value);
-void handleArmRemoteID(float ts, uint8_t arm_status);
-
-
 
 /** @addtogroup Low_Level
  * @{
@@ -415,11 +395,8 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size);
 
-void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size);
-void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size);
-void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size);
-void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size);
-void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size);
+
+
 
 /**
  * @}
@@ -493,12 +470,6 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_TRIGGER:    BRIDGE_HandleTriggerPkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE:    BRIDGE_HandleDeplyTubePkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE_CMD:    BRIDGE_HandleDeplyTubeCmdPkt(data,size); break;
-
-		case CAN_PKT_REMOTE_ID:  BRIDGE_HandleRIDPacket(data, size); break;
-		case CAN_PKT_GCS_LOCATION: BRIDGE_HandleGCSLocation(data, size); break;
-		case CAN_PKT_ARM_RID:		 BRIDGE_HandleArmRemoteID(data, size); break;
-		case CAN_PKT_SERIAL_ID:	 BRIDGE_HandleSerialNumber(data, size); break;
-
 		default: break;
 	}
 }
@@ -1056,20 +1027,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #ifdef _SP_ACTUATOR
 	LED_Toggle(0);	
 #if 1
-#ifdef _SP_ACTUATOR_HITEC
-	uint16_t usec_u = 0;
-
-	if(data->usec[DIP_GetVal()] != 0) {
-		float usec_f = data->usec[DIP_GetVal()];
-		usec_u = (uint16_t)((usec_f - 1500)*600/460 + 1500);
-
-		if(usec_u < 900) usec_u = 900;
-		if(usec_u > 2100) usec_u = 2100;
-	}
-	PWM_SetPulseWidth(0, usec_u);
-#else
 	PWM_SetPulseWidth(0, data->usec[DIP_GetVal()]);
-#endif
 #else
 	uint16_t usec = data->usec[DIP_GetVal()];
 
@@ -1159,7 +1117,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_GCS
+#if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_GNSS_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSPkt";
@@ -2040,121 +1998,6 @@ void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size)
 #endif
 }
 
-void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size)
-{
-#if defined BOARD_core
-	static uint8_t pkt_size = sizeof(CAN_OperatorID_t);
-
-	static uint8_t buffer[sizeof(CAN_OperatorID_t)];
-
-	BRIDGE_BUFFER_PREAMBLE
-
-		CAN_OperatorID_t * data = (CAN_OperatorID_t *) buffer;
-		float t0 = getElapsedTime();
-		updateOperatorID(t0,
-				data->operator_id);
-#ifdef VERBOSE
-	pmesg(VERBOSE_CAN, "OPERATOR ID: %s\n", t0, data->operator_id);
-#endif
-
-	BRIDGE_BUFFER_CONCLUSION
-#endif
-}
-
-void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size)
-{
-		printf("handle serial \n");
-#if defined BOARD_RID
-	static uint8_t pkt_size = sizeof(CAN_SerialNumber_t);
-
-	static uint8_t buffer[sizeof(CAN_SerialNumber_t)];
-
-	BRIDGE_BUFFER_PREAMBLE
-
-		CAN_SerialNumber_t * data = (CAN_SerialNumber_t *) buffer;
-		float t0 = getElapsedTime();
-		updateSerialNumber(t0,
-				data->serial_number);
-#ifdef VERBOSE
-	pmesg(VERBOSE_CAN, "SERIAL NUMBER: %s\n", t0, data->serial_number);
-#endif
-
-	BRIDGE_BUFFER_CONCLUSION
-#endif
-}
-
-void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size)
-{
-#if defined BOARD_RID
-	static uint8_t pkt_size = sizeof(CAN_RemoteID_t);
-
-	static uint8_t buffer[sizeof(CAN_RemoteID_t)];
-
-	BRIDGE_BUFFER_PREAMBLE
-
-		CAN_RemoteID_t * data = (CAN_RemoteID_t *) buffer;
-		float t0 = getElapsedTime();
-		updateRemoteID(t0,
-				data->aircraft_type,
-				data->base_mode,
-				data->state,
-				data->autopilot_type);
-
-#ifdef VERBOSE
-	pmesg(VERBOSE_CAN, "RID PACKET: %0.02f s, aircraft type %d, autopilot type %d, base_mode %d, state: %d\n", t0, data->aircraft_type, data->autopilot_type, data->base_mode, data->state);
-#endif
-
-	BRIDGE_BUFFER_CONCLUSION
-#endif
-}
-
-void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size)
-{
-
-#if defined BOARD_RID
-	static uint8_t pkt_size = sizeof(CAN_GCSLocation_t);
-
-	static uint8_t buffer[sizeof(CAN_GCSLocation_t)];
-
-	BRIDGE_BUFFER_PREAMBLE
-
-		CAN_GCSLocation_t * data = (CAN_GCSLocation_t *) buffer;
-		float t0 = getElapsedTime();
-		updateGCSLocation(t0,
-				//data->operator_id,
-				data->lat,
-				data->lon,
-				data->altitude);
-#ifdef VERBOSE
-	pmesg(VERBOSE_CAN, "GCS LOCATION PACKET: %0.02f s, latitude %0.02lf, longitude %0.02lf, altitude %0.02f\n", t0, data->lat, data->lon, data->altitude);
-#endif
-
-	BRIDGE_BUFFER_CONCLUSION
-#endif
-}
-
-void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size)
-{
-#if defined BOARD_core
-	static uint8_t pkt_size = sizeof(CAN_ArmRemoteID_t);
-
-	static uint8_t buffer[sizeof(CAN_ArmRemoteID_t)];
-
-	BRIDGE_BUFFER_PREAMBLE
-
-		CAN_ArmRemoteID_t * data = (CAN_ArmRemoteID_t *) buffer;
-		float t0 = getElapsedTime();
-		handleArmRemoteID(t0,
-				data->armed);
-
-#ifdef VERBOSE
-	pmesg(VERBOSE_CAN, "ARM REMOTE ID PACKET: %0.02f s, Remote ID %d\n", t0, data->armed);
-#endif
-
-	BRIDGE_BUFFER_CONCLUSION
-#endif
-}
-
 // ==============================================================================
 // FUNCTIONS FOR SENDING CAN-BUS PACKETS
 // ==============================================================================
@@ -2806,7 +2649,6 @@ uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
 	return CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE, &data, sizeof(CAN_DeploymentTube_t));
 }
 
-
 uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 		uint8_t id,
 		float value) {
@@ -2820,67 +2662,6 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTubeCommand_t));
 
 	return CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE_CMD, &data, sizeof(CAN_DeploymentTubeCommand_t));
-}
-
-uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
-		uint8_t armed) {
-
-	CAN_ArmRemoteID_t data;
-
-	// fill packet
-	data.startByte = BRIDGE_START_BYTE;
-	data.armed = armed;
-	setFletcher16((uint8_t *)(&data), sizeof(CAN_ArmRemoteID_t));
-
-	return CAN_Write(p, CAN_PKT_ARM_RID, &data, sizeof(CAN_ArmRemoteID_t));
-}
-
-uint8_t BRIDGE_SendGCSLocation(uint8_t p,
-		double latitude,
-		double longitude,
-		float altitude) {
-
-	CAN_GCSLocation_t data;
-
-	// fill packet
-	data.startByte = BRIDGE_START_BYTE;
-	data.lat = latitude;
-	data.lon = longitude;
-	data.altitude = altitude;
-	setFletcher16((uint8_t *)(&data), sizeof(CAN_GCSLocation_t));
-
-	return CAN_Write(p, CAN_PKT_GCS_LOCATION, &data, sizeof(CAN_GCSLocation_t));
-}
-
-uint8_t BRIDGE_SendRIDPacket(uint8_t p,
-		uint8_t aircraft_type,
-		uint8_t base_mode,
-		uint8_t state,
-		uint8_t autopilot_type) {
-
-	CAN_RemoteID_t data;
-
-	// fill packet
-	data.startByte = BRIDGE_START_BYTE;
-	data.aircraft_type = aircraft_type;
-	data.base_mode = base_mode;
-	data.state = state;
-	setFletcher16((uint8_t *)(&data), sizeof(CAN_RemoteID_t));
-
-	return CAN_Write(p, CAN_PKT_REMOTE_ID, &data, sizeof(CAN_RemoteID_t));
-}
-
-uint8_t BRIDGE_SendSerialNumber(uint8_t p,
-		char serial_number[20]) {
-
-	CAN_SerialNumber_t data;
-
-	// fill packet
-	data.startByte = BRIDGE_START_BYTE;
-	memcpy(data.serial_number,serial_number,20);
-	setFletcher16((uint8_t *)(&data), sizeof(CAN_SerialNumber_t));
-
-	return CAN_Write(p, CAN_PKT_SERIAL_ID, &data, sizeof(CAN_SerialNumber_t));
 }
 
 
