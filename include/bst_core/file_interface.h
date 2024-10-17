@@ -16,8 +16,8 @@ class FileInterface : public CommunicationsInterface {
 		bool open();
 		bool close();
 
-		uint16_t read(uint8_t * buf, uint16_t buf_size);
-		uint16_t write(uint8_t * buf, uint16_t size);
+		int16_t read(uint8_t * buf, uint16_t buf_size);
+		int16_t write(uint8_t * buf, uint16_t size);
 
 		uint16_t getRxBytes() {return 0;}
 		uint16_t getTxBytes() {return 0;}

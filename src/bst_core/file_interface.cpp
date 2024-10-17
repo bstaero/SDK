@@ -28,7 +28,7 @@ bool FileInterface::initialize(const char * filename, const char * param2, const
 	return false;
 }
 
-uint16_t FileInterface::read(uint8_t * buf, uint16_t buf_size) {
+int16_t FileInterface::read(uint8_t * buf, uint16_t buf_size) {
 	int retval = ::read(in_fid, buf, buf_size);
 	if(retval <= 0) connected = false;
 
@@ -36,7 +36,7 @@ uint16_t FileInterface::read(uint8_t * buf, uint16_t buf_size) {
 }
 
 
-uint16_t FileInterface::write(uint8_t * buf, uint16_t buf_size) {
+int16_t FileInterface::write(uint8_t * buf, uint16_t buf_size) {
 	return 0;
 }
 
