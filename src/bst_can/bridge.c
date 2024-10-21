@@ -2063,8 +2063,7 @@ void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size)
 
 void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size)
 {
-		printf("handle serial \n");
-#if defined BOARD_RID
+#if defined BOARD_RID || defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_SerialNumber_t);
 
 	static uint8_t buffer[sizeof(CAN_SerialNumber_t)];
