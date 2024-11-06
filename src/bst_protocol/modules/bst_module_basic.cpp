@@ -56,7 +56,7 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(ACTUATORS_CALIBRATION, sizeof(ActuatorCalibration_t), true, true);
 #if defined(VEHICLE_FIXEDWING)
 	registerDataType(ACTUATORS_MIXING_PARAMS, sizeof(SurfaceMixing_t), true, true);
-#elif defined(VEHICLE_MULTIROTOR) || defined(VEHICLE_TAILSITTER)
+#elif defined(VEHICLE_MULTIROTOR) || defined(VEHICLE_TAILSITTER) || defined(VEHICLE_VTOL)
 	registerDataType(ACTUATORS_ROTOR_PARAMS, sizeof(RotorParameters_t), true, true);
 #endif
 	//registerDataType(ACTUATORS_ROTOR_PARAMS, sizeof(), true, true);

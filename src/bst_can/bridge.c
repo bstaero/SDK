@@ -280,6 +280,7 @@ void updateSerialNumber(float ts,
 
 void handleDeployTubeCmd(float ts, uint8_t id, float value);
 void handleArmRemoteID(float ts, uint8_t arm_status);
+void handleArmRemoteIDErrorMsg(float ts, char error[50]);
 
 
 
@@ -418,6 +419,7 @@ void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size);
+void BRIDGE_HandleArmRemoteIDErrorMsg(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size);
 
@@ -497,6 +499,7 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_REMOTE_ID:  BRIDGE_HandleRIDPacket(data, size); break;
 		case CAN_PKT_GCS_LOCATION: BRIDGE_HandleGCSLocation(data, size); break;
 		case CAN_PKT_ARM_RID:		 BRIDGE_HandleArmRemoteID(data, size); break;
+		case CAN_PKT_REMOTE_ID_ERROR_MSG:	BRIDGE_HandleArmRemoteIDErrorMsg(data, size); break;
 		case CAN_PKT_SERIAL_ID:	 BRIDGE_HandleSerialNumber(data, size); break;
 
 		default: break;
@@ -549,7 +552,7 @@ void BRIDGE_HandleReceiverPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandlePressurePkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core
+#if defined BOARD_core || defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_Pressure_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandlePressurePkt";
@@ -600,7 +603,7 @@ void BRIDGE_HandlePressurePkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core
+#if defined BOARD_core || defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_AirData_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleAirDataPkt";
@@ -1254,7 +1257,7 @@ void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP
+#if defined BOARD_core || defined BOARD_MHP || (defined BOARD_RID && defined ARCH_stm32f1)
 	static uint8_t pkt_size = sizeof(CAN_GNSS_UTC_W_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSUTCWPkt";
@@ -1290,7 +1293,7 @@ void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP
+#if defined BOARD_core || defined BOARD_MHP || (defined BOARD_RID && defined ARCH_stm32f1)
   static uint8_t pkt_size = sizeof(CAN_GNSS_LLA_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSLLAPkt";
@@ -1330,7 +1333,7 @@ void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSVelPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP
+#if defined BOARD_core || defined BOARD_MHP || (defined BOARD_RID && defined ARCH_stm32f1)
   static uint8_t pkt_size = sizeof(CAN_GNSS_VEL_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSVelPkt";
@@ -1369,7 +1372,7 @@ void BRIDGE_HandleGNSSVelPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP
+#if defined BOARD_core || defined BOARD_MHP || (defined BOARD_RID && defined ARCH_stm32f1)
   static uint8_t pkt_size = sizeof(CAN_GNSS_HEALTH_2_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSHealth2Pkt";
@@ -2154,6 +2157,29 @@ void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size)
 #endif
 }
 
+void BRIDGE_HandleArmRemoteIDErrorMsg(uint8_t * byte, uint8_t size)
+{
+#if defined BOARD_core
+	static uint8_t pkt_size = sizeof(CAN_RemoteIDErrorMessage_t);
+
+	static uint8_t buffer[sizeof(CAN_RemoteIDErrorMessage_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+		CAN_RemoteIDErrorMessage_t * data = (CAN_RemoteIDErrorMessage_t *) buffer;
+		float t0 = getElapsedTime();
+		handleArmRemoteIDErrorMsg(t0,
+				data->error_message);
+
+#ifdef VERBOSE
+	pmesg(VERBOSE_CAN, "ARM REMOTE ID ERROR MSG: %s\n", t0, data->error_message);
+#endif
+
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+
 // ==============================================================================
 // FUNCTIONS FOR SENDING CAN-BUS PACKETS
 // ==============================================================================
@@ -2834,6 +2860,19 @@ uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
 	return CAN_Write(p, CAN_PKT_ARM_RID, &data, sizeof(CAN_ArmRemoteID_t));
 }
 
+uint8_t BRIDGE_SendArmRemoteIDErrorMsg(uint8_t p,
+		char error[50]) {
+
+	CAN_RemoteIDErrorMessage_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	memcpy(data.error_message,error,50);
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_RemoteIDErrorMessage_t));
+
+	return CAN_Write(p, CAN_PKT_REMOTE_ID_ERROR_MSG, &data, sizeof(CAN_RemoteIDErrorMessage_t));
+}
+
 uint8_t BRIDGE_SendGCSLocation(uint8_t p,
 		double latitude,
 		double longitude,
@@ -2864,6 +2903,7 @@ uint8_t BRIDGE_SendRIDPacket(uint8_t p,
 	data.aircraft_type = aircraft_type;
 	data.base_mode = base_mode;
 	data.state = state;
+	data.autopilot_type = autopilot_type;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_RemoteID_t));
 
 	return CAN_Write(p, CAN_PKT_REMOTE_ID, &data, sizeof(CAN_RemoteID_t));

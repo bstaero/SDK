@@ -193,6 +193,9 @@ uint8_t BRIDGE_SendSerialNumber(uint8_t p,
 uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
 		uint8_t armed);
 
+uint8_t BRIDGE_SendArmRemoteIDErrorMsg(uint8_t p,
+		char error[50]);
+
 uint32_t BRIDGE_GetPktDrop(void);
 /**
   * @}

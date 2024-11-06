@@ -92,6 +92,7 @@ typedef enum {
 	CAN_PKT_REMOTE_ID=66,
 	CAN_PKT_ARM_RID=67,
 	CAN_PKT_SERIAL_ID=68,
+	CAN_PKT_REMOTE_ID_ERROR_MSG=69,
 
 	/* TELEMETRY */
 	CAN_PKT_DEPLOYMENT_TUBE=128,
@@ -1056,6 +1057,27 @@ typedef struct _CAN_RemoteID_t {
 	}
 #endif
 } __attribute__ ((packed)) CAN_RemoteID_t;
+
+typedef struct _CAN_RemoteIDErrorMessage_t {
+	uint8_t startByte;
+
+	char error_message[50];
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_RemoteIDErrorMessage_t() {
+		uint8_t _i;
+
+		startByte = 0;
+
+		for (_i = 0; _i < 50; ++_i)
+			error_message[_i] = 0;
+
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_RemoteIDErrorMessage_t;
 
 typedef struct _CAN_SerialNumber_t {
 	uint8_t startByte;
