@@ -52,6 +52,7 @@ class Parser:
 
         self.parsed_logs = {}
         self.failed_pkts = {}
+        self.sys_init_times = {}
         self.ac_vehicle_type = VehicleType.VEHICLE_UNKNOWN
         self.ac_sys_current_time = 0
         self.ac_sys_previous_time = 0
@@ -118,14 +119,8 @@ class Parser:
         if from_aircraft or not self.has_addr:
             if is_new_sys_time:
                 # Same aircraft, new log data
-                split_name = self.current_ac.split('_')
-                try:
-                    ac_name = '_'.join(split_name[0:len(split_name)-1])
-                    new_log_num = int(split_name[-1]) + 1
-                    self.current_ac = f'{ac_name}_{new_log_num}'
-                    self.ac_sys_previous_time = pkt_data.system_time
-                except:
-                    pass
+                self.current_ac = self.increment_log_name(self.current_ac)
+                self.ac_sys_previous_time = pkt_data.system_time
             elif is_sys_init:
                 sys_init_pkt: SystemInitialize = pkt_data
                 self.ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type)
@@ -134,8 +129,6 @@ class Parser:
                 name_arr = sys_init_pkt.name
                 while name_arr[len(name_arr)-1] == 0:
                     del name_arr[len(name_arr)-1]
-
-                is_new_sys_time = sys_init_pkt.system_time < self.ac_sys_previous_time
 
                 ac_name = "".join(map(chr, sys_init_pkt.name))
                 if self.current_ac.startswith(unknown_ac):
@@ -149,6 +142,22 @@ class Parser:
                 elif not self.current_ac.startswith(ac_name):
                     # New aircraft log
                     self.current_ac = f'{ac_name}_log_1'
+                    try:
+                        if len(self.results[self.current_ac]) > 0:
+                            self.current_ac = self.increment_log_name(self.current_ac)
+                    except:
+                        pass
+
+                prev_sys_init_time = 0
+                has_prev_sys_init = self.current_ac in self.sys_init_times
+                if has_prev_sys_init:
+                    prev_sys_init_time = self.sys_init_times[self.current_ac]
+
+                if sys_init_pkt.system_time < prev_sys_init_time:
+                    self.current_ac = self.increment_log_name(self.current_ac)
+
+                self.sys_init_times[self.current_ac] = sys_init_pkt.system_time
+
             entry_name = self.current_ac
         else:
             entry_name = gcs_name
@@ -161,6 +170,15 @@ class Parser:
             self.results[entry_name][pkt_type].append(pkt_data)
         else:
             self.results[entry_name][pkt_type] = [pkt_data]
+
+    def increment_log_name(self, name: str) -> str:
+        try:
+            split_name = name.split('_')
+            ac_name = '_'.join(split_name[0:len(split_name)-1])
+            new_log_num = int(split_name[-1]) + 1
+            return f'{ac_name}_{new_log_num}'
+        except:
+            return name
 
 
 def find_system_info(filename, has_addressing=False):
