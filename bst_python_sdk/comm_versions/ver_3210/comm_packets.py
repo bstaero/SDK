@@ -18,6 +18,7 @@
 
 from enum import Enum
 import struct
+import sys
 
 from .comm_packets import *
 
@@ -113,6 +114,7 @@ class SurfaceCommand (Enum):
 	INVALID_SURFACE=24
 
 class ActuatorCalibration:
+	PACKET_TYPES = ['ACTUATORS_CALIBRATION']
 	SIZE = 8
 
 	def __init__ (self, channel = 255,
@@ -153,6 +155,10 @@ class ActuatorCalibration:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -166,6 +172,7 @@ class ActuatorCalibration:
 		return bytearray(buf)
 
 class Actuators:
+	PACKET_TYPES = ['ACTUATORS_VALUES']
 	SIZE = 32
 
 	def __init__ (self, usec = [None] * 16):
@@ -191,6 +198,10 @@ class Actuators:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -365,6 +376,7 @@ MAX_VEHICLES = 5
 #---------[ Estimator ]---------#
 
 class EstimatorParameters:
+	PACKET_TYPES = ['STATE_ESTIMATOR_PARAM']
 	SIZE = 64
 
 	def __init__ (self, cf_acc_gain = 0.0, cf_mag_gain = 0.0,
@@ -450,6 +462,10 @@ class EstimatorParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -472,6 +488,7 @@ class EstimatorParameters:
 		return bytearray(buf)
 
 class State:
+	PACKET_TYPES = ['STATE_STATE']
 	SIZE = 92
 
 	def __init__ (self, system_time = 0.0, q = [None] * 4, altitude = 0.0, ias = 0.0,
@@ -570,6 +587,10 @@ class State:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -644,6 +665,7 @@ class WaypointAction (Enum):
 	END_OF_RUNWAY=512
 
 class Waypoint:
+	PACKET_TYPES = ['FLIGHT_PLAN_WAYPOINT']
 	SIZE = 28
 
 	def __init__ (self, num = 255, next = 255, latitude = 0.0, longitude = 0.0,
@@ -689,6 +711,10 @@ class Waypoint:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -702,6 +728,7 @@ class Waypoint:
 		return bytearray(buf)
 
 class DubinsPath:
+	PACKET_TYPES = ['DUBIN_PATH']
 	SIZE = 109
 
 	def __init__ (self, xc0_x = 0.0, xc0_y = 0.0, xc1_x = 0.0, xc1_y = 0.0,
@@ -827,6 +854,10 @@ class DubinsPath:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -860,6 +891,7 @@ class DubinsPath:
 		return bytearray(buf)
 
 class FlightPlanMap:
+	PACKET_TYPES = ['FLIGHT_PLAN_MAP']
 	SIZE = 18
 
 	def __init__ (self, mode = FPMapMode.NONE, map = [None] * 17):
@@ -890,6 +922,10 @@ class FlightPlanMap:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -985,6 +1021,7 @@ class SensorType (Enum):
 	UNKNOWN_SENSOR=14
 
 class AxisMapping:
+	PACKET_TYPES = ['SENSORS_GNSS_ORIENTATION', 'SENSORS_BOARD_ORIENTATION']
 	SIZE = 3
 
 	def __init__ (self, axis = [None] * 3):
@@ -1011,6 +1048,10 @@ class AxisMapping:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1019,6 +1060,7 @@ class AxisMapping:
 		return bytearray(buf)
 
 class MHP:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 52
 
 	def __init__ (self, system_time = 0.0, alpha = 0.0, beta = 0.0, q = 0.0, ias = 0.0,
@@ -1082,6 +1124,10 @@ class MHP:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1100,6 +1146,7 @@ class MHP:
 		return bytearray(buf)
 
 class MHP9HSensors:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 77
 
 	def __init__ (self, system_time = 0.0, error_code = 0,
@@ -1172,6 +1219,10 @@ class MHP9HSensors:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1193,6 +1244,7 @@ class MHP9HSensors:
 		return bytearray(buf)
 
 class MHP9HTiming:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 64
 
 	def __init__ (self, system_time = 0.0, static_pressure_time = 0.0,
@@ -1252,6 +1304,10 @@ class MHP9HTiming:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1269,6 +1325,7 @@ class MHP9HTiming:
 		return bytearray(buf)
 
 class MHPSensors:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 61
 
 	def __init__ (self, system_time = 0.0, error_code = 0, static_pressure = 0.0,
@@ -1341,6 +1398,10 @@ class MHPSensors:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1362,6 +1423,7 @@ class MHPSensors:
 		return bytearray(buf)
 
 class MHPSensorsGNSS:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 60
 
 	def __init__ (self, system_time = 0.0, magnetometer = [None] * 3,
@@ -1440,6 +1502,10 @@ class MHPSensorsGNSS:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1463,6 +1529,7 @@ class MHPSensorsGNSS:
 		return bytearray(buf)
 
 class MHPTiming:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 48
 
 	def __init__ (self, system_time = 0.0, static_pressure_time = 0.0,
@@ -1522,6 +1589,10 @@ class MHPTiming:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1539,6 +1610,7 @@ class MHPTiming:
 		return bytearray(buf)
 
 class Pressure:
+	PACKET_TYPES = ['SENSORS_DYNAMIC_PRESSURE', 'SENSORS_STATIC_PRESSURE']
 	SIZE = 12
 
 	def __init__ (self, system_time = 0.0, pressure = 0.0, temperature = 0.0):
@@ -1567,6 +1639,10 @@ class Pressure:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1576,6 +1652,7 @@ class Pressure:
 		return bytearray(buf)
 
 class RTCM:
+	PACKET_TYPES = ['SENSORS_GNSS_RTCM']
 	SIZE = 65
 
 	def __init__ (self, size = 0, payload = [None] * 64):
@@ -1607,6 +1684,10 @@ class RTCM:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1617,6 +1698,7 @@ class RTCM:
 		return bytearray(buf)
 
 class SensorOffsets:
+	PACKET_TYPES = ['SENSORS_OFFSETS']
 	SIZE = 33
 
 	def __init__ (self, status = 0, gyroscope_x = 0.0, gyroscope_y = 0.0,
@@ -1671,6 +1753,10 @@ class SensorOffsets:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1686,6 +1772,7 @@ class SensorOffsets:
 		return bytearray(buf)
 
 class SingleAxisSensorCalibration:
+	PACKET_TYPES = ['SENSORS_DYNP_CALIBRATION']
 	SIZE = 8
 
 	def __init__ (self, b = 0.0, m = 0.0):
@@ -1710,6 +1797,10 @@ class SingleAxisSensorCalibration:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1718,6 +1809,7 @@ class SingleAxisSensorCalibration:
 		return bytearray(buf)
 
 class SingleValue:
+	PACKET_TYPES = []
 	SIZE = 4
 
 	def __init__ (self, value = 0.0):
@@ -1738,6 +1830,10 @@ class SingleValue:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1745,6 +1841,7 @@ class SingleValue:
 		return bytearray(buf)
 
 class SingleValueSensor:
+	PACKET_TYPES = ['SENSORS_AIR_TEMPERATURE', 'SENSORS_AGL']
 	SIZE = 8
 
 	def __init__ (self, system_time = 0.0, value = 0.0):
@@ -1769,6 +1866,10 @@ class SingleValueSensor:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1777,6 +1878,7 @@ class SingleValueSensor:
 		return bytearray(buf)
 
 class ThreeAxisSensor:
+	PACKET_TYPES = ['SENSORS_ACCELEROMETER', 'SENSORS_GYROSCOPE', 'SENSORS_MAGNETOMETER']
 	SIZE = 16
 
 	def __init__ (self, system_time = 0.0, x = 0.0, y = 0.0, z = 0.0):
@@ -1809,6 +1911,10 @@ class ThreeAxisSensor:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1819,6 +1925,7 @@ class ThreeAxisSensor:
 		return bytearray(buf)
 
 class ThreeAxisSensorCalibration:
+	PACKET_TYPES = ['SENSORS_GYRO_CALIBRATION', 'SENSORS_MAG_CALIBRATION']
 	SIZE = 48
 
 	def __init__ (self, b = [None] * 3, m = [None] * 9):
@@ -1856,6 +1963,10 @@ class ThreeAxisSensorCalibration:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1867,6 +1978,7 @@ class ThreeAxisSensorCalibration:
 		return bytearray(buf)
 
 class ADSB:
+	PACKET_TYPES = ['SENSORS_ADSB']
 	SIZE = 56
 
 	def __init__ (self, system_time = 0.0, icao_address = 0, latitude = 0.0,
@@ -1954,6 +2066,10 @@ class ADSB:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1980,6 +2096,7 @@ class ADSB:
 		return bytearray(buf)
 
 class CalibrateSensor:
+	PACKET_TYPES = ['SENSORS_CALIBRATE']
 	SIZE = 2
 
 	def __init__ (self, sensor = SensorType.UNKNOWN_SENSOR,
@@ -2006,6 +2123,10 @@ class CalibrateSensor:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2015,6 +2136,7 @@ class CalibrateSensor:
 		return bytearray(buf)
 
 class GPS:
+	PACKET_TYPES = ['SENSORS_GPS']
 	SIZE = 66
 
 	def __init__ (self, system_time = 0.0, week = 0, hour = 0, minute = 0,
@@ -2097,6 +2219,10 @@ class GPS:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2120,6 +2246,7 @@ class GPS:
 		return bytearray(buf)
 
 class IMU:
+	PACKET_TYPES = ['SENSORS_IMU']
 	SIZE = 56
 
 	def __init__ (self, accelerometer = 0, gyroscope = 0, magnetometer = 0,
@@ -2160,6 +2287,10 @@ class IMU:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2170,6 +2301,7 @@ class IMU:
 		return bytearray(buf)
 
 class ThreeAxisFirstOrderCorrection:
+	PACKET_TYPES = ['SENSORS_MAG_CURRENT_CAL']
 	SIZE = 25
 
 	def __init__ (self, sensor = SensorType.UNKNOWN_SENSOR,
@@ -2224,6 +2356,10 @@ class ThreeAxisFirstOrderCorrection:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2240,6 +2376,7 @@ class ThreeAxisFirstOrderCorrection:
 		return bytearray(buf)
 
 class Sensors:
+	PACKET_TYPES = []
 	SIZE = 170
 
 	def __init__ (self, imu = 0, gps = 0, dynamic_pressure = 0, static_pressure = 0,
@@ -2297,6 +2434,10 @@ class Sensors:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -2381,6 +2522,7 @@ class SystemErrors (Enum):
 	ERROR_ICING=268435456
 	ERROR_BAD_LAUNCH=536870912
 	ERROR_RESET_IN_FLIGHT=1073741824
+	ERROR_REMOTE_ID=2147483648
 
 	# ERROR_WIND_LIMIT          = 0x00000000
 
@@ -2438,6 +2580,7 @@ class VehicleType (Enum):
 	VTOL=6
 
 class HardwareError:
+	PACKET_TYPES = ['SYSTEM_HARDWARE_ERROR']
 	SIZE = 35
 
 	def __init__ (self, error_code = 0, r0 = 0, r1 = 0, r2 = 0, r3 = 0,
@@ -2499,6 +2642,10 @@ class HardwareError:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2516,6 +2663,7 @@ class HardwareError:
 		return bytearray(buf)
 
 class PowerOn:
+	PACKET_TYPES = ['SYSTEM_POWER_ON']
 	SIZE = 6
 
 	def __init__ (self, comms_rev = 0, serial_num = 0):
@@ -2540,6 +2688,10 @@ class PowerOn:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2548,6 +2700,7 @@ class PowerOn:
 		return bytearray(buf)
 
 class SystemStatus:
+	PACKET_TYPES = ['SYSTEM_HEALTH_AND_STATUS']
 	SIZE = 31
 
 	def __init__ (self, batt_voltage = 0.0, batt_current = 0.0,
@@ -2606,6 +2759,10 @@ class SystemStatus:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2622,6 +2779,7 @@ class SystemStatus:
 		return bytearray(buf)
 
 class SystemInitialize:
+	PACKET_TYPES = ['SYSTEM_INITIALIZE']
 	SIZE = 40
 
 	def __init__ (self, vehicle_type = VehicleType.VEHICLE_UNKNOWN,
@@ -2704,6 +2862,10 @@ class SystemInitialize:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -2822,6 +2984,7 @@ class HandsetType (Enum):
 	HS_TYPE_INVALID=3
 
 class HandsetValues:
+	PACKET_TYPES = ['INPUT_HANDSET_VALUES']
 	SIZE = 32
 
 	def __init__ (self, usec = [None] * 16):
@@ -2847,6 +3010,10 @@ class HandsetValues:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -2943,7 +3110,7 @@ class CommandID (Enum):
 
 	CMD_TRIGGER_PAYLOAD=23
 
-	CMD_INVALID=37
+	CMD_INVALID=47
 
 class FlightMode (Enum):
 	FLIGHT_MODE_INIT=0
@@ -2999,6 +3166,7 @@ class NavigationControllerMode (Enum):
 	NAV_INVALID=7
 
 class Command:
+	PACKET_TYPES = ['CONTROL_COMMAND']
 	SIZE = 5
 
 	def __init__ (self, id = 255, value = 0.0):
@@ -3023,6 +3191,10 @@ class Command:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3031,6 +3203,7 @@ class Command:
 		return bytearray(buf)
 
 class HandsetCalibration:
+	PACKET_TYPES = ['HANDSET_CALIBRATION']
 	SIZE = 7
 
 	def __init__ (self, channel = 255,
@@ -3080,6 +3253,10 @@ class HandsetCalibration:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3097,6 +3274,7 @@ class HandsetCalibration:
 		return bytearray(buf)
 
 class Limit:
+	PACKET_TYPES = []
 	SIZE = 8
 
 	def __init__ (self, min = -float("inf"), max = float("inf")):
@@ -3121,6 +3299,10 @@ class Limit:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3129,6 +3311,7 @@ class Limit:
 		return bytearray(buf)
 
 class Timeout:
+	PACKET_TYPES = []
 	SIZE = 3
 
 	def __init__ (self, seconds = 0, waypoint = 0):
@@ -3153,6 +3336,10 @@ class Timeout:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3161,6 +3348,7 @@ class Timeout:
 		return bytearray(buf)
 
 class PID:
+	PACKET_TYPES = ['CONTROL_PID']
 	SIZE = 21
 
 	def __init__ (self, id = 0, p = 0.0, i = 0.0, d = 0.0, output = 0):
@@ -3199,6 +3387,10 @@ class PID:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3210,6 +3402,7 @@ class PID:
 		return bytearray(buf)
 
 class TabletJoystick:
+	PACKET_TYPES = ['INPUT_JOYSTICK_VALUES']
 	SIZE = 10
 
 	def __init__ (self, axis = [None] * 4, button = [None] * 2):
@@ -3247,6 +3440,10 @@ class TabletJoystick:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3260,6 +3457,7 @@ class TabletJoystick:
 #---------[ Communication ]---------#
 
 class TelemetryControl:
+	PACKET_TYPES = ['TELEMETRY_CONTROL']
 	SIZE = 64
 
 	def __init__ (self, system_time = 0, roll = 0, pitch = 0, yaw = 0,
@@ -3365,6 +3563,10 @@ class TelemetryControl:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3398,6 +3600,7 @@ class TelemetryControl:
 #---------[ Telemetry ]---------#
 
 class DeploymentTube:
+	PACKET_TYPES = ['TELEMETRY_DEPLOYMENT_TUBE']
 	SIZE = 4
 
 	def __init__ (self, state = 0, parachute_door = 0, batt_voltage = 0,
@@ -3431,6 +3634,10 @@ class DeploymentTube:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3441,6 +3648,7 @@ class DeploymentTube:
 		return bytearray(buf)
 
 class TelemetryOrientation:
+	PACKET_TYPES = ['TELEMETRY_ORIENTATION']
 	SIZE = 24
 
 	def __init__ (self, system_time = 0, q = [None] * 4,
@@ -3495,6 +3703,10 @@ class TelemetryOrientation:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3511,6 +3723,7 @@ class TelemetryOrientation:
 		return bytearray(buf)
 
 class TelemetryPosition:
+	PACKET_TYPES = ['TELEMETRY_POSITION']
 	SIZE = 46
 
 	def __init__ (self, system_time = 0, latitude = 0, longitude = 0,
@@ -3579,6 +3792,10 @@ class TelemetryPosition:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3598,6 +3815,7 @@ class TelemetryPosition:
 		return bytearray(buf)
 
 class TelemetryPressure:
+	PACKET_TYPES = ['TELEMETRY_PRESSURE']
 	SIZE = 28
 
 	def __init__ (self, system_time = 0, static_pressure = 0,
@@ -3664,6 +3882,10 @@ class TelemetryPressure:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3683,6 +3905,7 @@ class TelemetryPressure:
 		return bytearray(buf)
 
 class TelemetrySystem:
+	PACKET_TYPES = ['TELEMETRY_SYSTEM']
 	SIZE = 34
 
 	def __init__ (self, system_time = 0, batt_voltage = 0, batt_current = 0,
@@ -3787,6 +4010,10 @@ class TelemetrySystem:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []

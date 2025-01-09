@@ -18,6 +18,7 @@
 
 from enum import Enum
 import struct
+import sys
 
 from .comm_packets import *
 
@@ -83,6 +84,7 @@ class CAN_PacketTypes (Enum):
 	CAN_PKT_REMOTE_ID=66
 	CAN_PKT_ARM_RID=67
 	CAN_PKT_SERIAL_ID=68
+	CAN_PKT_REMOTE_ID_ERROR_MSG=69
 
 	# TELEMETRY
 
@@ -124,6 +126,7 @@ class CAN_DeploymentTubeState (Enum):
 	DEPLOY_TUBE_ERROR=8
 
 class CAN_DeploymentTubeCommand:
+	PACKET_TYPES = ['CAN_PKT_DEPLOYMENT_TUBE_CMD']
 	SIZE = 8
 
 	def __init__ (self, startByte = 0, id = 255, value = 0.0,
@@ -157,6 +160,10 @@ class CAN_DeploymentTubeCommand:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -169,6 +176,7 @@ class CAN_DeploymentTubeCommand:
 #---------[ PAYLOAD ]---------#
 
 class CAN_NDVI:
+	PACKET_TYPES = ['CAN_PKT_NDVI']
 	SIZE = 20
 
 	def __init__ (self, startByte = 0, id = 0, red = 0.0, near_ir = 0.0,
@@ -214,6 +222,10 @@ class CAN_NDVI:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -229,6 +241,7 @@ class CAN_NDVI:
 #---------[ SENSORS ]---------#
 
 class CAN_ADSB:
+	PACKET_TYPES = ['CAN_PKT_ADSB:']
 	SIZE = 59
 
 	def __init__ (self, startByte = 0, timestamp = 0.0, icao_address = 0,
@@ -321,6 +334,10 @@ class CAN_ADSB:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -346,6 +363,7 @@ class CAN_ADSB:
 		return bytearray(buf)
 
 class CAN_AGL:
+	PACKET_TYPES = ['CAN_PKT_AGL:']
 	SIZE = 15
 
 	def __init__ (self, startByte = 0, timestamp = 0.0, distance = 0.0,
@@ -383,6 +401,10 @@ class CAN_AGL:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -394,6 +416,7 @@ class CAN_AGL:
 		return bytearray(buf)
 
 class CAN_Accelerometer:
+	PACKET_TYPES = ['CAN_PKT_ACCEL']
 	SIZE = 19
 
 	def __init__ (self, startByte = 0, ax = 0.0, ay = 0.0, az = 0.0,
@@ -435,6 +458,10 @@ class CAN_Accelerometer:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -447,6 +474,7 @@ class CAN_Accelerometer:
 		return bytearray(buf)
 
 class CAN_AirData:
+	PACKET_TYPES = ['CAN_PKT_AIRDATA']
 	SIZE = 19
 
 	def __init__ (self, startByte = 0, static_pressure = 0.0,
@@ -488,6 +516,10 @@ class CAN_AirData:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -500,6 +532,7 @@ class CAN_AirData:
 		return bytearray(buf)
 
 class CAN_GNSS:
+	PACKET_TYPES = ['CAN_PKT_GNSS']
 	SIZE = 57
 
 	def __init__ (self, startByte = 0, week = 0, hours = 0, minutes = 0,
@@ -587,6 +620,10 @@ class CAN_GNSS:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -610,6 +647,7 @@ class CAN_GNSS:
 		return bytearray(buf)
 
 class CAN_GNSS_HEALTH:
+	PACKET_TYPES = ['CAN_PKT_GNSS']
 	SIZE = 8
 
 	def __init__ (self, startByte = 0, pdop = 0.0, satellites = 0, chk = 0):
@@ -642,6 +680,10 @@ class CAN_GNSS_HEALTH:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -652,6 +694,7 @@ class CAN_GNSS_HEALTH:
 		return bytearray(buf)
 
 class CAN_GNSS_HEALTH_2:
+	PACKET_TYPES = ['CAN_PKT_GNSS']
 	SIZE = 11
 
 	def __init__ (self, startByte = 0, pdop = 0.0, satellites = 0,
@@ -701,6 +744,10 @@ class CAN_GNSS_HEALTH_2:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -716,6 +763,7 @@ class CAN_GNSS_HEALTH_2:
 		return bytearray(buf)
 
 class CAN_GNSS_VEL:
+	PACKET_TYPES = ['CAN_PKT_GNSS']
 	SIZE = 23
 
 	def __init__ (self, startByte = 0, heading = 0.0, speed = 0.0, vx = 0.0,
@@ -761,6 +809,10 @@ class CAN_GNSS_VEL:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -774,6 +826,7 @@ class CAN_GNSS_VEL:
 		return bytearray(buf)
 
 class CAN_Gyroscope:
+	PACKET_TYPES = ['CAN_PKT_GYRO']
 	SIZE = 19
 
 	def __init__ (self, startByte = 0, gx = 0.0, gy = 0.0, gz = 0.0,
@@ -815,6 +868,10 @@ class CAN_Gyroscope:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -827,6 +884,7 @@ class CAN_Gyroscope:
 		return bytearray(buf)
 
 class CAN_IMU:
+	PACKET_TYPES = ['CAN_PKT_IMU']
 	SIZE = 43
 
 	def __init__ (self, startByte = 0, ax = 0.0, ay = 0.0, az = 0.0, gx = 0.0,
@@ -892,6 +950,10 @@ class CAN_IMU:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -910,6 +972,7 @@ class CAN_IMU:
 		return bytearray(buf)
 
 class CAN_MHP:
+	PACKET_TYPES = ['CAN_PKT_MHP']
 	SIZE = 57
 
 	def __init__ (self, startByte = 0, system_time = 0, static_pressure = 0,
@@ -1007,6 +1070,10 @@ class CAN_MHP:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1035,6 +1102,7 @@ class CAN_MHP:
 		return bytearray(buf)
 
 class CAN_MHP_Products:
+	PACKET_TYPES = ['CAN_PKT_MHP_PRODUCTS']
 	SIZE = 19
 
 	def __init__ (self, startByte = 0, alpha = 0.0, beta = 0.0, ias = 0.0,
@@ -1076,6 +1144,10 @@ class CAN_MHP_Products:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1088,6 +1160,7 @@ class CAN_MHP_Products:
 		return bytearray(buf)
 
 class CAN_MHP_Raw:
+	PACKET_TYPES = ['CAN_PKT_MHP_RAW']
 	SIZE = 23
 
 	def __init__ (self, startByte = 0, differential_pressure = [None] * 5,
@@ -1125,6 +1198,10 @@ class CAN_MHP_Raw:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1137,6 +1214,7 @@ class CAN_MHP_Raw:
 		return bytearray(buf)
 
 class CAN_Magnetometer:
+	PACKET_TYPES = ['CAN_PKT_MAG']
 	SIZE = 15
 
 	def __init__ (self, startByte = 0, mx = 0.0, my = 0.0, mz = 0.0,
@@ -1174,6 +1252,10 @@ class CAN_Magnetometer:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1185,6 +1267,7 @@ class CAN_Magnetometer:
 		return bytearray(buf)
 
 class CAN_Orientation:
+	PACKET_TYPES = ['CAN_PKT_ORIENTATION']
 	SIZE = 19
 
 	def __init__ (self, startByte = 0, q = [None] * 4, chk = 0):
@@ -1221,6 +1304,10 @@ class CAN_Orientation:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1233,6 +1320,7 @@ class CAN_Orientation:
 		return bytearray(buf)
 
 class CAN_Pressure:
+	PACKET_TYPES = ['CAN_PKT_PRESSURE']
 	SIZE = 15
 
 	def __init__ (self, startByte = 0, pressureSta = 0.0, pressureDyn = 0.0,
@@ -1270,6 +1358,10 @@ class CAN_Pressure:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1281,6 +1373,7 @@ class CAN_Pressure:
 		return bytearray(buf)
 
 class CAN_Proximity:
+	PACKET_TYPES = ['CAN_PKT_PROXIMITY:']
 	SIZE = 15
 
 	def __init__ (self, startByte = 0, timestamp = 0.0, distance = 0.0,
@@ -1318,6 +1411,10 @@ class CAN_Proximity:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1329,6 +1426,7 @@ class CAN_Proximity:
 		return bytearray(buf)
 
 class CAN_Trigger:
+	PACKET_TYPES = ['CAN_PKT_TRIGGER:']
 	SIZE = 10
 
 	def __init__ (self, startByte = 0, timestamp = 0.0, id = 0, channel = 0,
@@ -1366,6 +1464,10 @@ class CAN_Trigger:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1377,6 +1479,7 @@ class CAN_Trigger:
 		return bytearray(buf)
 
 class CAN_Wind:
+	PACKET_TYPES = ['CAN_PKT_WIND']
 	SIZE = 15
 
 	def __init__ (self, startByte = 0, u = 0.0, v = 0.0, w = 0.0, chk = 0):
@@ -1413,6 +1516,10 @@ class CAN_Wind:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1426,6 +1533,7 @@ class CAN_Wind:
 #---------[ SYSTEM ]---------#
 
 class CAN_Supply:
+	PACKET_TYPES = ['CAN_PKT_SUPPLY']
 	SIZE = 19
 
 	def __init__ (self, startByte = 0, voltage = 0.0, current = 0.0,
@@ -1467,6 +1575,10 @@ class CAN_Supply:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1504,6 +1616,7 @@ class CAN_SensorType (Enum):
 	CAN_UNKNOWN_SENSOR=14
 
 class CAN_AxisMapping:
+	PACKET_TYPES = ['SENSORS_GNSS_ORIENTATION', 'SENSORS_BOARD_ORIENTATION']
 	SIZE = 6
 
 	def __init__ (self, startByte = 0, axis = [None] * 3, chk = 0):
@@ -1540,6 +1653,10 @@ class CAN_AxisMapping:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1552,6 +1669,7 @@ class CAN_AxisMapping:
 		return bytearray(buf)
 
 class CAN_CalibrateSensor:
+	PACKET_TYPES = ['SENSORS_CALIBRATE']
 	SIZE = 5
 
 	def __init__ (self, startByte = 0,
@@ -1589,6 +1707,10 @@ class CAN_CalibrateSensor:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1625,6 +1747,7 @@ class CAN_DeploymentTubeErrors (Enum):
 #---------[ System ]---------#
 
 class CAN_PowerOn:
+	PACKET_TYPES = ['SYSTEM_POWER_ON']
 	SIZE = 9
 
 	def __init__ (self, startByte = 0, comms_rev = 0, serial_num = 0, chk = 0):
@@ -1657,6 +1780,10 @@ class CAN_PowerOn:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1667,6 +1794,7 @@ class CAN_PowerOn:
 		return bytearray(buf)
 
 class CAN_GNSS_LLA:
+	PACKET_TYPES = ['CAN_PKT_GNSS']
 	SIZE = 23
 
 	def __init__ (self, startByte = 0, latitude = 0.0, longitude = 0.0,
@@ -1704,6 +1832,10 @@ class CAN_GNSS_LLA:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1715,6 +1847,7 @@ class CAN_GNSS_LLA:
 		return bytearray(buf)
 
 class CAN_GNSS_RTCM:
+	PACKET_TYPES = ['CAN_PKT_GNSS_RTCM']
 	SIZE = 68
 
 	def __init__ (self, startByte = 0, size = 0, payload = [None] * 64,
@@ -1756,6 +1889,10 @@ class CAN_GNSS_RTCM:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1769,6 +1906,7 @@ class CAN_GNSS_RTCM:
 		return bytearray(buf)
 
 class CAN_GNSS_SVIN:
+	PACKET_TYPES = ['CAN_PKT_GNSS_RTCM']
 	SIZE = 20
 
 	def __init__ (self, startByte = 0, time_elapsed = 0, time_minimum = 0,
@@ -1814,6 +1952,10 @@ class CAN_GNSS_SVIN:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1827,6 +1969,7 @@ class CAN_GNSS_SVIN:
 		return bytearray(buf)
 
 class CAN_GNSS_UTC:
+	PACKET_TYPES = ['CAN_PKT_GNSS']
 	SIZE = 9
 
 	def __init__ (self, startByte = 0, hours = 0, minutes = 0, seconds = 0.0,
@@ -1864,6 +2007,10 @@ class CAN_GNSS_UTC:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1875,6 +2022,7 @@ class CAN_GNSS_UTC:
 		return bytearray(buf)
 
 class CAN_GNSS_UTC_W:
+	PACKET_TYPES = ['CAN_PKT_GNSS_W']
 	SIZE = 11
 
 	def __init__ (self, startByte = 0, week = 0, hours = 0, minutes = 0,
@@ -1916,6 +2064,10 @@ class CAN_GNSS_UTC_W:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1930,6 +2082,7 @@ class CAN_GNSS_UTC_W:
 #---------[ ACTUATORS ]---------#
 
 class CAN_Actuator:
+	PACKET_TYPES = ['CAN_PKT_ACTUATOR']
 	SIZE = 35
 
 	def __init__ (self, startByte = 0, usec = [None] * 16, chk = 0):
@@ -1966,6 +2119,10 @@ class CAN_Actuator:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1980,6 +2137,7 @@ class CAN_Actuator:
 #---------[ INPUT ]---------#
 
 class CAN_Receiver:
+	PACKET_TYPES = ['CAN_PKT_RECEIVER']
 	SIZE = 35
 
 	def __init__ (self, startByte = 0, usec = [None] * 16, chk = 0):
@@ -2016,6 +2174,10 @@ class CAN_Receiver:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2030,6 +2192,7 @@ class CAN_Receiver:
 #---------[ Telemetry ]---------#
 
 class CAN_ArmRemoteID:
+	PACKET_TYPES = ['CAN_PKT_ARM_REMOTE_ID']
 	SIZE = 4
 
 	def __init__ (self, startByte = 0, armed = 0, chk = 0):
@@ -2058,6 +2221,10 @@ class CAN_ArmRemoteID:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2067,6 +2234,7 @@ class CAN_ArmRemoteID:
 		return bytearray(buf)
 
 class CAN_DeploymentTube:
+	PACKET_TYPES = ['CAN_PKT_DEPLOYMENT_TUBE']
 	SIZE = 7
 
 	def __init__ (self, startByte = 0,
@@ -2115,6 +2283,10 @@ class CAN_DeploymentTube:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2132,6 +2304,7 @@ class CAN_DeploymentTube:
 		return bytearray(buf)
 
 class CAN_GCSLocation:
+	PACKET_TYPES = ['CAN_PKT_GCS_LOCATION']
 	SIZE = 23
 
 	def __init__ (self, startByte = 0, lat = 0.0, lon = 0.0, altitude = 0.0,
@@ -2169,6 +2342,10 @@ class CAN_GCSLocation:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2180,6 +2357,7 @@ class CAN_GCSLocation:
 		return bytearray(buf)
 
 class CAN_OperatorID:
+	PACKET_TYPES = ['CAN_PKT_OPERATOR_ID']
 	SIZE = 23
 
 	def __init__ (self, startByte = 0, operator_id = [None] * 20, chk = 0):
@@ -2216,6 +2394,10 @@ class CAN_OperatorID:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2228,6 +2410,7 @@ class CAN_OperatorID:
 		return bytearray(buf)
 
 class CAN_RemoteID:
+	PACKET_TYPES = ['CAN_PKT_REMOTE_ID']
 	SIZE = 7
 
 	def __init__ (self, startByte = 0, aircraft_type = 0, base_mode = 0,
@@ -2269,6 +2452,10 @@ class CAN_RemoteID:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2280,7 +2467,62 @@ class CAN_RemoteID:
 		buf.extend(struct.pack('<H', self.chk))
 		return bytearray(buf)
 
+class CAN_RemoteIDErrorMessage:
+	PACKET_TYPES = ['CAN_PKT_REMOTE_ID_ERROR_MSG']
+	SIZE = 53
+
+	def __init__ (self, startByte = 0, error_message = [None] * 50,
+	chk = 0):
+		self.startByte = startByte
+
+		if (len(error_message) != 50):
+			raise ValueError('array error_message expecting length '+str(50)+' got '+str(len(error_message)))
+
+		self.error_message = list(error_message)
+
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_RemoteIDErrorMessage]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.error_message = [];
+
+		for i in range(0,50):
+			self.error_message.append(struct.unpack_from('<B',buf,offset)[0])
+			offset = offset+struct.calcsize('<B')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+
+		for val in self.error_message:
+		    buf.extend(struct.pack('<B', val))
+
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
+
 class CAN_SerialNumber:
+	PACKET_TYPES = ['CAN_PKT_SERIAL_NUMBER']
 	SIZE = 23
 
 	def __init__ (self, startByte = 0, serial_number = [None] * 20,
@@ -2317,6 +2559,10 @@ class CAN_SerialNumber:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []

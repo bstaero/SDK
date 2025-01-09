@@ -15,6 +15,10 @@ import sys
 
 type_conv = {int: 'i8', float: 'f8'}
 
+script_dir = os.path.dirname(__file__)
+root_dir = os.path.abspath(os.path.join(script_dir, 'bst_python_sdk'))
+sys.path.insert(0, root_dir)
+
 
 def parse(
 	filename: str,

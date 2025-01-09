@@ -18,6 +18,7 @@
 
 from enum import Enum
 import struct
+import sys
 
 from .comm_packets import *
 
@@ -34,6 +35,7 @@ class GCSRTKFlags (Enum):
 	SENDING_RTCM3=3
 
 class GCSStatus:
+	PACKET_TYPES = ['TELEMETRY_GCS']
 	SIZE = 27
 
 	def __init__ (self, rssi = 0, num_drop = 0, hour = 0, minute = 0,
@@ -96,6 +98,10 @@ class GCSStatus:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -113,6 +119,7 @@ class GCSStatus:
 		return bytearray(buf)
 
 class HDOBConfig:
+	PACKET_TYPES = ['MISSION_HDOB_CONFIG']
 	SIZE = 35
 
 	def __init__ (self, vehicle_type = 0, mission_number = 0, storm_number = 0,
@@ -153,6 +160,10 @@ class HDOBConfig:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -165,6 +176,7 @@ class HDOBConfig:
 		return bytearray(buf)
 
 class GCSSurveyIn:
+	PACKET_TYPES = ['TELEMETRY_GCS']
 	SIZE = 17
 
 	def __init__ (self, time_elapsed = 0, time_minimum = 0, accuracy = 0.0,
@@ -203,6 +215,10 @@ class GCSSurveyIn:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -232,6 +248,7 @@ class GCSErrors (Enum):
 #---------[ Telemetry ]---------#
 
 class TelemetryGCS:
+	PACKET_TYPES = ['TELEMETRY_GCS_LOCATION']
 	SIZE = 24
 
 	def __init__ (self, latitude = 0.0, longitude = 0.0, altitude = 0.0,
@@ -272,6 +289,10 @@ class TelemetryGCS:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
