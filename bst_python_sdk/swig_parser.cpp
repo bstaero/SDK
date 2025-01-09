@@ -57,7 +57,7 @@ std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode)
             i += packet.SIZE;
 
             if (quick_mode && packet.TYPE == 33) {
-                if (packet.DATA.at(0) != 1) { // Skip non-flight mode commands
+                if (packet.DATA.empty() || packet.DATA.at(0) != 1) { // Skip non-flight mode commands
                     continue;
                 }
             }
