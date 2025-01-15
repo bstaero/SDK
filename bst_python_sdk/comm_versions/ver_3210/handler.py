@@ -162,7 +162,6 @@ ignore_pkts = [
 
 can_actuators = CAN_Actuator()
 
-
 def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
     packet_data = None
 
@@ -170,13 +169,17 @@ def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
 
     if pkt.TYPE not in pkt_map:
         if vehicle_type != VehicleType.VEHICLE_UNKNOWN:
-            if vehicle_type == VehicleType.FIXED_WING and pkt.TYPE in fw_mapping:
+            # FIXED_WING
+            if vehicle_type.value == 1 and pkt.TYPE in fw_mapping:
                 pkt_map = fw_mapping
-            elif vehicle_type == VehicleType.MULTI_COPTER and pkt.TYPE in mr_mapping:
+            # MULTI_COPTER
+            elif vehicle_type.value == 2 and pkt.TYPE in mr_mapping:
                 pkt_map = mr_mapping
-            elif vehicle_type == VehicleType.VTOL and pkt.TYPE in vt_mapping:
+            # VTOL
+            elif vehicle_type.value == 6 and pkt.TYPE in vt_mapping:
                 pkt_map = vt_mapping
-            elif vehicle_type == VehicleType.TAIL_SITTER and pkt.TYPE in ts_mapping:
+            # TAIL_SITTER
+            elif vehicle_type.value == 5 and pkt.TYPE in ts_mapping:
                 pkt_map = ts_mapping
             else:
                 if pkt.TYPE not in ignore_pkts:
