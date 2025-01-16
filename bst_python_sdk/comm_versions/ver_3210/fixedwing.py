@@ -93,34 +93,34 @@ class FilterParameters:
 
 		offset = 0
 
-		self.ias_alpha = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.ias_alpha = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.ias_dot_alpha = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.ias_dot_alpha = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.gamma_alpha = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.gamma_alpha = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.roll_cmd_rate = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.roll_cmd_rate = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.pitch_cmd_rate = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.pitch_cmd_rate = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.ias_cmd_rate = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.ias_cmd_rate = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.gamma_cmd_rate = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.gamma_cmd_rate = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.throttle_cmd_rate = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.throttle_cmd_rate = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.k_cmd_rate = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.k_cmd_rate = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.vx_dot_cmd_rate = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.vx_dot_cmd_rate = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
@@ -182,55 +182,55 @@ class FlightControlParameters:
 
 		offset = 0
 
-		self.tecs_Kv = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.tecs_Kv = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.tecs_Kh = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.tecs_Kh = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.tecs_max_vx_dot = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.tecs_max_vx_dot = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.min_ground_speed = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.min_ground_speed = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.nav_lookahead = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.nav_lookahead = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.min_nav_lookahead_dist = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.min_nav_lookahead_dist = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.tuning_ias = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.tuning_ias = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.max_height_error_mode = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.max_height_error_mode = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.max_v_error_mode = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.max_v_error_mode = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.k_height_tracking = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.k_height_tracking = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.k_flare = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.k_flare = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.k_land = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.k_land = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.k_cruise = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.k_cruise = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.k_climb = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.k_climb = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.k_speed_hold = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.k_speed_hold = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.no_ias_a = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.no_ias_a = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.no_ias_b = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.no_ias_b = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
@@ -281,13 +281,13 @@ class SurfaceMixing:
 
 		offset = 0
 
-		self.mixing_roll_2_elevator = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.mixing_roll_2_elevator = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.mixing_aileron_2_rudder = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.mixing_aileron_2_rudder = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.mixing_flap_2_elevator = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.mixing_flap_2_elevator = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
@@ -381,52 +381,52 @@ class LandingParameters:
 
 		offset = 0
 
-		self.ias = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.ias = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.glide_slope = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.glide_slope = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.safe_height = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.safe_height = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.abort_height = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.abort_height = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.flap_deflection = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.flap_deflection = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.flare_min_pitch = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.flare_min_pitch = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.cross_track_error = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.cross_track_error = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.cross_track_angle = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.cross_track_angle = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.height_error_bound = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.height_error_bound = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.abort_trigger_time = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.abort_trigger_time = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.decision_time = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.decision_time = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.commit_time = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.commit_time = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.flare_time = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.flare_time = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.agl_offset = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.agl_offset = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
 		for i in range(0,12):
-			self.unused.append(struct.unpack_from('<B',buf,offset)[0] / 1)
+			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
 
 	def getSize(self):
@@ -490,37 +490,37 @@ class LaunchParameters:
 
 		offset = 0
 
-		self.ias = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.ias = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.flap_deflection = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.flap_deflection = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.throttle_delay = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.throttle_delay = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.throttle_setting = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.throttle_setting = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.min_pitch = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.min_pitch = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.climbout_angle = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.climbout_angle = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.climbout_height = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.climbout_height = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.timeout = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.timeout = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.elevator_deflection = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.elevator_deflection = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
 		for i in range(0,28):
-			self.unused.append(struct.unpack_from('<B',buf,offset)[0] / 1)
+			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
 
 	def getSize(self):
@@ -598,16 +598,16 @@ class VehicleLimits:
 		self.ias.parse(buf[offset:offset+Limit.SIZE])
 		offset = offset+Limit.SIZE
 
-		self.lost_gps = struct.unpack_from('<B',buf,offset)[0] / 1
+		self.lost_gps = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
 
-		self.lost_gps_roll = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.lost_gps_roll = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.max_pdop = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.max_pdop = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.max_scale_factor = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.max_scale_factor = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 		self.flightpath_angle = Limit()
@@ -618,13 +618,13 @@ class VehicleLimits:
 		self.flightpath_angle_flap.parse(buf[offset:offset+Limit.SIZE])
 		offset = offset+Limit.SIZE
 
-		self.flightpath_angle_fraction = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.flightpath_angle_fraction = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
 		for i in range(0,10):
-			self.unused.append(struct.unpack_from('<B',buf,offset)[0] / 1)
+			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
 
 	def getSize(self):
@@ -690,22 +690,22 @@ class VehicleParameters:
 		self.name = [];
 
 		for i in range(0,16):
-			self.name.append(struct.unpack_from('<B',buf,offset)[0] / 1)
+			self.name.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
 
-		self.flight_time = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.flight_time = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.standard_bank = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.standard_bank = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.cruise_speed = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.cruise_speed = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.battery_cap = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.battery_cap = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.battery_num_cells = struct.unpack_from('<B',buf,offset)[0] / 1
+		self.battery_num_cells = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
 
 		self.batt_chem = BatteryChemistry(struct.unpack_from('<B',buf,offset)[0])
@@ -714,7 +714,7 @@ class VehicleParameters:
 		self.unused = [];
 
 		for i in range(0,32):
-			self.unused.append(struct.unpack_from('<B',buf,offset)[0] / 1)
+			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
 
 	def getSize(self):
@@ -795,28 +795,28 @@ class MissionParameters:
 		self.land_type = LandType(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
-		self.max_range = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.max_range = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.safe_height = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.safe_height = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.flight_time = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.flight_time = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.battery_min = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.battery_min = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.initialized = struct.unpack_from('<B',buf,offset)[0] / 1
+		self.initialized = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
 
-		self.mag_dec = struct.unpack_from('<f',buf,offset)[0] / 1
+		self.mag_dec = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
 		self.unused = [];
 
 		for i in range(0,16):
-			self.unused.append(struct.unpack_from('<B',buf,offset)[0] / 1)
+			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
 
 	def getSize(self):
