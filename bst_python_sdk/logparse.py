@@ -185,10 +185,10 @@ class Parser:
             self.results[entry_name] = {}
 
         pkt_type = PacketTypes(pkt.TYPE)
-        if pkt_type in self.results[entry_name]:
-            self.results[entry_name][pkt_type].append(pkt_data)
+        if pkt_type.name in self.results[entry_name]:
+            self.results[entry_name][pkt_type.name].append(pkt_data)
         else:
-            self.results[entry_name][pkt_type] = [pkt_data]
+            self.results[entry_name][pkt_type.name] = [pkt_data]
 
     def increment_log_name(self, name: str) -> str:
         try:

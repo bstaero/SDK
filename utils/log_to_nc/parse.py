@@ -61,12 +61,12 @@ def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
 	root_grp = Dataset(nc_name, 'w', format='NETCDF4')
 
 	for pkt_type, pkts in parsed_log.items():
-		print(f'Adding {pkt_type.name}...')
+		print(f'Adding {pkt_type}...')
 		if len(pkts) == 0:
 			print(' -- Skipping (dimension of size 0)')
 			continue
 
-		pkt_grp = root_grp.createGroup(pkt_type.name)
+		pkt_grp = root_grp.createGroup(pkt_type)
 		pkt_grp.createDimension('packets', len(pkts))
 
 		if type(pkts[0]) == int:
