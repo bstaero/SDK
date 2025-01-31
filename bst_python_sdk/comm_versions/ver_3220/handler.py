@@ -62,6 +62,7 @@ packet_mapping = {
     PacketTypes.SENSORS_DYNAMIC_PRESSURE.value: Pressure,
     PacketTypes.SENSORS_DYNP_CALIBRATION.value: SingleAxisSensorCalibration,
     PacketTypes.SENSORS_GNSS_ORIENTATION.value: AxisMapping,
+    PacketTypes.SENSORS_GNSS_RTCM.value: RTCM,
     PacketTypes.SENSORS_GPS.value: GPS,
     PacketTypes.SENSORS_GYROSCOPE.value: ThreeAxisSensor,
     PacketTypes.SENSORS_GYRO_CALIBRATION.value: ThreeAxisSensorCalibration,

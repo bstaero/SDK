@@ -1652,7 +1652,7 @@ class Pressure:
 		return bytearray(buf)
 
 class RTCM:
-	PACKET_TYPES = ['SENSORS_GPS_RTCM']
+	PACKET_TYPES = ['SENSORS_GNSS_RTCM']
 	SIZE = 65
 
 	def __init__ (self, size = 0, payload = [None] * 64):

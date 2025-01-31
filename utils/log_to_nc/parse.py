@@ -76,6 +76,8 @@ def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
 			def _parse_field(field):
 				field_val = read_var(pkts[0], field)
 				field_type = type(field_val)
+				if field == 'system_time':
+					field_type = float
 				if isinstance(field_val, Enum):
 					add_enum_to_nc(field, pkt_grp, pkts)
 				elif field_type == list and type(field_val[0]) in type_conv:
