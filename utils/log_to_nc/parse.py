@@ -57,7 +57,7 @@ def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
 	print(f'\n### Converting {ac_name}')
 	log_name = '.'.join(filename.split('.')[:-1])
 	nc_name = f'{log_name}_{ac_name}.nc'
-	nc_name = f'{out_dir}/{nc_name.split('/')[-1]}'
+	nc_name = f'{out_dir}/{nc_name.split("/")[-1]}'
 	root_grp = Dataset(nc_name, 'w', format='NETCDF4')
 
 	for pkt_type, pkts in parsed_log.items():
