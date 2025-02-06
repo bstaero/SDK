@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+import sys
+import os.path
+
+sys.path.append(os.path.join(
+    os.path.dirname(__file__), '../..'))
+
 try:
 	from .bst_python_sdk.logparse import Parser
 except ImportError:
@@ -10,8 +16,6 @@ from enum import Enum
 import inspect
 
 from netCDF4 import Dataset
-import os.path
-import sys
 
 type_conv = {int: 'i8', float: 'f8'}
 
