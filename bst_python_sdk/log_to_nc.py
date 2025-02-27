@@ -1,7 +1,7 @@
 import sys
 import os.path
 
-from logparse import Parser
+from .logparse import Parser
 from enum import Enum
 import inspect
 
@@ -14,7 +14,7 @@ root_dir = os.path.abspath(os.path.join(script_dir, 'bst_python_sdk'))
 sys.path.insert(0, root_dir)
 
 
-def parse(
+def convert_to_nc(
 	filename: str,
 	has_addr: bool=False,
 	quick_mode: bool=False,

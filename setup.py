@@ -26,15 +26,14 @@ parser_module = Extension(
     sources=[
         "bst_python_sdk/swig_parser_wrap.cxx",
         "bst_python_sdk/swig_parser.cpp"],
-    extra_compile_args=["-std=c++11"]
-)
+    extra_compile_args=["-std=c++11"])
 
 with open("README.md", "r") as readme:
     long_description = readme.read()
 
 setup(
-    name="bst_sdk",
-    version="3.21.0.dev18",
+    name="BSTPythonSDK",
+    version="3.21.0.dev19",
     author="Black Swift Technologies",
     author_email="ben.busby@blackswifttech.com",
     description="BST Flight Management SDK",
