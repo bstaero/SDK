@@ -1,0 +1,3 @@
+include bst_python_sdk/*.i
+include bst_python_sdk/*.cpp
+include bst_python_sdk/*.hpp

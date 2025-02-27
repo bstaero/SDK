@@ -10,6 +10,9 @@ while true; do
     esac
 done
 
-python setup.py sdist bdist_wheel
+rm -rf BSTPythonSDK.egg-info
+rm -rf build
+rm -rf dist
+python3 setup.py sdist bdist_wheel
 
 twine upload dist/*

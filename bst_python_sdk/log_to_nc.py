@@ -1,17 +1,7 @@
-#!/usr/bin/env python
-
 import sys
 import os.path
 
-sys.path.append(os.path.join(
-    os.path.dirname(__file__), '../..'))
-
-try:
-	from .bst_python_sdk.logparse import Parser
-except ImportError:
-	from bst_python_sdk.logparse import Parser
-
-import argparse
+from logparse import Parser
 from enum import Enum
 import inspect
 
@@ -26,14 +16,13 @@ sys.path.insert(0, root_dir)
 
 def parse(
 	filename: str,
-	use_swig: bool=False,
 	has_addr: bool=False,
 	quick_mode: bool=False,
 	out_dir: str='.',
 ) -> list[str]:
 	while out_dir.endswith('/'):
 		out_dir = out_dir[:len(out_dir)-1]
-	parser = Parser(use_swig=use_swig, has_addr=has_addr, quick_mode=quick_mode)
+	parser = Parser(has_addr=has_addr, quick_mode=quick_mode)
 	parsed_log = parser.parse_log(filename)
 	converted = []
 	for name in parsed_log.keys():
@@ -121,27 +110,3 @@ def add_primitive_to_nc(field, field_type, pkt_grp, pkts):
 	group_var = pkt_grp.createVariable(field, nc_type, ('packets',))
 	group_var[:] = [read_var(pkt, field) for pkt in pkts]
 
-
-if __name__ == '__main__':
-	parser = argparse.ArgumentParser(
-		prog='./parse.py',
-		description='Convert GCS and aircraft logs to netCDF format')
-	parser.add_argument('filepath', help='Path to the log file')
-	parser.add_argument('-a', '--addr', action='store_true', default=False,
-					 help='Enables addressing')
-	parser.add_argument('-s', '--swig', action='store_true', default=False,
-					 help='Enables SWIG log processing (must compile first)')
-	parser.add_argument('-q', '--quick', action='store_true', default=False,
-					 help='Enables "quick mode", which only outputs SYS_INIT '+
-					 'and CONTROL_COMMAND packets with a flight_mode command')
-	args = parser.parse_args()
-
-	if not os.path.isfile(args.filepath):
-		print(f'File "{args.filepath}" not found')
-		sys.exit(1)
-
-	converted = parse(args.filepath, args.swig, args.addr, args.quick)
-
-	print('\nOutput:')
-	for filename in converted:
-		print(filename)

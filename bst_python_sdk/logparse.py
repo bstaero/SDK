@@ -25,6 +25,7 @@
 from .bstpacket import BSTPacket
 from .comm_packets.handler import standard_handler
 from .comm_packets.comm_packets import VehicleType, PacketTypes
+from . import swig_parser
 import importlib
 import numpy as np
 import scipy.io as spio
@@ -45,8 +46,7 @@ log_suffix: str = '_log_1'
 
 
 class Parser:
-    def __init__(self, use_swig=False, has_addr=True, quick_mode=False, verbose=False):
-        self.use_swig = use_swig
+    def __init__(self, has_addr=True, quick_mode=False, verbose=False):
         self.has_addr = has_addr
         self.verbose = verbose
         self.quick_mode = quick_mode
@@ -71,37 +71,20 @@ class Parser:
         print(f'-- Using comms rev: {new_rev}')
         self.comms_rev = new_rev
 
-        handler_import = f'comm_versions.ver_{new_rev}.handler'
-        comm_packets_import = f'comm_versions.ver_{new_rev}.comm_packets'
+        handler_import = f'.comm_versions.ver_{new_rev}.handler'
+        comm_packets_import = f'.comm_versions.ver_{new_rev}.comm_packets'
 
-        globals()['standard_handler'] = importlib.import_module(handler_import).standard_handler
-        globals()['VehicleType'] = importlib.import_module(comm_packets_import).VehicleType
-        globals()['PacketTypes'] = importlib.import_module(comm_packets_import).PacketTypes
+        handler = importlib.import_module(
+                handler_import, package="bst_python_sdk")
+        comm_packets = importlib.import_module(
+                comm_packets_import, package="bst_python_sdk")
+
+        globals()['standard_handler'] = handler.standard_handler
+        globals()['VehicleType'] = comm_packets.VehicleType
+        globals()['PacketTypes'] = comm_packets.PacketTypes
 
     def parse_log(self, filename: str) -> dict:
-        bst_packets = []
-        if self.use_swig:
-            # This is dynamically imported since it won't always be compiled
-            # by the developer beforehand
-            from . import swig_parser
-            bst_packets = swig_parser.parse(filename, self.has_addr, self.quick_mode)
-        else:
-            with open(filename, "rb") as binary_file:
-                binary_file.seek(0, 2)  # Seek the end
-                num_bytes = binary_file.tell()  # Get the file size
-
-                i = 0
-
-                while i < num_bytes:
-                    pkt = BSTPacket()
-                    binary_file.seek(i)
-                    pkt_data = binary_file.read(BSTPacket.BST_MAX_PACKET_SIZE)
-                    parsed_pkt = pkt.parse(pkt_data, self.has_addr)
-                    if parsed_pkt:
-                        bst_packets.append(pkt)
-                        i = i + pkt.SIZE + pkt.OVERHEAD
-                    else:
-                        i = i + 1
+        bst_packets = swig_parser.parse(filename, self.has_addr, self.quick_mode)
 
         for pkt in bst_packets:
             if (pkt.FROM & 0xFF000000) == 0x41000000:
