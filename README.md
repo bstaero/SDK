@@ -38,5 +38,8 @@ parsed_log = parser.parse_log(log_path)
 from bst_python_sdk.log_to_nc import convert_to_nc
 
 log_path = "path/to/log.bin"
+
+# output will be a list of the converted logs in netcdf format
+# Ex: ["log_010_FW0001.nc", "log_010_SwiftStation.nc"]
 output = convert_to_nc(log_path)
 ```

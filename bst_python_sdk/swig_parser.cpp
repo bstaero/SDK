@@ -1,4 +1,4 @@
-#include "swig_parser.hpp"
+#include "swig_parser.h"
 #include <fstream>
 #include <iostream>
 #include <cstring>
