@@ -33,7 +33,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="BSTPythonSDK",
-    version="3.22.0.dev1",
+    version="3.22.0.dev2",
     author="Black Swift Technologies",
     author_email="ben.busby@blackswifttech.com",
     description="BST Flight Management SDK",
