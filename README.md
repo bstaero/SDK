@@ -10,6 +10,13 @@ https://gitlab.com/bstaero/sdk/-/wikis/swiftflow-interface
 
 ## Python SDK
 
+### Prerequisites
+
+Installing the Python SDK requires the following to be installed on your machine:
+
+- swig
+- python3-dev
+
 ### Install
 
 `pip install BSTPythonSDK`
