@@ -33,7 +33,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="BSTPythonSDK",
-    version="3.22.0.dev2",
+    version="3.22.0.dev3",
     author="Black Swift Technologies",
     author_email="ben.busby@blackswifttech.com",
     description="BST Flight Management SDK",
@@ -45,7 +45,7 @@ setup(
     ext_modules=[parser_module],
     cmdclass={"build_ext": SwigBuildExt},
     py_modules=["swig_parser"],
-    setup_requires=["setuptools", "wheel"],
+    setup_requires=["setuptools", "wheel", "swig"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",

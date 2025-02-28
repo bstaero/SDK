@@ -18,6 +18,7 @@ venv/
 
 # Python library
 *.egg-info/
+.eggs/
 build/
 dist/
 
