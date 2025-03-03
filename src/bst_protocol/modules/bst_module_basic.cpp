@@ -46,7 +46,7 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	registerDataType(CONTROL_COMMAND, sizeof(Command_t), true, true);
 	registerDataType(CONTROL_PID, sizeof(PID_t), true, true);
 	registerDataType(CONTROL_FLIGHT_PARAMS, sizeof(FlightControlParameters_t), true, true);
-#if defined(VEHICLE_FIXEDWING)
+#if defined(VEHICLE_FIXEDWING) || defined(VEHICLE_VTOL)
 	registerDataType(CONTROL_FILTER_PARAMS, sizeof(FilterParameters_t), true, true);
 #endif
 	// registerDataType(CONTROL_CMD_FILTER, sizeof(CommandFilter_t), true, true);
@@ -54,9 +54,9 @@ BSTModuleBasic::BSTModuleBasic() : BSTCommunicationsModule() {
 	/* ACTUATORS */
 	registerDataType(ACTUATORS_VALUES, sizeof(Actuators_t), true, true);
 	registerDataType(ACTUATORS_CALIBRATION, sizeof(ActuatorCalibration_t), true, true);
-#if defined(VEHICLE_FIXEDWING)
+#if defined(VEHICLE_FIXEDWING) || defined(VEHICLE_VTOL)
 	registerDataType(ACTUATORS_MIXING_PARAMS, sizeof(SurfaceMixing_t), true, true);
-#elif defined(VEHICLE_MULTIROTOR) || defined(VEHICLE_TAILSITTER) || defined(VEHICLE_VTOL)
+#elif defined(VEHICLE_MULTIROTOR) || defined(VEHICLE_TAILSITTER)
 	registerDataType(ACTUATORS_ROTOR_PARAMS, sizeof(RotorParameters_t), true, true);
 #endif
 	//registerDataType(ACTUATORS_ROTOR_PARAMS, sizeof(), true, true);

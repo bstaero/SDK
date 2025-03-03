@@ -292,7 +292,7 @@ typedef enum {
 
 /*--------[ Configuration ]--------*/
 
-#define COMMS_VERSION 3210
+#define COMMS_VERSION 3220
 
 #define MAX_ALTITUDE 20000
 
@@ -1485,7 +1485,7 @@ typedef enum {
 
 typedef enum {
 	/* NOTE - you must check the numbers in the CommandID values */
-	/* contained in the children folders if you modify or change these numbers */
+	/* contained in the subfolders if you modify or change these numbers */
 	/*  */
 	/* States */
 	CMD_AUTOPILOT_MODE=0,
@@ -1501,6 +1501,8 @@ typedef enum {
 	CMD_ENGINE_KILL=6,
 	CMD_FLIGHT_TERMINATE=7,
 	CMD_ABORT=8,
+	CMD_RID_EMERGENCY=37,
+	CMD_RID_IGNORE=38,
 
 	/* Navigation */
 	CMD_WAYPOINT=9,
@@ -1530,7 +1532,7 @@ typedef enum {
 	/* Payload Commands */
 	CMD_TRIGGER_PAYLOAD=23,
 
-	CMD_INVALID=37,
+	CMD_INVALID=48,
 }  __attribute__ ((packed)) CommandID_t;
 
 typedef enum {
