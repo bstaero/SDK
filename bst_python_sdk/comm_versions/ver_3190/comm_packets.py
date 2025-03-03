@@ -18,6 +18,7 @@
 
 from enum import Enum
 import struct
+import sys
 
 from .comm_packets import *
 
@@ -113,6 +114,7 @@ class SurfaceCommand (Enum):
 	INVALID_SURFACE=24
 
 class ActuatorCalibration:
+	PACKET_TYPES = ['ACTUATORS_CALIBRATION']
 	SIZE = 8
 
 	def __init__ (self, channel = 255,
@@ -153,6 +155,10 @@ class ActuatorCalibration:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -166,6 +172,7 @@ class ActuatorCalibration:
 		return bytearray(buf)
 
 class Actuators:
+	PACKET_TYPES = ['ACTUATORS_VALUES']
 	SIZE = 32
 
 	def __init__ (self, usec = [None] * 16):
@@ -191,6 +198,10 @@ class Actuators:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -328,7 +339,6 @@ class PacketTypes (Enum):
 
 	MISSION_CHECKLIST=160
 	MISSION_PARAMETERS=161
-	MISSION_HDOB_CONFIG=162
 
 	# PAYLOAD
 
@@ -350,29 +360,27 @@ class PacketTypes (Enum):
 	PAYLOAD_DATA_CHANNEL_6=238
 	PAYLOAD_DATA_CHANNEL_7=239
 
-	PAYLOAD_S0_SENSORS=240
-
 	# ERRORS
 
 	INVALID_PACKET=255
 
 #---------[ Configuration ]---------#
 
-COMMS_VERSION = 3210
+COMMS_VERSION = 3190
 MAX_ALTITUDE = 20000
 MAX_VEHICLES = 5
 
 #---------[ Estimator ]---------#
 
 class EstimatorParameters:
-	SIZE = 64
+	PACKET_TYPES = ['STATE_ESTIMATOR_PARAM']
+	SIZE = 48
 
 	def __init__ (self, cf_acc_gain = 0.0, cf_mag_gain = 0.0,
 	cf_press_gain = 0.0, altitude_filter_Ph = 0.0, altitude_filter_R = 0.0,
 	altitude_filter_Q1 = 0.0, altitude_filter_Q2 = 0.0,
 	altitude_filter_Q3 = 0.0, ax_filter_alpha = 0.0, ax_filter_beta = 0.0,
-	agl_filter_rate = 0.0, agl_filter_cutoff = 0.0, ias_detect_k0 = 0.0,
-	ias_detect_kth = 0.0, ias_detect_kpitch = 0.0, ias_detect_kvz = 0.0):
+	agl_filter_rate = 0.0, agl_filter_cutoff = 0.0):
 		self.cf_acc_gain = cf_acc_gain
 		self.cf_mag_gain = cf_mag_gain
 		self.cf_press_gain = cf_press_gain
@@ -385,10 +393,6 @@ class EstimatorParameters:
 		self.ax_filter_beta = ax_filter_beta
 		self.agl_filter_rate = agl_filter_rate
 		self.agl_filter_cutoff = agl_filter_cutoff
-		self.ias_detect_k0 = ias_detect_k0
-		self.ias_detect_kth = ias_detect_kth
-		self.ias_detect_kpitch = ias_detect_kpitch
-		self.ias_detect_kvz = ias_detect_kvz
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
@@ -432,23 +436,15 @@ class EstimatorParameters:
 		self.agl_filter_cutoff = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.ias_detect_k0 = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.ias_detect_kth = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.ias_detect_kpitch = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.ias_detect_kvz = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
 	def getSize(self):
 		return self.SIZE
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -465,13 +461,10 @@ class EstimatorParameters:
 		buf.extend(struct.pack('<f', self.ax_filter_beta))
 		buf.extend(struct.pack('<f', self.agl_filter_rate))
 		buf.extend(struct.pack('<f', self.agl_filter_cutoff))
-		buf.extend(struct.pack('<f', self.ias_detect_k0))
-		buf.extend(struct.pack('<f', self.ias_detect_kth))
-		buf.extend(struct.pack('<f', self.ias_detect_kpitch))
-		buf.extend(struct.pack('<f', self.ias_detect_kvz))
 		return bytearray(buf)
 
 class State:
+	PACKET_TYPES = ['STATE_STATE']
 	SIZE = 92
 
 	def __init__ (self, system_time = 0.0, q = [None] * 4, altitude = 0.0, ias = 0.0,
@@ -570,6 +563,10 @@ class State:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -644,6 +641,7 @@ class WaypointAction (Enum):
 	END_OF_RUNWAY=512
 
 class Waypoint:
+	PACKET_TYPES = ['FLIGHT_PLAN_WAYPOINT']
 	SIZE = 28
 
 	def __init__ (self, num = 255, next = 255, latitude = 0.0, longitude = 0.0,
@@ -689,6 +687,10 @@ class Waypoint:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -702,6 +704,7 @@ class Waypoint:
 		return bytearray(buf)
 
 class DubinsPath:
+	PACKET_TYPES = ['DUBIN_PATH']
 	SIZE = 109
 
 	def __init__ (self, xc0_x = 0.0, xc0_y = 0.0, xc1_x = 0.0, xc1_y = 0.0,
@@ -827,6 +830,10 @@ class DubinsPath:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -860,6 +867,7 @@ class DubinsPath:
 		return bytearray(buf)
 
 class FlightPlanMap:
+	PACKET_TYPES = ['FLIGHT_PLAN_MAP']
 	SIZE = 18
 
 	def __init__ (self, mode = FPMapMode.NONE, map = [None] * 17):
@@ -890,6 +898,10 @@ class FlightPlanMap:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -985,6 +997,7 @@ class SensorType (Enum):
 	UNKNOWN_SENSOR=14
 
 class AxisMapping:
+	PACKET_TYPES = ['SENSORS_GNSS_ORIENTATION', 'SENSORS_BOARD_ORIENTATION']
 	SIZE = 3
 
 	def __init__ (self, axis = [None] * 3):
@@ -1011,6 +1024,10 @@ class AxisMapping:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1019,6 +1036,7 @@ class AxisMapping:
 		return bytearray(buf)
 
 class MHP:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 52
 
 	def __init__ (self, system_time = 0.0, alpha = 0.0, beta = 0.0, q = 0.0, ias = 0.0,
@@ -1082,6 +1100,10 @@ class MHP:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1100,6 +1122,7 @@ class MHP:
 		return bytearray(buf)
 
 class MHP9HSensors:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 77
 
 	def __init__ (self, system_time = 0.0, error_code = 0,
@@ -1172,6 +1195,10 @@ class MHP9HSensors:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1193,6 +1220,7 @@ class MHP9HSensors:
 		return bytearray(buf)
 
 class MHP9HTiming:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 64
 
 	def __init__ (self, system_time = 0.0, static_pressure_time = 0.0,
@@ -1252,6 +1280,10 @@ class MHP9HTiming:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1269,6 +1301,7 @@ class MHP9HTiming:
 		return bytearray(buf)
 
 class MHPSensors:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 61
 
 	def __init__ (self, system_time = 0.0, error_code = 0, static_pressure = 0.0,
@@ -1341,6 +1374,10 @@ class MHPSensors:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1362,6 +1399,7 @@ class MHPSensors:
 		return bytearray(buf)
 
 class MHPSensorsGNSS:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 60
 
 	def __init__ (self, system_time = 0.0, magnetometer = [None] * 3,
@@ -1440,6 +1478,10 @@ class MHPSensorsGNSS:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1463,6 +1505,7 @@ class MHPSensorsGNSS:
 		return bytearray(buf)
 
 class MHPTiming:
+	PACKET_TYPES = ['SENSORS_MHP']
 	SIZE = 48
 
 	def __init__ (self, system_time = 0.0, static_pressure_time = 0.0,
@@ -1522,6 +1565,10 @@ class MHPTiming:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1539,6 +1586,7 @@ class MHPTiming:
 		return bytearray(buf)
 
 class Pressure:
+	PACKET_TYPES = ['SENSORS_DYNAMIC_PRESSURE', 'SENSORS_STATIC_PRESSURE']
 	SIZE = 12
 
 	def __init__ (self, system_time = 0.0, pressure = 0.0, temperature = 0.0):
@@ -1567,6 +1615,10 @@ class Pressure:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1576,6 +1628,7 @@ class Pressure:
 		return bytearray(buf)
 
 class RTCM:
+	PACKET_TYPES = ['SENSORS_GPS_RTCM']
 	SIZE = 65
 
 	def __init__ (self, size = 0, payload = [None] * 64):
@@ -1607,6 +1660,10 @@ class RTCM:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1617,6 +1674,7 @@ class RTCM:
 		return bytearray(buf)
 
 class SensorOffsets:
+	PACKET_TYPES = ['SENSORS_OFFSETS']
 	SIZE = 33
 
 	def __init__ (self, status = 0, gyroscope_x = 0.0, gyroscope_y = 0.0,
@@ -1671,6 +1729,10 @@ class SensorOffsets:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1686,6 +1748,7 @@ class SensorOffsets:
 		return bytearray(buf)
 
 class SingleAxisSensorCalibration:
+	PACKET_TYPES = ['SENSORS_DYNP_CALIBRATION']
 	SIZE = 8
 
 	def __init__ (self, b = 0.0, m = 0.0):
@@ -1710,6 +1773,10 @@ class SingleAxisSensorCalibration:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1718,6 +1785,7 @@ class SingleAxisSensorCalibration:
 		return bytearray(buf)
 
 class SingleValue:
+	PACKET_TYPES = []
 	SIZE = 4
 
 	def __init__ (self, value = 0.0):
@@ -1738,6 +1806,10 @@ class SingleValue:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1745,6 +1817,7 @@ class SingleValue:
 		return bytearray(buf)
 
 class SingleValueSensor:
+	PACKET_TYPES = ['SENSORS_AIR_TEMPERATURE', 'SENSORS_AGL']
 	SIZE = 8
 
 	def __init__ (self, system_time = 0.0, value = 0.0):
@@ -1769,6 +1842,10 @@ class SingleValueSensor:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1777,6 +1854,7 @@ class SingleValueSensor:
 		return bytearray(buf)
 
 class ThreeAxisSensor:
+	PACKET_TYPES = ['SENSORS_ACCELEROMETER', 'SENSORS_GYROSCOPE', 'SENSORS_MAGNETOMETER']
 	SIZE = 16
 
 	def __init__ (self, system_time = 0.0, x = 0.0, y = 0.0, z = 0.0):
@@ -1809,6 +1887,10 @@ class ThreeAxisSensor:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1819,6 +1901,7 @@ class ThreeAxisSensor:
 		return bytearray(buf)
 
 class ThreeAxisSensorCalibration:
+	PACKET_TYPES = ['SENSORS_GYRO_CALIBRATION', 'SENSORS_MAG_CALIBRATION']
 	SIZE = 48
 
 	def __init__ (self, b = [None] * 3, m = [None] * 9):
@@ -1856,6 +1939,10 @@ class ThreeAxisSensorCalibration:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1867,6 +1954,7 @@ class ThreeAxisSensorCalibration:
 		return bytearray(buf)
 
 class ADSB:
+	PACKET_TYPES = ['SENSORS_ADSB']
 	SIZE = 56
 
 	def __init__ (self, system_time = 0.0, icao_address = 0, latitude = 0.0,
@@ -1954,6 +2042,10 @@ class ADSB:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1980,6 +2072,7 @@ class ADSB:
 		return bytearray(buf)
 
 class CalibrateSensor:
+	PACKET_TYPES = ['SENSORS_CALIBRATE']
 	SIZE = 2
 
 	def __init__ (self, sensor = SensorType.UNKNOWN_SENSOR,
@@ -2006,6 +2099,10 @@ class CalibrateSensor:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2015,6 +2112,7 @@ class CalibrateSensor:
 		return bytearray(buf)
 
 class GPS:
+	PACKET_TYPES = ['SENSORS_GPS']
 	SIZE = 66
 
 	def __init__ (self, system_time = 0.0, week = 0, hour = 0, minute = 0,
@@ -2097,6 +2195,10 @@ class GPS:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2120,6 +2222,7 @@ class GPS:
 		return bytearray(buf)
 
 class IMU:
+	PACKET_TYPES = ['SENSORS_IMU']
 	SIZE = 56
 
 	def __init__ (self, accelerometer = 0, gyroscope = 0, magnetometer = 0,
@@ -2160,6 +2263,10 @@ class IMU:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2170,6 +2277,7 @@ class IMU:
 		return bytearray(buf)
 
 class ThreeAxisFirstOrderCorrection:
+	PACKET_TYPES = ['SENSORS_MAG_CURRENT_CAL']
 	SIZE = 25
 
 	def __init__ (self, sensor = SensorType.UNKNOWN_SENSOR,
@@ -2224,6 +2332,10 @@ class ThreeAxisFirstOrderCorrection:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2240,6 +2352,7 @@ class ThreeAxisFirstOrderCorrection:
 		return bytearray(buf)
 
 class Sensors:
+	PACKET_TYPES = []
 	SIZE = 170
 
 	def __init__ (self, imu = 0, gps = 0, dynamic_pressure = 0, static_pressure = 0,
@@ -2297,6 +2410,10 @@ class Sensors:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -2438,6 +2555,7 @@ class VehicleType (Enum):
 	VTOL=6
 
 class HardwareError:
+	PACKET_TYPES = ['SYSTEM_HARDWARE_ERROR']
 	SIZE = 35
 
 	def __init__ (self, error_code = 0, r0 = 0, r1 = 0, r2 = 0, r3 = 0,
@@ -2499,6 +2617,10 @@ class HardwareError:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2516,6 +2638,7 @@ class HardwareError:
 		return bytearray(buf)
 
 class PowerOn:
+	PACKET_TYPES = ['SYSTEM_POWER_ON']
 	SIZE = 6
 
 	def __init__ (self, comms_rev = 0, serial_num = 0):
@@ -2540,6 +2663,10 @@ class PowerOn:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2548,6 +2675,7 @@ class PowerOn:
 		return bytearray(buf)
 
 class SystemStatus:
+	PACKET_TYPES = ['SYSTEM_HEALTH_AND_STATUS']
 	SIZE = 31
 
 	def __init__ (self, batt_voltage = 0.0, batt_current = 0.0,
@@ -2606,6 +2734,10 @@ class SystemStatus:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -2622,6 +2754,7 @@ class SystemStatus:
 		return bytearray(buf)
 
 class SystemInitialize:
+	PACKET_TYPES = ['SYSTEM_INITIALIZE']
 	SIZE = 40
 
 	def __init__ (self, vehicle_type = VehicleType.VEHICLE_UNKNOWN,
@@ -2704,6 +2837,10 @@ class SystemInitialize:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -2822,6 +2959,7 @@ class HandsetType (Enum):
 	HS_TYPE_INVALID=3
 
 class HandsetValues:
+	PACKET_TYPES = ['INPUT_HANDSET_VALUES']
 	SIZE = 32
 
 	def __init__ (self, usec = [None] * 16):
@@ -2847,6 +2985,10 @@ class HandsetValues:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []
@@ -2999,6 +3141,7 @@ class NavigationControllerMode (Enum):
 	NAV_INVALID=7
 
 class Command:
+	PACKET_TYPES = ['CONTROL_COMMAND']
 	SIZE = 5
 
 	def __init__ (self, id = 255, value = 0.0):
@@ -3023,6 +3166,10 @@ class Command:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3031,6 +3178,7 @@ class Command:
 		return bytearray(buf)
 
 class HandsetCalibration:
+	PACKET_TYPES = ['HANDSET_CALIBRATION']
 	SIZE = 7
 
 	def __init__ (self, channel = 255,
@@ -3080,6 +3228,10 @@ class HandsetCalibration:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3097,6 +3249,7 @@ class HandsetCalibration:
 		return bytearray(buf)
 
 class Limit:
+	PACKET_TYPES = []
 	SIZE = 8
 
 	def __init__ (self, min = -float("inf"), max = float("inf")):
@@ -3121,6 +3274,10 @@ class Limit:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3129,7 +3286,8 @@ class Limit:
 		return bytearray(buf)
 
 class Timeout:
-	SIZE = 3
+	PACKET_TYPES = []
+	SIZE = 2
 
 	def __init__ (self, seconds = 0, waypoint = 0):
 		self.seconds = seconds
@@ -3141,8 +3299,8 @@ class Timeout:
 
 		offset = 0
 
-		self.seconds = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
+		self.seconds = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
 
 		self.waypoint = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
@@ -3153,14 +3311,19 @@ class Timeout:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
-		buf.extend(struct.pack('<H', self.seconds))
+		buf.extend(struct.pack('<B', self.seconds))
 		buf.extend(struct.pack('<B', self.waypoint))
 		return bytearray(buf)
 
 class PID:
+	PACKET_TYPES = ['CONTROL_PID']
 	SIZE = 21
 
 	def __init__ (self, id = 0, p = 0.0, i = 0.0, d = 0.0, output = 0):
@@ -3199,6 +3362,10 @@ class PID:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3210,6 +3377,7 @@ class PID:
 		return bytearray(buf)
 
 class TabletJoystick:
+	PACKET_TYPES = ['INPUT_JOYSTICK_VALUES']
 	SIZE = 10
 
 	def __init__ (self, axis = [None] * 4, button = [None] * 2):
@@ -3247,6 +3415,10 @@ class TabletJoystick:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -3260,28 +3432,25 @@ class TabletJoystick:
 #---------[ Communication ]---------#
 
 class TelemetryControl:
-	SIZE = 64
+	PACKET_TYPES = ['TELEMETRY_CONTROL']
+	SIZE = 110
 
-	def __init__ (self, system_time = 0, roll = 0, pitch = 0, yaw = 0,
-	roll_rate = 0, pitch_rate = 0, yaw_rate = 0, velocity = [None] * 3,
-	altitude = 0, waypoint = 0, look_at_point = 0,
+	def __init__ (self, roll = 0.0, pitch = 0.0, yaw = 0.0,
+	roll_rate = 0.0, pitch_rate = 0.0, yaw_rate = 0.0, vx = 0.0, vy = 0.0,
+	vrate = 0.0, altitude = 0.0, waypoint = 0, look_at_point = 0,
 	lat_mode = LateralControlMode.LAT_MODE_INVALID,
 	alt_mode = AltitudeControlMode.ALT_MODE_INVALID,
 	nav_mode = NavigationControllerMode.NAV_INVALID, landing_status = 0,
 	actuators = [None] * 16):
-		self.system_time = system_time
 		self.roll = roll
 		self.pitch = pitch
 		self.yaw = yaw
 		self.roll_rate = roll_rate
 		self.pitch_rate = pitch_rate
 		self.yaw_rate = yaw_rate
-
-		if (len(velocity) != 3):
-			raise ValueError('array velocity expecting length '+str(3)+' got '+str(len(velocity)))
-
-		self.velocity = list(velocity)
-
+		self.vx = vx
+		self.vy = vy
+		self.vrate = vrate
 		self.altitude = altitude
 		self.waypoint = waypoint
 		self.look_at_point = look_at_point
@@ -3305,35 +3474,35 @@ class TelemetryControl:
 
 		offset = 0
 
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
+		self.roll = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.roll = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.pitch = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.pitch = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.yaw = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.yaw = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.roll_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.roll_rate = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.pitch_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.pitch_rate = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.yaw_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.yaw_rate = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.vx = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.velocity = [];
+		self.vy = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		for i in range(0,3):
-			self.velocity.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
+		self.vrate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.altitude = struct.unpack_from('<i',buf,offset)[0]
-		offset = offset + struct.calcsize('<i')
+		self.altitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.waypoint = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
@@ -3356,8 +3525,8 @@ class TelemetryControl:
 		self.actuators = [];
 
 		for i in range(0,16):
-			self.actuators.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
+			self.actuators.append(struct.unpack_from('<f',buf,offset)[0])
+			offset = offset+struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -3365,21 +3534,23 @@ class TelemetryControl:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
-		buf.extend(struct.pack('<I', self.system_time))
-		buf.extend(struct.pack('<h', self.roll))
-		buf.extend(struct.pack('<h', self.pitch))
-		buf.extend(struct.pack('<h', self.yaw))
-		buf.extend(struct.pack('<h', self.roll_rate))
-		buf.extend(struct.pack('<h', self.pitch_rate))
-		buf.extend(struct.pack('<h', self.yaw_rate))
-
-		for val in self.velocity:
-		    buf.extend(struct.pack('<h', val))
-
-		buf.extend(struct.pack('<i', self.altitude))
+		buf.extend(struct.pack('<f', self.roll))
+		buf.extend(struct.pack('<f', self.pitch))
+		buf.extend(struct.pack('<f', self.yaw))
+		buf.extend(struct.pack('<f', self.roll_rate))
+		buf.extend(struct.pack('<f', self.pitch_rate))
+		buf.extend(struct.pack('<f', self.yaw_rate))
+		buf.extend(struct.pack('<f', self.vx))
+		buf.extend(struct.pack('<f', self.vy))
+		buf.extend(struct.pack('<f', self.vrate))
+		buf.extend(struct.pack('<f', self.altitude))
 		buf.extend(struct.pack('<B', self.waypoint))
 		buf.extend(struct.pack('<B', self.look_at_point))
 
@@ -3392,19 +3563,18 @@ class TelemetryControl:
 		buf.extend(struct.pack('<B', self.landing_status))
 
 		for val in self.actuators:
-		    buf.extend(struct.pack('<h', val))
+		    buf.extend(struct.pack('<f', val))
 		return bytearray(buf)
 
 #---------[ Telemetry ]---------#
 
 class DeploymentTube:
-	SIZE = 4
+	PACKET_TYPES = ['TELEMETRY_DEPLOYMENT_TUBE']
+	SIZE = 3
 
-	def __init__ (self, state = 0, parachute_door = 0, batt_voltage = 0,
-	error = 0):
+	def __init__ (self, state = 0, parachute_door = 0, error = 0):
 		self.state = state
 		self.parachute_door = parachute_door
-		self.batt_voltage = batt_voltage
 		self.error = error
 
 	def parse(self,buf):
@@ -3419,9 +3589,6 @@ class DeploymentTube:
 		self.parachute_door = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
 
-		self.batt_voltage = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
-
 		self.error = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
 
@@ -3431,36 +3598,31 @@ class DeploymentTube:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
 		buf.extend(struct.pack('<B', self.state))
 		buf.extend(struct.pack('<B', self.parachute_door))
-		buf.extend(struct.pack('<B', self.batt_voltage))
 		buf.extend(struct.pack('<B', self.error))
 		return bytearray(buf)
 
 class TelemetryOrientation:
-	SIZE = 24
+	PACKET_TYPES = ['TELEMETRY_ORIENTATION']
+	SIZE = 48
 
-	def __init__ (self, system_time = 0, q = [None] * 4,
-	omega = [None] * 3, magnetometer = [None] * 3):
-		self.system_time = system_time
-
+	def __init__ (self, q = [None] * 4, omega = 0, magnetometer = 0):
 		if (len(q) != 4):
 			raise ValueError('array q expecting length '+str(4)+' got '+str(len(q)))
 
 		self.q = list(q)
 
-		if (len(omega) != 3):
-			raise ValueError('array omega expecting length '+str(3)+' got '+str(len(omega)))
+		self.omega = ThreeAxisSensor(omega)
 
-		self.omega = list(omega)
-
-		if (len(magnetometer) != 3):
-			raise ValueError('array magnetometer expecting length '+str(3)+' got '+str(len(magnetometer)))
-
-		self.magnetometer = list(magnetometer)
+		self.magnetometer = ThreeAxisSensor(magnetometer)
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
@@ -3468,26 +3630,19 @@ class TelemetryOrientation:
 
 		offset = 0
 
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
-
 		self.q = [];
 
 		for i in range(0,4):
-			self.q.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
+			self.q.append(struct.unpack_from('<f',buf,offset)[0])
+			offset = offset+struct.calcsize('<f')
 
-		self.omega = [];
+		self.omega = ThreeAxisSensor()
+		self.omega.parse(buf[offset:offset+ThreeAxisSensor.SIZE])
+		offset = offset+ThreeAxisSensor.SIZE
 
-		for i in range(0,3):
-			self.omega.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
-
-		self.magnetometer = [];
-
-		for i in range(0,3):
-			self.magnetometer.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
+		self.magnetometer = ThreeAxisSensor()
+		self.magnetometer.parse(buf[offset:offset+ThreeAxisSensor.SIZE])
+		offset = offset+ThreeAxisSensor.SIZE
 
 	def getSize(self):
 		return self.SIZE
@@ -3495,44 +3650,36 @@ class TelemetryOrientation:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
-		buf.extend(struct.pack('<I', self.system_time))
-
 		for val in self.q:
-		    buf.extend(struct.pack('<h', val))
+		    buf.extend(struct.pack('<f', val))
 
-		for val in self.omega:
-		    buf.extend(struct.pack('<h', val))
-
-		for val in self.magnetometer:
-		    buf.extend(struct.pack('<h', val))
+		buf.extend(self.omega.serialize())
+		buf.extend(self.magnetometer.serialize())
 		return bytearray(buf)
 
 class TelemetryPosition:
-	SIZE = 46
+	PACKET_TYPES = ['TELEMETRY_POSITION']
+	SIZE = 72
 
-	def __init__ (self, system_time = 0, latitude = 0, longitude = 0,
-	altitude = 0, gps_altitude = 0, height = 0, laser_distance = 0,
-	velocity = [None] * 3, acceleration = [None] * 3):
-		self.system_time = system_time
+	def __init__ (self, latitude = 0.0, longitude = 0.0, altitude = 0.0,
+	height = 0.0, position = 0, velocity = 0, acceleration = 0):
 		self.latitude = latitude
 		self.longitude = longitude
 		self.altitude = altitude
-		self.gps_altitude = gps_altitude
 		self.height = height
-		self.laser_distance = laser_distance
 
-		if (len(velocity) != 3):
-			raise ValueError('array velocity expecting length '+str(3)+' got '+str(len(velocity)))
+		self.position = ThreeAxisSensor(position)
 
-		self.velocity = list(velocity)
+		self.velocity = ThreeAxisSensor(velocity)
 
-		if (len(acceleration) != 3):
-			raise ValueError('array acceleration expecting length '+str(3)+' got '+str(len(acceleration)))
-
-		self.acceleration = list(acceleration)
+		self.acceleration = ThreeAxisSensor(acceleration)
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
@@ -3540,38 +3687,29 @@ class TelemetryPosition:
 
 		offset = 0
 
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
+		self.latitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset + struct.calcsize('<d')
 
-		self.latitude = struct.unpack_from('<q',buf,offset)[0]
-		offset = offset + struct.calcsize('<q')
+		self.longitude = struct.unpack_from('<d',buf,offset)[0]
+		offset = offset + struct.calcsize('<d')
 
-		self.longitude = struct.unpack_from('<q',buf,offset)[0]
-		offset = offset + struct.calcsize('<q')
+		self.altitude = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.altitude = struct.unpack_from('<i',buf,offset)[0]
-		offset = offset + struct.calcsize('<i')
+		self.height = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.gps_altitude = struct.unpack_from('<i',buf,offset)[0]
-		offset = offset + struct.calcsize('<i')
+		self.position = ThreeAxisSensor()
+		self.position.parse(buf[offset:offset+ThreeAxisSensor.SIZE])
+		offset = offset+ThreeAxisSensor.SIZE
 
-		self.height = struct.unpack_from('<i',buf,offset)[0]
-		offset = offset + struct.calcsize('<i')
+		self.velocity = ThreeAxisSensor()
+		self.velocity.parse(buf[offset:offset+ThreeAxisSensor.SIZE])
+		offset = offset+ThreeAxisSensor.SIZE
 
-		self.laser_distance = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
-
-		self.velocity = [];
-
-		for i in range(0,3):
-			self.velocity.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
-
-		self.acceleration = [];
-
-		for i in range(0,3):
-			self.acceleration.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
+		self.acceleration = ThreeAxisSensor()
+		self.acceleration.parse(buf[offset:offset+ThreeAxisSensor.SIZE])
+		offset = offset+ThreeAxisSensor.SIZE
 
 	def getSize(self):
 		return self.SIZE
@@ -3579,43 +3717,37 @@ class TelemetryPosition:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
-		buf.extend(struct.pack('<I', self.system_time))
-		buf.extend(struct.pack('<q', self.latitude))
-		buf.extend(struct.pack('<q', self.longitude))
-		buf.extend(struct.pack('<i', self.altitude))
-		buf.extend(struct.pack('<i', self.gps_altitude))
-		buf.extend(struct.pack('<i', self.height))
-		buf.extend(struct.pack('<H', self.laser_distance))
-
-		for val in self.velocity:
-		    buf.extend(struct.pack('<h', val))
-
-		for val in self.acceleration:
-		    buf.extend(struct.pack('<h', val))
+		buf.extend(struct.pack('<d', self.latitude))
+		buf.extend(struct.pack('<d', self.longitude))
+		buf.extend(struct.pack('<f', self.altitude))
+		buf.extend(struct.pack('<f', self.height))
+		buf.extend(self.position.serialize())
+		buf.extend(self.velocity.serialize())
+		buf.extend(self.acceleration.serialize())
 		return bytearray(buf)
 
 class TelemetryPressure:
-	SIZE = 28
+	PACKET_TYPES = ['TELEMETRY_PRESSURE']
+	SIZE = 44
 
-	def __init__ (self, system_time = 0, static_pressure = 0,
-	dynamic_pressure = 0, air_temperature = 0, humidity = 0, wind = [None] * 3,
-	ias = 0, tas = 0, alpha = 0, beta = 0):
-		self.system_time = system_time
+	def __init__ (self, static_pressure = 0.0, dynamic_pressure = 0.0,
+	air_temperature = 0.0, humidity = 0.0, wind = 0, ias = 0.0, alpha = 0.0,
+	beta = 0.0):
 		self.static_pressure = static_pressure
 		self.dynamic_pressure = dynamic_pressure
 		self.air_temperature = air_temperature
 		self.humidity = humidity
 
-		if (len(wind) != 3):
-			raise ValueError('array wind expecting length '+str(3)+' got '+str(len(wind)))
-
-		self.wind = list(wind)
+		self.wind = ThreeAxisSensor(wind)
 
 		self.ias = ias
-		self.tas = tas
 		self.alpha = alpha
 		self.beta = beta
 
@@ -3625,38 +3757,30 @@ class TelemetryPressure:
 
 		offset = 0
 
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
+		self.static_pressure = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.static_pressure = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
+		self.dynamic_pressure = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.dynamic_pressure = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.air_temperature = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.air_temperature = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.humidity = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.humidity = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
+		self.wind = ThreeAxisSensor()
+		self.wind.parse(buf[offset:offset+ThreeAxisSensor.SIZE])
+		offset = offset+ThreeAxisSensor.SIZE
 
-		self.wind = [];
+		self.ias = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		for i in range(0,3):
-			self.wind.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
+		self.alpha = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.ias = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
-
-		self.tas = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
-
-		self.alpha = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
-
-		self.beta = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.beta = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -3664,34 +3788,33 @@ class TelemetryPressure:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
-		buf.extend(struct.pack('<I', self.system_time))
-		buf.extend(struct.pack('<I', self.static_pressure))
-		buf.extend(struct.pack('<h', self.dynamic_pressure))
-		buf.extend(struct.pack('<h', self.air_temperature))
-		buf.extend(struct.pack('<H', self.humidity))
-
-		for val in self.wind:
-		    buf.extend(struct.pack('<h', val))
-
-		buf.extend(struct.pack('<h', self.ias))
-		buf.extend(struct.pack('<h', self.tas))
-		buf.extend(struct.pack('<h', self.alpha))
-		buf.extend(struct.pack('<h', self.beta))
+		buf.extend(struct.pack('<f', self.static_pressure))
+		buf.extend(struct.pack('<f', self.dynamic_pressure))
+		buf.extend(struct.pack('<f', self.air_temperature))
+		buf.extend(struct.pack('<f', self.humidity))
+		buf.extend(self.wind.serialize())
+		buf.extend(struct.pack('<f', self.ias))
+		buf.extend(struct.pack('<f', self.alpha))
+		buf.extend(struct.pack('<f', self.beta))
 		return bytearray(buf)
 
 class TelemetrySystem:
-	SIZE = 34
+	PACKET_TYPES = ['TELEMETRY_SYSTEM']
+	SIZE = 44
 
-	def __init__ (self, system_time = 0, batt_voltage = 0, batt_current = 0,
-	batt_watt_hours = 0, batt_percent = 0, flight_time = 0, week = 0, hour = 0,
-	minute = 0, milliseconds = 0, satellites = 0, pdop = 0,
+	def __init__ (self, batt_voltage = 0.0, batt_current = 0.0,
+	batt_watt_hours = 0.0, batt_percent = 0.0, flight_time = 0.0, week = 0,
+	hour = 0, minute = 0, seconds = 0.0, satellites = 0, pdop = 0.0,
 	fix_type = GPSFixType(0), rssi = 0, lost_comm = 0, lost_gps = 0,
 	engine_on = 0, error_code = 0, autopilot_mode = AutopilotMode(0),
 	flight_mode = FlightMode(0)):
-		self.system_time = system_time
 		self.batt_voltage = batt_voltage
 		self.batt_current = batt_current
 		self.batt_watt_hours = batt_watt_hours
@@ -3700,7 +3823,7 @@ class TelemetrySystem:
 		self.week = week
 		self.hour = hour
 		self.minute = minute
-		self.milliseconds = milliseconds
+		self.seconds = seconds
 		self.satellites = satellites
 		self.pdop = pdop
 
@@ -3722,23 +3845,20 @@ class TelemetrySystem:
 
 		offset = 0
 
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
+		self.batt_voltage = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.batt_voltage = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
+		self.batt_current = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.batt_current = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
+		self.batt_watt_hours = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.batt_watt_hours = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
+		self.batt_percent = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
-		self.batt_percent = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
-
-		self.flight_time = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
+		self.flight_time = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.week = struct.unpack_from('<H',buf,offset)[0]
 		offset = offset + struct.calcsize('<H')
@@ -3749,14 +3869,14 @@ class TelemetrySystem:
 		self.minute = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
 
-		self.milliseconds = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
+		self.seconds = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.satellites = struct.unpack_from('<B',buf,offset)[0]
 		offset = offset + struct.calcsize('<B')
 
-		self.pdop = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
+		self.pdop = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 		self.fix_type = GPSFixType(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
@@ -3788,21 +3908,24 @@ class TelemetrySystem:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
-		buf.extend(struct.pack('<I', self.system_time))
-		buf.extend(struct.pack('<H', self.batt_voltage))
-		buf.extend(struct.pack('<h', self.batt_current))
-		buf.extend(struct.pack('<H', self.batt_watt_hours))
-		buf.extend(struct.pack('<H', self.batt_percent))
-		buf.extend(struct.pack('<H', self.flight_time))
+		buf.extend(struct.pack('<f', self.batt_voltage))
+		buf.extend(struct.pack('<f', self.batt_current))
+		buf.extend(struct.pack('<f', self.batt_watt_hours))
+		buf.extend(struct.pack('<f', self.batt_percent))
+		buf.extend(struct.pack('<f', self.flight_time))
 		buf.extend(struct.pack('<H', self.week))
 		buf.extend(struct.pack('<B', self.hour))
 		buf.extend(struct.pack('<B', self.minute))
-		buf.extend(struct.pack('<H', self.milliseconds))
+		buf.extend(struct.pack('<f', self.seconds))
 		buf.extend(struct.pack('<B', self.satellites))
-		buf.extend(struct.pack('<H', self.pdop))
+		buf.extend(struct.pack('<f', self.pdop))
 
 		buf.put(GPSFixType.encode(self.fix_type));
 

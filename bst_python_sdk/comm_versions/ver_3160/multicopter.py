@@ -18,6 +18,7 @@
 
 from enum import Enum
 import struct
+import sys
 
 from .comm_packets import *
 
@@ -38,15 +39,12 @@ class CommandID (Enum):
 
 	#
 
-	# Controller Modes
 
-	CMD_TECS_MODE=24
+	# Composite
 
-	# Velocity
+	CMD_VEL_CTRL=26
 
-	CMD_IAS=25
-
-	# position
+	# Position
 
 	CMD_X_POS=27
 	CMD_Y_POS=28
@@ -59,6 +57,10 @@ class CommandID (Enum):
 	CMD_MOMENT_X=32
 	CMD_MOMENT_Y=33
 	CMD_MOMENT_Z=34
+
+	# Speed
+
+	CMD_SOG=25
 
 class ControlLoop (Enum):
 	CTRL_ANG_TO_RATE=0  # Angle error to rate
@@ -79,57 +81,29 @@ class ControlLoop (Enum):
 
 	CTRL_THRUST=8  # PID on thrust
 
-	CTRL_ENG_2_THROTTLE=9  # D is a FF term
-
-	CTRL_ENG_2_PITCH=10  # D is a FF term
-
-	CTRL_INVALID=11
+	CTRL_INVALID=9
 
 class FlightControlParameters:
-	SIZE = 80
+	PACKET_TYPES = ['CONTROL_FLIGHT_PARAMS']
+	SIZE = 48
 
-	def __init__ (self, tecs_Kv = 0.0, tecs_Kh = 0.0,
-	tecs_max_vx_dot = 0.0, min_ground_speed = 0.0, nav_lookahead = 0.0,
-	min_nav_lookahead_dist = 0.0, wpt_capture_dist = 0.0, cruise_speed = 0.0,
-	tuning_ias = 0.0, max_height_error_mode = 0.0, max_v_error_mode = 0.0,
-	k_height_tracking = 0.0, k_flare = 0.0, k_land = 0.0, k_cruise = 0.0,
-	k_climb = 0.0, k_speed_hold = 0.0, transition_fwd_rate = 0.0,
-	transition_fwd_angle = 0.0, transition_hover_rate = 0.0):
-		self.tecs_Kv = tecs_Kv
-		self.tecs_Kh = tecs_Kh
-		self.tecs_max_vx_dot = tecs_max_vx_dot
+	def __init__ (self, min_ground_speed = 0.0, nav_lookahead = 0.0,
+	min_nav_lookahead_dist = 0.0, wpt_capture_dist = 0.0, unused = [None] * 32):
 		self.min_ground_speed = min_ground_speed
 		self.nav_lookahead = nav_lookahead
 		self.min_nav_lookahead_dist = min_nav_lookahead_dist
 		self.wpt_capture_dist = wpt_capture_dist
-		self.cruise_speed = cruise_speed
-		self.tuning_ias = tuning_ias
-		self.max_height_error_mode = max_height_error_mode
-		self.max_v_error_mode = max_v_error_mode
-		self.k_height_tracking = k_height_tracking
-		self.k_flare = k_flare
-		self.k_land = k_land
-		self.k_cruise = k_cruise
-		self.k_climb = k_climb
-		self.k_speed_hold = k_speed_hold
-		self.transition_fwd_rate = transition_fwd_rate
-		self.transition_fwd_angle = transition_fwd_angle
-		self.transition_hover_rate = transition_hover_rate
+
+		if (len(unused) != 32):
+			raise ValueError('array unused expecting length '+str(32)+' got '+str(len(unused)))
+
+		self.unused = list(unused)
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
 			raise BufferError('INVALID PACKET SIZE [FlightControlParameters]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
 
 		offset = 0
-
-		self.tecs_Kv = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.tecs_Kh = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.tecs_max_vx_dot = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.min_ground_speed = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
@@ -143,44 +117,11 @@ class FlightControlParameters:
 		self.wpt_capture_dist = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
-		self.cruise_speed = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
+		self.unused = [];
 
-		self.tuning_ias = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.max_height_error_mode = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.max_v_error_mode = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.k_height_tracking = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.k_flare = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.k_land = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.k_cruise = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.k_climb = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.k_speed_hold = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.transition_fwd_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.transition_fwd_angle = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.transition_hover_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
+		for i in range(0,32):
+			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
+			offset = offset+struct.calcsize('<B')
 
 	def getSize(self):
 		return self.SIZE
@@ -188,34 +129,121 @@ class FlightControlParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
-		buf.extend(struct.pack('<f', self.tecs_Kv))
-		buf.extend(struct.pack('<f', self.tecs_Kh))
-		buf.extend(struct.pack('<f', self.tecs_max_vx_dot))
 		buf.extend(struct.pack('<f', self.min_ground_speed))
 		buf.extend(struct.pack('<f', self.nav_lookahead))
 		buf.extend(struct.pack('<f', self.min_nav_lookahead_dist))
 		buf.extend(struct.pack('<f', self.wpt_capture_dist))
-		buf.extend(struct.pack('<f', self.cruise_speed))
-		buf.extend(struct.pack('<f', self.tuning_ias))
-		buf.extend(struct.pack('<f', self.max_height_error_mode))
-		buf.extend(struct.pack('<f', self.max_v_error_mode))
-		buf.extend(struct.pack('<f', self.k_height_tracking))
-		buf.extend(struct.pack('<f', self.k_flare))
-		buf.extend(struct.pack('<f', self.k_land))
-		buf.extend(struct.pack('<f', self.k_cruise))
-		buf.extend(struct.pack('<f', self.k_climb))
-		buf.extend(struct.pack('<f', self.k_speed_hold))
-		buf.extend(struct.pack('<f', self.transition_fwd_rate))
-		buf.extend(struct.pack('<f', self.transition_fwd_angle))
-		buf.extend(struct.pack('<f', self.transition_hover_rate))
+
+		for val in self.unused:
+		    buf.extend(struct.pack('<B', val))
+		return bytearray(buf)
+
+class VehicleLimits:
+	PACKET_TYPES = ['VEHICLE_LIMITS']
+	SIZE = 69
+
+	def __init__ (self, roll = 0, pitch = 0, roll_rate = 0.0,
+	pitch_rate = 0.0, yaw_rate = 0.0, speed = 0.0, vrate = 0, lost_gps = 0,
+	max_pdop = 0.0, unused = [None] * 24):
+		self.roll = Limit(roll)
+
+		self.pitch = Limit(pitch)
+
+		self.roll_rate = roll_rate
+		self.pitch_rate = pitch_rate
+		self.yaw_rate = yaw_rate
+		self.speed = speed
+
+		self.vrate = Limit(vrate)
+
+		self.lost_gps = lost_gps
+		self.max_pdop = max_pdop
+
+		if (len(unused) != 24):
+			raise ValueError('array unused expecting length '+str(24)+' got '+str(len(unused)))
+
+		self.unused = list(unused)
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [VehicleLimits]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.roll = Limit()
+		self.roll.parse(buf[offset:offset+Limit.SIZE])
+		offset = offset+Limit.SIZE
+
+		self.pitch = Limit()
+		self.pitch.parse(buf[offset:offset+Limit.SIZE])
+		offset = offset+Limit.SIZE
+
+		self.roll_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.pitch_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.yaw_rate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.speed = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.vrate = Limit()
+		self.vrate.parse(buf[offset:offset+Limit.SIZE])
+		offset = offset+Limit.SIZE
+
+		self.lost_gps = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.max_pdop = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.unused = [];
+
+		for i in range(0,24):
+			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
+			offset = offset+struct.calcsize('<B')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(self.roll.serialize())
+		buf.extend(self.pitch.serialize())
+		buf.extend(struct.pack('<f', self.roll_rate))
+		buf.extend(struct.pack('<f', self.pitch_rate))
+		buf.extend(struct.pack('<f', self.yaw_rate))
+		buf.extend(struct.pack('<f', self.speed))
+		buf.extend(self.vrate.serialize())
+		buf.extend(struct.pack('<B', self.lost_gps))
+		buf.extend(struct.pack('<f', self.max_pdop))
+
+		for val in self.unused:
+		    buf.extend(struct.pack('<B', val))
 		return bytearray(buf)
 
 #---------[ Logging ]---------#
 
 class LogFlightControl:
+	PACKET_TYPES = []
 	SIZE = 64
 
 	def __init__ (self, data = [None] * 64):
@@ -242,6 +270,10 @@ class LogFlightControl:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -252,7 +284,8 @@ class LogFlightControl:
 #---------[ Mission ]---------#
 
 class MissionParameters:
-	SIZE = 48
+	PACKET_TYPES = ['MISSION_PARAMETERS']
+	SIZE = 47
 
 	def __init__ (self, altitude = 0, comm = 0, max_range = 0.0,
 	safe_height = 0.0, flight_time = 0.0, battery_min = 0.0, initialized = 0,
@@ -317,6 +350,10 @@ class MissionParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -341,6 +378,7 @@ class RotorDir (Enum):
 	ROTOR_DIR_INVALID=2
 
 class RotorParameters:
+	PACKET_TYPES = ['ACTUATORS_ROTOR_PARAMS']
 	SIZE = 43
 
 	def __init__ (self, id = 0, channel = 0, k_wv = 0.0, pwm_o = 0.0,
@@ -414,6 +452,10 @@ class RotorParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -461,6 +503,7 @@ class LandingStatus (Enum):
 	LANDING_STATUS_COMMITTED=6
 
 class LandingParameters:
+	PACKET_TYPES = ['VEHICLE_LAND_PARAMS']
 	SIZE = 28
 
 	def __init__ (self, safe_height = 0.0, descend_rate = 0.0,
@@ -501,6 +544,10 @@ class LandingParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -513,6 +560,7 @@ class LandingParameters:
 		return bytearray(buf)
 
 class LaunchParameters:
+	PACKET_TYPES = ['VEHICLE_LAUNCH_PARAMS']
 	SIZE = 24
 
 	def __init__ (self, climbout_height = 0.0, timeout = 0.0,
@@ -549,6 +597,10 @@ class LaunchParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -559,136 +611,19 @@ class LaunchParameters:
 		    buf.extend(struct.pack('<B', val))
 		return bytearray(buf)
 
-class VehicleLimits:
-	SIZE = 81
-
-	def __init__ (self, roll_angle = 0, pitch_angle = 0, roll_rate = 0.0,
-	pitch_rate = 0.0, yaw_rate = 0.0, speed = 0.0, vrate = 0, ias = 0,
-	lost_gps = 0, lost_gps_roll = 0.0, max_pdop = 0.0, max_scale_factor = 0.0,
-	flightpath_angle = 0, flightpath_angle_flap = 0,
-	flightpath_angle_fraction = 0.0):
-		self.roll_angle = Limit(roll_angle)
-
-		self.pitch_angle = Limit(pitch_angle)
-
-		self.roll_rate = roll_rate
-		self.pitch_rate = pitch_rate
-		self.yaw_rate = yaw_rate
-		self.speed = speed
-
-		self.vrate = Limit(vrate)
-
-		self.ias = Limit(ias)
-
-		self.lost_gps = lost_gps
-		self.lost_gps_roll = lost_gps_roll
-		self.max_pdop = max_pdop
-		self.max_scale_factor = max_scale_factor
-
-		self.flightpath_angle = Limit(flightpath_angle)
-
-		self.flightpath_angle_flap = Limit(flightpath_angle_flap)
-
-		self.flightpath_angle_fraction = flightpath_angle_fraction
-
-	def parse(self,buf):
-		if (len(buf) != self.SIZE):
-			raise BufferError('INVALID PACKET SIZE [VehicleLimits]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
-
-		offset = 0
-
-		self.roll_angle = Limit()
-		self.roll_angle.parse(buf[offset:offset+Limit.SIZE])
-		offset = offset+Limit.SIZE
-
-		self.pitch_angle = Limit()
-		self.pitch_angle.parse(buf[offset:offset+Limit.SIZE])
-		offset = offset+Limit.SIZE
-
-		self.roll_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.pitch_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.yaw_rate = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.speed = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.vrate = Limit()
-		self.vrate.parse(buf[offset:offset+Limit.SIZE])
-		offset = offset+Limit.SIZE
-
-		self.ias = Limit()
-		self.ias.parse(buf[offset:offset+Limit.SIZE])
-		offset = offset+Limit.SIZE
-
-		self.lost_gps = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
-
-		self.lost_gps_roll = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.max_pdop = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.max_scale_factor = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.flightpath_angle = Limit()
-		self.flightpath_angle.parse(buf[offset:offset+Limit.SIZE])
-		offset = offset+Limit.SIZE
-
-		self.flightpath_angle_flap = Limit()
-		self.flightpath_angle_flap.parse(buf[offset:offset+Limit.SIZE])
-		offset = offset+Limit.SIZE
-
-		self.flightpath_angle_fraction = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-	def getSize(self):
-		return self.SIZE
-
-	def set_system_time(self, sys_time):
-		self.system_time = sys_time
-
-	def serialize(self):
-		buf = []
-
-		buf.extend(self.roll_angle.serialize())
-		buf.extend(self.pitch_angle.serialize())
-		buf.extend(struct.pack('<f', self.roll_rate))
-		buf.extend(struct.pack('<f', self.pitch_rate))
-		buf.extend(struct.pack('<f', self.yaw_rate))
-		buf.extend(struct.pack('<f', self.speed))
-		buf.extend(self.vrate.serialize())
-		buf.extend(self.ias.serialize())
-		buf.extend(struct.pack('<B', self.lost_gps))
-		buf.extend(struct.pack('<f', self.lost_gps_roll))
-		buf.extend(struct.pack('<f', self.max_pdop))
-		buf.extend(struct.pack('<f', self.max_scale_factor))
-		buf.extend(self.flightpath_angle.serialize())
-		buf.extend(self.flightpath_angle_flap.serialize())
-		buf.extend(struct.pack('<f', self.flightpath_angle_fraction))
-		return bytearray(buf)
-
 class VehicleParameters:
-	SIZE = 68
+	PACKET_TYPES = ['VEHICLE_PARAMS']
+	SIZE = 51
 
-	def __init__ (self, name = [None] * 16, flight_time = 0.0,
-	standard_bank = 0.0, cruise_speed = 0.0, battery_cap = 0.0,
+	def __init__ (self, name = [None] * 16, battery_cap = 0.0,
 	battery_num_cells = 0, batt_chem = BatteryChemistry(0), num_rotors = 0,
-	mass = 0.0, torque = 0.0, drag = 0.0, unused = [None] * 21):
+	mass = 0.0, torque = 0.0, drag = 0.0, cruise_speed = 0.0,
+	unused = [None] * 12):
 		if (len(name) != 16):
 			raise ValueError('array name expecting length '+str(16)+' got '+str(len(name)))
 
 		self.name = list(name)
 
-		self.flight_time = flight_time
-		self.standard_bank = standard_bank
-		self.cruise_speed = cruise_speed
 		self.battery_cap = battery_cap
 		self.battery_num_cells = battery_num_cells
 
@@ -698,9 +633,10 @@ class VehicleParameters:
 		self.mass = mass
 		self.torque = torque
 		self.drag = drag
+		self.cruise_speed = cruise_speed
 
-		if (len(unused) != 21):
-			raise ValueError('array unused expecting length '+str(21)+' got '+str(len(unused)))
+		if (len(unused) != 12):
+			raise ValueError('array unused expecting length '+str(12)+' got '+str(len(unused)))
 
 		self.unused = list(unused)
 
@@ -715,15 +651,6 @@ class VehicleParameters:
 		for i in range(0,16):
 			self.name.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
-
-		self.flight_time = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.standard_bank = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
-
-		self.cruise_speed = struct.unpack_from('<f',buf,offset)[0]
-		offset = offset + struct.calcsize('<f')
 
 		self.battery_cap = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
@@ -746,9 +673,12 @@ class VehicleParameters:
 		self.drag = struct.unpack_from('<f',buf,offset)[0]
 		offset = offset + struct.calcsize('<f')
 
+		self.cruise_speed = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
 		self.unused = [];
 
-		for i in range(0,21):
+		for i in range(0,12):
 			self.unused.append(struct.unpack_from('<B',buf,offset)[0])
 			offset = offset+struct.calcsize('<B')
 
@@ -758,15 +688,16 @@ class VehicleParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
 		for val in self.name:
 		    buf.extend(struct.pack('<B', val))
 
-		buf.extend(struct.pack('<f', self.flight_time))
-		buf.extend(struct.pack('<f', self.standard_bank))
-		buf.extend(struct.pack('<f', self.cruise_speed))
 		buf.extend(struct.pack('<f', self.battery_cap))
 		buf.extend(struct.pack('<B', self.battery_num_cells))
 
@@ -776,6 +707,7 @@ class VehicleParameters:
 		buf.extend(struct.pack('<f', self.mass))
 		buf.extend(struct.pack('<f', self.torque))
 		buf.extend(struct.pack('<f', self.drag))
+		buf.extend(struct.pack('<f', self.cruise_speed))
 
 		for val in self.unused:
 		    buf.extend(struct.pack('<B', val))

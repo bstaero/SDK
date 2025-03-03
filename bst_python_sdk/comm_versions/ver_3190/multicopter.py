@@ -18,6 +18,7 @@
 
 from enum import Enum
 import struct
+import sys
 
 from .comm_packets import *
 
@@ -83,6 +84,7 @@ class ControlLoop (Enum):
 	CTRL_INVALID=9
 
 class FlightControlParameters:
+	PACKET_TYPES = ['CONTROL_FLIGHT_PARAMS']
 	SIZE = 48
 
 	def __init__ (self, min_ground_speed = 0.0, nav_lookahead = 0.0,
@@ -127,6 +129,10 @@ class FlightControlParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -140,6 +146,7 @@ class FlightControlParameters:
 		return bytearray(buf)
 
 class VehicleLimits:
+	PACKET_TYPES = ['VEHICLE_LIMITS']
 	SIZE = 69
 
 	def __init__ (self, roll = 0, pitch = 0, roll_rate = 0.0,
@@ -212,6 +219,10 @@ class VehicleLimits:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -232,6 +243,7 @@ class VehicleLimits:
 #---------[ Logging ]---------#
 
 class LogFlightControl:
+	PACKET_TYPES = []
 	SIZE = 64
 
 	def __init__ (self, data = [None] * 64):
@@ -258,6 +270,10 @@ class LogFlightControl:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -268,7 +284,8 @@ class LogFlightControl:
 #---------[ Mission ]---------#
 
 class MissionParameters:
-	SIZE = 48
+	PACKET_TYPES = ['MISSION_PARAMETERS']
+	SIZE = 47
 
 	def __init__ (self, altitude = 0, comm = 0, max_range = 0.0,
 	safe_height = 0.0, flight_time = 0.0, battery_min = 0.0, initialized = 0,
@@ -333,6 +350,10 @@ class MissionParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -357,6 +378,7 @@ class RotorDir (Enum):
 	ROTOR_DIR_INVALID=2
 
 class RotorParameters:
+	PACKET_TYPES = ['ACTUATORS_ROTOR_PARAMS']
 	SIZE = 43
 
 	def __init__ (self, id = 0, channel = 0, k_wv = 0.0, pwm_o = 0.0,
@@ -430,6 +452,10 @@ class RotorParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -477,6 +503,7 @@ class LandingStatus (Enum):
 	LANDING_STATUS_COMMITTED=6
 
 class LandingParameters:
+	PACKET_TYPES = ['VEHICLE_LAND_PARAMS']
 	SIZE = 28
 
 	def __init__ (self, safe_height = 0.0, descend_rate = 0.0,
@@ -517,6 +544,10 @@ class LandingParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -529,6 +560,7 @@ class LandingParameters:
 		return bytearray(buf)
 
 class LaunchParameters:
+	PACKET_TYPES = ['VEHICLE_LAUNCH_PARAMS']
 	SIZE = 24
 
 	def __init__ (self, climbout_height = 0.0, timeout = 0.0,
@@ -565,6 +597,10 @@ class LaunchParameters:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -576,6 +612,7 @@ class LaunchParameters:
 		return bytearray(buf)
 
 class VehicleParameters:
+	PACKET_TYPES = ['VEHICLE_PARAMS']
 	SIZE = 51
 
 	def __init__ (self, name = [None] * 16, battery_cap = 0.0,
@@ -650,6 +687,10 @@ class VehicleParameters:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []

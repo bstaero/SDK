@@ -2,6 +2,14 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include <unordered_set>
+
+// Packet types to parse when quick mode is enabled
+std::unordered_set<int> quick_mode_packets = {
+    16,  // STATE_STATE
+    33,  // CONTROL_COMMAND
+    81,  // SYSTEM_INITIALIZE
+};
 
 std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode) {
     std::ifstream file(file_path, std::ios::binary);
@@ -33,7 +41,7 @@ std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode)
             packet.TYPE = buf[i++];
 
             // In quick mode, only parse SYS_INIT and CONTROL_COMMAND
-            if (quick_mode && packet.TYPE != 33 && packet.TYPE != 81) {
+            if (quick_mode && !quick_mode_packets.count(packet.TYPE)) {
                 continue;
             }
 
@@ -57,7 +65,7 @@ std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode)
             i += packet.SIZE;
 
             if (quick_mode && packet.TYPE == 33) {
-                if (packet.DATA.at(0) != 1) { // Skip non-flight mode commands
+                if (packet.DATA.empty() || packet.DATA.at(0) != 1) { // Skip non-flight mode commands
                     continue;
                 }
             }

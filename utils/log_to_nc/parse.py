@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+import sys
+import os.path
+
+sys.path.append(os.path.join(
+    os.path.dirname(__file__), '../..'))
+
 try:
 	from .bst_python_sdk.logparse import Parser
 except ImportError:
@@ -10,10 +16,12 @@ from enum import Enum
 import inspect
 
 from netCDF4 import Dataset
-import os.path
-import sys
 
 type_conv = {int: 'i8', float: 'f8'}
+
+script_dir = os.path.dirname(__file__)
+root_dir = os.path.abspath(os.path.join(script_dir, 'bst_python_sdk'))
+sys.path.insert(0, root_dir)
 
 
 def parse(
@@ -53,16 +61,16 @@ def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
 	print(f'\n### Converting {ac_name}')
 	log_name = '.'.join(filename.split('.')[:-1])
 	nc_name = f'{log_name}_{ac_name}.nc'
-	nc_name = f'{out_dir}/{nc_name.split('/')[-1]}'
+	nc_name = f'{out_dir}/{nc_name.split("/")[-1]}'
 	root_grp = Dataset(nc_name, 'w', format='NETCDF4')
 
 	for pkt_type, pkts in parsed_log.items():
-		print(f'Adding {pkt_type.name}...')
+		print(f'Adding {pkt_type}...')
 		if len(pkts) == 0:
 			print(' -- Skipping (dimension of size 0)')
 			continue
 
-		pkt_grp = root_grp.createGroup(pkt_type.name)
+		pkt_grp = root_grp.createGroup(pkt_type)
 		pkt_grp.createDimension('packets', len(pkts))
 
 		if type(pkts[0]) == int:
@@ -72,6 +80,8 @@ def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
 			def _parse_field(field):
 				field_val = read_var(pkts[0], field)
 				field_type = type(field_val)
+				if field == 'system_time':
+					field_type = float
 				if isinstance(field_val, Enum):
 					add_enum_to_nc(field, pkt_grp, pkts)
 				elif field_type == list and type(field_val[0]) in type_conv:

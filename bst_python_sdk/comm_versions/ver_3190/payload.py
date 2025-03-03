@@ -18,6 +18,7 @@
 
 from enum import Enum
 import struct
+import sys
 
 from .comm_packets import *
 
@@ -109,6 +110,7 @@ class LDCRPlatformType (Enum):
 	PLATFORM_TYPE_FIXED=2
 
 class K30:
+	PACKET_TYPES = ['PAYLOAD_K30']
 	SIZE = 8
 
 	def __init__ (self, system_time = 0.0, co2 = 0, temp = 0):
@@ -137,6 +139,10 @@ class K30:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -146,6 +152,7 @@ class K30:
 		return bytearray(buf)
 
 class MiniGAS:
+	PACKET_TYPES = ['PAYLOAD_MINIGAS']
 	SIZE = 60
 
 	def __init__ (self, system_time = 0.0, gas01_mv = 0.0, gas01_ppm = 0.0,
@@ -225,6 +232,10 @@ class MiniGAS:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -246,6 +257,7 @@ class MiniGAS:
 		return bytearray(buf)
 
 class ParticlesPlusChannel:
+	PACKET_TYPES = ['PAYLOAD_PARTICLES_PLUS']
 	SIZE = 11
 
 	def __init__ (self, channel_size = 0, differential_counts = 0,
@@ -279,6 +291,10 @@ class ParticlesPlusChannel:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -289,6 +305,7 @@ class ParticlesPlusChannel:
 		return bytearray(buf)
 
 class LDCR:
+	PACKET_TYPES = ['PAYLOAD_LDCR']
 	SIZE = 101
 
 	def __init__ (self, header = [None] * 2, serial_number = 0, hw_revision = 0,
@@ -434,6 +451,10 @@ class LDCR:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -474,6 +495,7 @@ class LDCR:
 		return bytearray(buf)
 
 class ParticlesPlus:
+	PACKET_TYPES = ['PAYLOAD_PARTICLES_PLUS']
 	SIZE = 104
 
 	def __init__ (self, system_time = 0.0, date = [None] * 11,
@@ -546,6 +568,10 @@ class ParticlesPlus:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -568,107 +594,12 @@ class ParticlesPlus:
 
 #---------[ Communication ]---------#
 
-class S0Sensors:
-	SIZE = 36
-
-	def __init__ (self, system_time = 0, static_pressure = [None] * 2,
-	dynamic_pressure = [None] * 5, air_temperature = 0, humidity = 0,
-	laser_distance = 0, ground_temperature = 0, u = 0, v = 0, w = 0):
-		self.system_time = system_time
-
-		if (len(static_pressure) != 2):
-			raise ValueError('array static_pressure expecting length '+str(2)+' got '+str(len(static_pressure)))
-
-		self.static_pressure = list(static_pressure)
-
-		if (len(dynamic_pressure) != 5):
-			raise ValueError('array dynamic_pressure expecting length '+str(5)+' got '+str(len(dynamic_pressure)))
-
-		self.dynamic_pressure = list(dynamic_pressure)
-
-		self.air_temperature = air_temperature
-		self.humidity = humidity
-		self.laser_distance = laser_distance
-		self.ground_temperature = ground_temperature
-		self.u = u
-		self.v = v
-		self.w = w
-
-	def parse(self,buf):
-		if (len(buf) != self.SIZE):
-			raise BufferError('INVALID PACKET SIZE [S0Sensors]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
-
-		offset = 0
-
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
-
-		self.static_pressure = [];
-
-		for i in range(0,2):
-			self.static_pressure.append(struct.unpack_from('<I',buf,offset)[0])
-			offset = offset+struct.calcsize('<I')
-
-		self.dynamic_pressure = [];
-
-		for i in range(0,5):
-			self.dynamic_pressure.append(struct.unpack_from('<h',buf,offset)[0])
-			offset = offset+struct.calcsize('<h')
-
-		self.air_temperature = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
-
-		self.humidity = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
-
-		self.laser_distance = struct.unpack_from('<H',buf,offset)[0]
-		offset = offset + struct.calcsize('<H')
-
-		self.ground_temperature = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
-
-		self.u = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
-
-		self.v = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
-
-		self.w = struct.unpack_from('<h',buf,offset)[0]
-		offset = offset + struct.calcsize('<h')
-
-	def getSize(self):
-		return self.SIZE
-
-	def set_system_time(self, sys_time):
-		self.system_time = sys_time
-
-	def serialize(self):
-		buf = []
-
-		buf.extend(struct.pack('<I', self.system_time))
-
-		for val in self.static_pressure:
-		    buf.extend(struct.pack('<I', val))
-
-		for val in self.dynamic_pressure:
-		    buf.extend(struct.pack('<h', val))
-
-		buf.extend(struct.pack('<h', self.air_temperature))
-		buf.extend(struct.pack('<H', self.humidity))
-		buf.extend(struct.pack('<H', self.laser_distance))
-		buf.extend(struct.pack('<h', self.ground_temperature))
-		buf.extend(struct.pack('<h', self.u))
-		buf.extend(struct.pack('<h', self.v))
-		buf.extend(struct.pack('<h', self.w))
-		return bytearray(buf)
-
 class TelemetryPayload:
-	SIZE = 8
+	PACKET_TYPES = ['TELEMETRY_PAYLOAD']
+	SIZE = 7
 
-	def __init__ (self, system_time = 0, node_status = PayloadControl(0),
-	num_triggers = 0, percent_complete = 0):
-		self.system_time = system_time
-
+	def __init__ (self, node_status = PayloadControl(0), num_triggers = 0,
+	percent_complete = 0.0):
 		self.node_status = PayloadControl(node_status)
 
 		self.num_triggers = num_triggers
@@ -680,17 +611,14 @@ class TelemetryPayload:
 
 		offset = 0
 
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]
-		offset = offset + struct.calcsize('<I')
-
 		self.node_status = PayloadControl(struct.unpack_from('<B',buf,offset)[0])
 		offset = offset+struct.calcsize('<B')
 
 		self.num_triggers = struct.unpack_from('<H',buf,offset)[0]
 		offset = offset + struct.calcsize('<H')
 
-		self.percent_complete = struct.unpack_from('<B',buf,offset)[0]
-		offset = offset + struct.calcsize('<B')
+		self.percent_complete = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
 
 	def getSize(self):
 		return self.SIZE
@@ -698,15 +626,17 @@ class TelemetryPayload:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
-
-		buf.extend(struct.pack('<I', self.system_time))
 
 		buf.put(PayloadControl.encode(self.node_status));
 
 		buf.extend(struct.pack('<H', self.num_triggers))
-		buf.extend(struct.pack('<B', self.percent_complete))
+		buf.extend(struct.pack('<f', self.percent_complete))
 		return bytearray(buf)
 
 #---------[ Payload ]---------#
@@ -732,6 +662,7 @@ class PayloadID (Enum):
 	PAYLOAD_IR_THERMOMETER=209
 
 class NDVI:
+	PACKET_TYPES = ['PAYLOAD_NDVI']
 	SIZE = 21
 
 	def __init__ (self, system_time = 0.0, id = 0, red = 0.0, near_ir = 0.0,
@@ -773,6 +704,10 @@ class NDVI:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -785,6 +720,7 @@ class NDVI:
 		return bytearray(buf)
 
 class PayloadParam:
+	PACKET_TYPES = ['PAYLOAD_PARAMS']
 	SIZE = 52
 
 	def __init__ (self, channel = 0, channelName = [None] * 32, deltaD = 0.0,
@@ -850,6 +786,10 @@ class PayloadParam:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -871,6 +811,7 @@ class PayloadParam:
 		return bytearray(buf)
 
 class PayloadSerial:
+	PACKET_TYPES = ['PAYLOAD_SERIAL']
 	SIZE = 5
 
 	def __init__ (self, baudRate = 0, payloadInterface = PayloadInterface(0)):
@@ -896,6 +837,10 @@ class PayloadSerial:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -905,6 +850,7 @@ class PayloadSerial:
 		return bytearray(buf)
 
 class PayloadTrigger:
+	PACKET_TYPES = ['PAYLOAD_TRIGGER']
 	SIZE = 40
 
 	def __init__ (self, latitude = 0.0, longitude = 0.0, altitude = 0.0,
@@ -958,6 +904,10 @@ class PayloadTrigger:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -974,6 +924,7 @@ class PayloadTrigger:
 		return bytearray(buf)
 
 class UserPayload:
+	PACKET_TYPES = ['USER_PAYLOAD']
 	SIZE = 66
 
 	def __init__ (self, system_id = 0, size = 0, buffer = [None] * 64):
@@ -1009,6 +960,10 @@ class UserPayload:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1020,6 +975,7 @@ class UserPayload:
 		return bytearray(buf)
 
 class CameraTag:
+	PACKET_TYPES = ['PAYLOAD_CAMERA_TAG']
 	SIZE = 80
 
 	def __init__ (self, trigger_info = 0, week = 0, hour = 0, minute = 0,
@@ -1070,6 +1026,10 @@ class CameraTag:
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
 
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
 	def serialize(self):
 		buf = []
 
@@ -1084,6 +1044,7 @@ class CameraTag:
 		return bytearray(buf)
 
 class PayloadStatus:
+	PACKET_TYPES = ['PAYLOAD_STATUS']
 	SIZE = 4
 
 	def __init__ (self, identifier = PayloadID.PAYLOAD_UNKNOWN, power_on = 0,
@@ -1118,6 +1079,10 @@ class PayloadStatus:
 
 	def set_system_time(self, sys_time):
 		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
 
 	def serialize(self):
 		buf = []

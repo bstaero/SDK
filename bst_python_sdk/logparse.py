@@ -23,8 +23,9 @@
 # *#=+--+=#=+--                 --+=#=+--+=#=+--                 --+=#=+--+=#* #
 
 from .bstpacket import BSTPacket
-from .handler import standard_handler
-from .comm_packets.comm_packets import *
+from .comm_packets.handler import standard_handler
+from .comm_packets.comm_packets import VehicleType, PacketTypes
+import importlib
 import numpy as np
 import scipy.io as spio
 import os.path
@@ -58,11 +59,24 @@ class Parser:
         self.ac_sys_previous_time = 0
         self.gcs_sys_time = 0
 
+        self.comms_rev = 0
+
         self.current_ac = unknown_ac
         if has_addr:
             self.current_ac = f'{unknown_ac}{log_suffix}'
 
         self.results = {gcs_name: {}, self.current_ac:{}}
+
+    def reimport_comms(self, new_rev: int):
+        print(f'-- Using comms rev: {new_rev}')
+        self.comms_rev = new_rev
+
+        handler_import = f'comm_versions.ver_{new_rev}.handler'
+        comm_packets_import = f'comm_versions.ver_{new_rev}.comm_packets'
+
+        globals()['standard_handler'] = importlib.import_module(handler_import).standard_handler
+        globals()['VehicleType'] = importlib.import_module(comm_packets_import).VehicleType
+        globals()['PacketTypes'] = importlib.import_module(comm_packets_import).PacketTypes
 
     def parse_log(self, filename: str) -> dict:
         bst_packets = []
@@ -116,6 +130,11 @@ class Parser:
         has_sys_time = hasattr(pkt_data, 'system_time')
         is_new_sys_time = has_sys_time and pkt_data.system_time < self.ac_sys_previous_time
 
+        if is_sys_init:
+            sys_init_pkt: SystemInitialize = pkt_data
+            if sys_init_pkt.comms_rev != self.comms_rev:
+                self.reimport_comms(sys_init_pkt.comms_rev)
+
         if from_aircraft or not self.has_addr:
             if is_new_sys_time:
                 # Same aircraft, new log data
@@ -123,7 +142,7 @@ class Parser:
                 self.ac_sys_previous_time = pkt_data.system_time
             elif is_sys_init:
                 sys_init_pkt: SystemInitialize = pkt_data
-                self.ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type)
+                self.ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type.value)
 
                 # Extract name and trim trailing 0s in name byte array
                 name_arr = sys_init_pkt.name
@@ -166,10 +185,10 @@ class Parser:
             self.results[entry_name] = {}
 
         pkt_type = PacketTypes(pkt.TYPE)
-        if pkt_type in self.results[entry_name]:
-            self.results[entry_name][pkt_type].append(pkt_data)
+        if pkt_type.name in self.results[entry_name]:
+            self.results[entry_name][pkt_type.name].append(pkt_data)
         else:
-            self.results[entry_name][pkt_type] = [pkt_data]
+            self.results[entry_name][pkt_type.name] = [pkt_data]
 
     def increment_log_name(self, name: str) -> str:
         try:
