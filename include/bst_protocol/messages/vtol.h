@@ -84,6 +84,35 @@ typedef enum {
 	CTRL_INVALID,
 }  __attribute__ ((packed)) ControlLoop_t;
 
+typedef struct _FilterParameters_t {
+	float ias_alpha;  // LPF alpha value (0,1]
+	float ias_dot_alpha;  // LPF alpha value (0,1]
+	float gamma_alpha;  // LPF alpha value (0,1]
+	float roll_cmd_rate;  // rate limit for roll cmd [rad/s]: default=1.57 (90 deg/s)
+	float pitch_cmd_rate;  // rate limit for pitch cmd [rad/s]: default=0.524 (30 deg/s)
+	float ias_cmd_rate;  // rate limit for ias cmd [m/s^2]: default=1
+	float gamma_cmd_rate;  // rate limit for gamma cmd [rad/s]: default=0.34
+	float throttle_cmd_rate;  // rate limit for throttle cmd [/s]: default=2
+	float k_cmd_rate;  // rate limit for TECS K-value cmd [/s]: default=1
+	float vx_dot_cmd_rate;  // rate limit for TECS dVx/dt cmd [m/2^3]
+	/* need to adjust param.h if need more space */
+
+#ifdef __cplusplus
+	_FilterParameters_t() {
+		ias_alpha = 0.0;
+		ias_dot_alpha = 0.0;
+		gamma_alpha = 0.0;
+		roll_cmd_rate = 0.0;
+		pitch_cmd_rate = 0.0;
+		ias_cmd_rate = 0.0;
+		gamma_cmd_rate = 0.0;
+		throttle_cmd_rate = 0.0;
+		k_cmd_rate = 0.0;
+		vx_dot_cmd_rate = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) FilterParameters_t;
+
 typedef struct _FlightControlParameters_t {
 	float tecs_Kv;
 	float tecs_Kh;
@@ -132,6 +161,20 @@ typedef struct _FlightControlParameters_t {
 	}
 #endif
 } __attribute__ ((packed)) FlightControlParameters_t;
+
+typedef struct _SurfaceMixing_t {
+	float mixing_roll_2_elevator;  // [-1,1]
+	float mixing_aileron_2_rudder;  // [-1,1]
+	float mixing_flap_2_elevator;  // [-1,1]
+
+#ifdef __cplusplus
+	_SurfaceMixing_t() {
+		mixing_roll_2_elevator = 0.0;
+		mixing_aileron_2_rudder = 0.0;
+		mixing_flap_2_elevator = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) SurfaceMixing_t;
 
 /*--------[ Logging ]--------*/
 
