@@ -1162,12 +1162,12 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_GCS
+#if defined BOARD_core || defined BOARD_GCS || defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_GNSS_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSPkt";
 #endif
-	static uint8_t buffer[sizeof(CAN_GNSS_t)];
+  static uint8_t buffer[sizeof(CAN_GNSS_t)];
 
 	BRIDGE_BUFFER_PREAMBLE
 
