@@ -31,15 +31,15 @@
 using namespace bst::comms::canpackets;
 #endif
 
-#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx
+#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32L431xx
   #include "helper_functions.h"
   #include "simulated_can.h"
 #endif
 
 #include "debug.h"
 
-#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32H743xx
-  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx
+#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32H743xx || defined STM32L431xx
+  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx && ! defined STM32L431xx
     #include "can.h"
     #include "led.h" // DEBUG
   #else
@@ -50,7 +50,7 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
     #endif
   #endif
 
-  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
+  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32L431xx
     uint8_t checkFletcher16(uint8_t * data, uint8_t size);
     void setFletcher16 (uint8_t * data, uint8_t size);
   #endif
@@ -1257,7 +1257,7 @@ void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP || (defined BOARD_RID && defined ARCH_stm32f1)
+#if defined BOARD_core || defined BOARD_MHP || defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_GNSS_UTC_W_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSUTCWPkt";
@@ -1267,9 +1267,7 @@ void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 	BRIDGE_BUFFER_PREAMBLE
 
 	//----- packet specific code -----//
-
 	if(!can_gps_sensor) can_gps_sensor = 1u;
-
 	CAN_GNSS_UTC_W_t *data;
 	data = (CAN_GNSS_UTC_W_t *)buffer;
 
@@ -1293,7 +1291,7 @@ void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP || (defined BOARD_RID && defined ARCH_stm32f1)
+#if defined BOARD_core || defined BOARD_MHP || defined BOARD_RID
   static uint8_t pkt_size = sizeof(CAN_GNSS_LLA_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSLLAPkt";
@@ -1333,7 +1331,7 @@ void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSVelPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP || (defined BOARD_RID && defined ARCH_stm32f1)
+#if defined BOARD_core || defined BOARD_MHP || defined BOARD_RID
   static uint8_t pkt_size = sizeof(CAN_GNSS_VEL_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSVelPkt";
@@ -1372,7 +1370,7 @@ void BRIDGE_HandleGNSSVelPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP || (defined BOARD_RID && defined ARCH_stm32f1)
+#if defined BOARD_core || defined BOARD_MHP || defined BOARD_RID
   static uint8_t pkt_size = sizeof(CAN_GNSS_HEALTH_2_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSHealth2Pkt";
