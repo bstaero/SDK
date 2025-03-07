@@ -325,7 +325,7 @@ typedef struct _S0Sensors_t {
 } __attribute__ ((packed)) S0Sensors_t;
 
 typedef struct _TelemetryPayload_t {
-	uint32_t system_time;  // [ms]
+	uint32_t system_time;  // [s * 1000]
 	PayloadControl_t node_status;  // status of external payload node
 	uint16_t num_triggers;  // if we are mapping, number of triggers
 	uint8_t percent_complete;  // [%] if we are mapping, percent path complete
