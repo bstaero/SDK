@@ -71,11 +71,11 @@ packet_mapping = {
     PacketTypes.SENSORS_MAG_CALIBRATION.value: ThreeAxisSensorCalibration,
     PacketTypes.SENSORS_MAG_CURRENT_CAL.value: ThreeAxisFirstOrderCorrection,
     PacketTypes.SENSORS_MHP.value: MHP,
-    PacketTypes.SENSORS_MHP.value: MHP9HSensors,
-    PacketTypes.SENSORS_MHP.value: MHP9HTiming,
-    PacketTypes.SENSORS_MHP.value: MHPSensors,
-    PacketTypes.SENSORS_MHP.value: MHPSensorsGNSS,
-    PacketTypes.SENSORS_MHP.value: MHPTiming,
+    PacketTypes.SENSORS_MHP_9H_SENSORS.value: MHP9HSensors,
+    PacketTypes.SENSORS_MHP_9H_TIMING.value: MHP9HTiming,
+    PacketTypes.SENSORS_MHP_GNSS.value: MHPSensorsGNSS,
+    PacketTypes.SENSORS_MHP_SENSORS.value: MHPSensors,
+    PacketTypes.SENSORS_MHP_TIMING.value: MHPTiming,
     PacketTypes.SENSORS_STATIC_PRESSURE.value: Pressure,
     PacketTypes.STATE_ESTIMATOR_PARAM.value: EstimatorParameters,
     PacketTypes.STATE_STATE.value: State,
@@ -132,7 +132,9 @@ mr_mapping = {
 }
 
 vt_mapping = {
+    PacketTypes.ACTUATORS_MIXING_PARAMS.value: vtol.SurfaceMixing,
     PacketTypes.ACTUATORS_ROTOR_PARAMS.value: vtol.RotorParameters,
+    PacketTypes.CONTROL_FILTER_PARAMS.value: vtol.FilterParameters,
     PacketTypes.CONTROL_FLIGHT_PARAMS.value: vtol.FlightControlParameters,
     PacketTypes.MISSION_PARAMETERS.value: vtol.MissionParameters,
     PacketTypes.VEHICLE_LAND_PARAMS.value: vtol.LandingParameters,

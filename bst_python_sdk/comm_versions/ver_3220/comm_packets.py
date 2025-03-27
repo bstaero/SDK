@@ -1146,7 +1146,7 @@ class MHP:
 		return bytearray(buf)
 
 class MHP9HSensors:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_9H_SENSORS']
 	SIZE = 77
 
 	def __init__ (self, system_time = 0.0, error_code = 0,
@@ -1244,7 +1244,7 @@ class MHP9HSensors:
 		return bytearray(buf)
 
 class MHP9HTiming:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_9H_TIMING']
 	SIZE = 64
 
 	def __init__ (self, system_time = 0.0, static_pressure_time = 0.0,
@@ -1325,7 +1325,7 @@ class MHP9HTiming:
 		return bytearray(buf)
 
 class MHPSensors:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_SENSORS']
 	SIZE = 61
 
 	def __init__ (self, system_time = 0.0, error_code = 0, static_pressure = 0.0,
@@ -1423,7 +1423,7 @@ class MHPSensors:
 		return bytearray(buf)
 
 class MHPSensorsGNSS:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_GNSS']
 	SIZE = 60
 
 	def __init__ (self, system_time = 0.0, magnetometer = [None] * 3,
@@ -1529,7 +1529,7 @@ class MHPSensorsGNSS:
 		return bytearray(buf)
 
 class MHPTiming:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_TIMING']
 	SIZE = 48
 
 	def __init__ (self, system_time = 0.0, static_pressure_time = 0.0,
@@ -3075,7 +3075,8 @@ class CommandID (Enum):
 	CMD_ENGINE_KILL=6
 	CMD_FLIGHT_TERMINATE=7
 	CMD_ABORT=8
-	CMD_RID_EMERGENCY=37
+	CMD_RID_EMERGENCY=39
+	CMD_RID_IGNORE=38
 
 	# Navigation
 

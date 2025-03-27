@@ -60,7 +60,7 @@ class CommandID (Enum):
 
 	# Speed
 
-	CMD_SOG=25
+	CMD_SOG=37
 
 class ControlLoop (Enum):
 	CTRL_ANG_TO_RATE=0  # Angle error to rate
