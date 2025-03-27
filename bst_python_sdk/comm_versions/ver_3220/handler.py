@@ -66,6 +66,7 @@ packet_mapping = {
     PacketTypes.SENSORS_GPS.value: GPS,
     PacketTypes.SENSORS_GYROSCOPE.value: ThreeAxisSensor,
     PacketTypes.SENSORS_GYRO_CALIBRATION.value: ThreeAxisSensorCalibration,
+    PacketTypes.SENSORS_HUMIDITY.value: SingleValueSensor,
     PacketTypes.SENSORS_IMU.value: IMU,
     PacketTypes.SENSORS_MAGNETOMETER.value: ThreeAxisSensor,
     PacketTypes.SENSORS_MAG_CALIBRATION.value: ThreeAxisSensorCalibration,
