@@ -6,6 +6,7 @@
 
 // Packet types to parse when quick mode is enabled
 std::unordered_set<int> quick_mode_packets = {
+    1,   // SENSORS_GPS
     16,  // STATE_STATE
     33,  // CONTROL_COMMAND
     81,  // SYSTEM_INITIALIZE
