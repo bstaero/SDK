@@ -77,6 +77,7 @@ packet_mapping = {
     PacketTypes.SENSORS_MHP_GNSS.value: MHPSensorsGNSS,
     PacketTypes.SENSORS_MHP_SENSORS.value: MHPSensors,
     PacketTypes.SENSORS_MHP_TIMING.value: MHPTiming,
+    PacketTypes.SENSORS_PROXIMITY.value: ProximitySensor,
     PacketTypes.SENSORS_STATIC_PRESSURE.value: Pressure,
     PacketTypes.STATE_ESTIMATOR_PARAM.value: EstimatorParameters,
     PacketTypes.STATE_STATE.value: State,
