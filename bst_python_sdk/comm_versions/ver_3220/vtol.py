@@ -98,7 +98,8 @@ class ControlLoop (Enum):
 
 	CTRL_NAV_2_ROLL=14  # no I or D terms
 
-	CTRL_INVALID=15
+	CTRL_IAS_2_VFF=15
+	CTRL_INVALID=16
 
 class TECSMode (Enum):
 	TECS_MODE_OFF=0
