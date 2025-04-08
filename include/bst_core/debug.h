@@ -41,6 +41,7 @@ typedef enum _VerboseLevel_t {
 	VERBOSE_PACKETS,  
 	VERBOSE_ALL_PACKETS,
 	VERBOSE_CAN, 
+	VERBOSE_CUSTOM, 
 	VERBOSE_ALL 
 } VerboseLevel_t;
 

@@ -90,6 +90,10 @@ void pmesg(VerboseLevel_t level, const char* format, ...) {
 				fprintf(stdout, FG_BLUE " [CAN] " FG_RESET);
 				break;
 
+			case VERBOSE_CUSTOM:
+				fprintf(stdout, FG_GRAY " [CUSTOM] " FG_RESET);
+				break;
+
 			case VERBOSE_ALL:
 				fprintf(stdout, FG_GRAY "   [ALL] " FG_RESET);
 				break;

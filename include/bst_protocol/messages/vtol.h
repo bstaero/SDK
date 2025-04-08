@@ -67,6 +67,12 @@ typedef enum {
 	CMD_MOMENT_X=32,
 	CMD_MOMENT_Y=33,
 	CMD_MOMENT_Z=34,
+
+	/* System Commands */
+	CMD_CAPTURE_TRIMS=26,
+
+	/* Speed */
+	CMD_SOG=37,
 }  __attribute__ ((packed)) CommandID_t;
 
 typedef enum {
@@ -81,8 +87,22 @@ typedef enum {
 	CTRL_THRUST,  // PID on thrust
 	CTRL_ENG_2_THROTTLE,  // D is a FF term
 	CTRL_ENG_2_PITCH,  // D is a FF term
+	CTRL_TURNRATE_2_RUD,
+	CTRL_PITCH_2_ELEVATOR,
+	CTRL_ROLL_2_AIL,
+	CTRL_NAV_2_ROLL,  // no I or D terms
+	CTRL_IAS_2_VFF,
 	CTRL_INVALID,
 }  __attribute__ ((packed)) ControlLoop_t;
+
+typedef enum {
+	TECS_MODE_OFF,
+	TECS_MODE_CLIMB,
+	TECS_MODE_ALT_HOLD,
+	TECS_MODE_VRATE,
+	TECS_MODE_LAND,
+	TECS_MODE_FLARE,
+}  __attribute__ ((packed)) TECSMode_t;
 
 typedef struct _FilterParameters_t {
 	float ias_alpha;  // LPF alpha value (0,1]
@@ -121,7 +141,7 @@ typedef struct _FlightControlParameters_t {
 	float nav_lookahead;  // [s]
 	float min_nav_lookahead_dist;  // [m]
 	float wpt_capture_dist;  // [m] radius of circle when to hold position
-	float cruise_speed;  // [m/s] - hover speed (ground speed)
+	float ground_speed;  // [m/s] - hover speed (ground speed)
 	float tuning_ias;  // [m/s]
 	float max_height_error_mode;  // max height to switch to new k_height_tracking: default=20
 	float max_v_error_mode;  // max speed to switch to k_speed_hold: default=3
@@ -131,9 +151,8 @@ typedef struct _FlightControlParameters_t {
 	float k_cruise;  // K-value for altitude hold mode: default=0.5
 	float k_climb;  // K-value for climbout mode: default=1.8
 	float k_speed_hold;  // K-value with large speed error
-	float transition_fwd_rate;  // Rate limit for transitioning forward [deg/s]
-	float transition_fwd_angle;  // Final angle to transition forward [deg]
-	float transition_hover_rate;  // Rate limit for transitioning forward [deg/s]
+	float no_ias_a;
+	float no_ias_b;
 	/* need to adjust param.h if need more space */
 
 #ifdef __cplusplus
@@ -145,7 +164,7 @@ typedef struct _FlightControlParameters_t {
 		nav_lookahead = 0.0;
 		min_nav_lookahead_dist = 0.0;
 		wpt_capture_dist = 0.0;
-		cruise_speed = 0.0;
+		ground_speed = 0.0;
 		tuning_ias = 0.0;
 		max_height_error_mode = 0.0;
 		max_v_error_mode = 0.0;
@@ -155,9 +174,8 @@ typedef struct _FlightControlParameters_t {
 		k_cruise = 0.0;
 		k_climb = 0.0;
 		k_speed_hold = 0.0;
-		transition_fwd_rate = 0.0;
-		transition_fwd_angle = 0.0;
-		transition_hover_rate = 0.0;
+		no_ias_a = 0.0;
+		no_ias_b = 0.0;
 	}
 #endif
 } __attribute__ ((packed)) FlightControlParameters_t;
@@ -191,39 +209,6 @@ typedef struct _LogFlightControl_t {
 	}
 #endif
 } __attribute__ ((packed)) LogFlightControl_t;
-
-/*--------[ Mission ]--------*/
-
-typedef struct _MissionParameters_t {
-	Limit_t altitude;  // [m]
-	Timeout_t comm;
-	float max_range;  // [m] max distance from base station
-	float safe_height;  // [m] min safe altitude for manuevers
-	float flight_time;  // [min] flight time for terminating mission
-	float battery_min;  // [%] min battery percent for terminiating mission
-	uint8_t initialized;  // bitwise field of init systems
-	float mag_dec;  // [rad] magnetic declination at local area
-
-	/* -- */
-	uint8_t unused[16];  // place holder for future parameters
-	/* need to adjust param.h if need more space */
-
-#ifdef __cplusplus
-	_MissionParameters_t() {
-		uint8_t _i;
-
-		max_range = 0.0;
-		safe_height = 0.0;
-		flight_time = 0.0;
-		battery_min = 0.0;
-		initialized = 0;
-		mag_dec = 0.0;
-
-		for (_i = 0; _i < 16; ++_i)
-			unused[_i] = 0;
-	}
-#endif
-} __attribute__ ((packed)) MissionParameters_t;
 
 /*--------[ Rotors ]--------*/
 
@@ -277,7 +262,6 @@ typedef enum {
 	CONTROL_GAINS_INITIALIZED=16,
 	LAUNCH_PARAM_INITIALIZED=32,
 	LANDING_PARAM_INITIALIZED=64,
-	ROTORS_INITIALIZED=128,
 	ESTIMATOR_INITIALIZED=256,
 	FILTERS_INITIALIZED=512,
 	SENSORS_INITIALIZED=1024,
@@ -286,23 +270,53 @@ typedef enum {
 /*--------[ Vehicle ]--------*/
 
 typedef enum {
+	LAND_SPIRAL,
+	LAND_VERTICAL,
+}  __attribute__ ((packed)) LandType_t;
+
+typedef enum {
 	LANDING_INVALID,
 	LANDING_STATUS_ENTER,
 	LANDING_STATUS_TRACKING,
 	LANDING_STATUS_HOLDING,
 	LANDING_STATUS_FINAL,
+	LANDING_STATUS_SHORT,
+	LANDING_STATUS_LONG,
+	LANDING_STATUS_LATERAL,
 	LANDING_STATUS_MANUAL,
 	LANDING_STATUS_COMMITTED,
 }  __attribute__ ((packed)) LandingStatus_t;
+
+typedef enum {
+	LAUNCH_HAND,
+	LAUNCH_BUNGEE,
+	LAUNCH_WINCH,
+	LAUNCH_ROLLING,
+	LAUNCH_CAR,
+	LAUNCH_RAIL,
+	LAUNCH_DROP,
+	LAUNCH_VERTICAL,
+}  __attribute__ ((packed)) LaunchType_t;
 
 typedef struct _LandingParameters_t {
 	float safe_height;  // [m] min safe altitude for manuevers
 	float descend_rate;  // [m/s] descend rate
 	float agl_offset;  // [m] agl sensor offset for landing gear-sensor location
-
+	float ias;  // [m/s]
+	float glide_slope;  // [rad] flight path angle
+	float abort_height;  // [m] altitude for abort orbit
+	float flap_deflection;  // [frac] how much flaps to use
+	float flare_min_pitch;  // [rad] min pitch angle during flare
+	float cross_track_error;  // [m] error at touchdown point
+	float cross_track_angle;  // [rad] total error is error plus angle growth
+	float height_error_bound;  // [m] bound on error for low tracking to generate short abort
+	float abort_trigger_time;  // [s] how long a trigger must exist before an abort
+	float decision_time;  // [s] when to start checking for abort conditions
+	float commit_time;  // [s] time at which plane commits to landing
+	float flare_time;  // [s] when to initiate flare based on time-to-impact
 	/* -- */
-	uint8_t unused[16];  // place holder for future parameters
-	/* need to adjust memory param table if need more space */
+	uint8_t unused[8];  // place holder for future parameters
+	/* need to adjust param.h if need more space */
 
 #ifdef __cplusplus
 	_LandingParameters_t() {
@@ -311,30 +325,54 @@ typedef struct _LandingParameters_t {
 		safe_height = 0.0;
 		descend_rate = 0.0;
 		agl_offset = 0.0;
+		ias = 0.0;
+		glide_slope = 0.0;
+		abort_height = 0.0;
+		flap_deflection = 0.0;
+		flare_min_pitch = 0.0;
+		cross_track_error = 0.0;
+		cross_track_angle = 0.0;
+		height_error_bound = 0.0;
+		abort_trigger_time = 0.0;
+		decision_time = 0.0;
+		commit_time = 0.0;
+		flare_time = 0.0;
 
-		for (_i = 0; _i < 16; ++_i)
+		for (_i = 0; _i < 8; ++_i)
 			unused[_i] = 0;
 	}
 #endif
 } __attribute__ ((packed)) LandingParameters_t;
 
 typedef struct _LaunchParameters_t {
-	/* Climbout */
+	float ias;  // [m/s]
+	float flap_deflection;  // [%]
+	float throttle_delay;  // [s]
+	float throttle_setting;  // [%]
+	float min_pitch;  // [rad]
+	float climbout_angle;  // [rad]
 	float climbout_height;  // [m]
 	float timeout;  // [s] max time in climbout mode
-
+	float elevator_deflection;  // [%] elevator position release
 	/* -- */
-	uint8_t unused[16];  // place holder for future parameters
-	/* need to adjust memory param table if need more space */
+	uint8_t unused[8];  // place holder for future parameters
+	/* need to adjust param.h if need more space */
 
 #ifdef __cplusplus
 	_LaunchParameters_t() {
 		uint8_t _i;
 
+		ias = 0.0;
+		flap_deflection = 0.0;
+		throttle_delay = 0.0;
+		throttle_setting = 0.0;
+		min_pitch = 0.0;
+		climbout_angle = 0.0;
 		climbout_height = 0.0;
 		timeout = 0.0;
+		elevator_deflection = 0.0;
 
-		for (_i = 0; _i < 16; ++_i)
+		for (_i = 0; _i < 8; ++_i)
 			unused[_i] = 0;
 	}
 #endif
@@ -343,6 +381,8 @@ typedef struct _LaunchParameters_t {
 typedef struct _VehicleLimits_t {
 	Limit_t roll_angle;  // [rad] also kept in control loops
 	Limit_t pitch_angle;  // [rad] also kept in control loops
+	Limit_t hover_roll_angle;  // [rad] also kept in control loops
+	Limit_t hover_pitch_angle;  // [rad] also kept in control loops
 	float roll_rate;  // [rad/s]
 	float pitch_rate;  // [rad/s]
 	float yaw_rate;  // [rad/s]
@@ -411,6 +451,41 @@ typedef struct _VehicleParameters_t {
 	}
 #endif
 } __attribute__ ((packed)) VehicleParameters_t;
+
+/*--------[ Mission ]--------*/
+
+typedef struct _MissionParameters_t {
+	Limit_t altitude;  // [m]
+	Timeout_t comm;
+	LaunchType_t launch_type;  // set the type of lauch used
+	LandType_t land_type;  // set the type of landing used
+	float max_range;  // [m] max distance from base station
+	float safe_height;  // [m] min safe altitude for manuevers
+	float flight_time;  // [min] flight time for terminating mission
+	float battery_min;  // [%] min battery percent for terminiating mission
+	uint8_t initialized;  // bitwise field of init systems
+	float mag_dec;  // [rad] magnetic declination at local area
+
+	/* -- */
+	uint8_t unused[16];  // place holder for future parameters
+	/* need to adjust param.h if need more space */
+
+#ifdef __cplusplus
+	_MissionParameters_t() {
+		uint8_t _i;
+
+		max_range = 0.0;
+		safe_height = 0.0;
+		flight_time = 0.0;
+		battery_min = 0.0;
+		initialized = 0;
+		mag_dec = 0.0;
+
+		for (_i = 0; _i < 16; ++_i)
+			unused[_i] = 0;
+	}
+#endif
+} __attribute__ ((packed)) MissionParameters_t;
 
 #ifdef __cplusplus
 } /* namespace vtol */

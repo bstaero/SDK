@@ -217,7 +217,8 @@ void updateAGL(float system_time,
 		float distance); // [m]
 
 void updateProximity(float system_time,
-		float distance); // [m]
+		float distance,  // [m]
+		float velocity); // [m/s]
 
 void updateADSB(float system_time,
 		uint32_t icao_address,
@@ -1710,7 +1711,7 @@ void BRIDGE_HandleAGLPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleProximityPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core && defined IMPLEMENTATION_firmware
+#if defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_Proximity_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleProximityPkt";
@@ -1721,15 +1722,15 @@ void BRIDGE_HandleProximityPkt(uint8_t *byte, uint8_t size)
 
 	//----- packet specific code -----//
 	
-#ifdef VERBOSE
 	CAN_Proximity_t *data = (CAN_Proximity_t *)buffer;
-#endif
-	//updateProximity(getElapsedTime(), data->distance, data->velocity);
+	updateProximity(getElapsedTime(), data->distance, data->velocity);
 	//updateProximity(getElapsedTime(), data->x, data->y, data->z, data->distance);
 
 	// DEBUG - sanity check
+#ifdef VERBOSE
 	pmesg(VERBOSE_CAN, "PROXIMITY: %0.02f s, %0.02f m, %0.02f m/s\n", 
 			data->timestamp, data->distance, data->velocity);
+#endif
 
 	//----- packet specific code -----//
 
@@ -1970,11 +1971,13 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 	CAN_DeploymentTube_t *data = (CAN_DeploymentTube_t *)buffer;
 
 	float t0 = getElapsedTime();
+#if defined(VEHICLE_FIXEDWING)
 	updateDeployTube(t0,
 			data->state,
 			data->parachute_door,
 			data->batt_voltage,
 			data->error);
+#endif
 
 #ifdef VERBOSE
 	// DEBUG - sanity check

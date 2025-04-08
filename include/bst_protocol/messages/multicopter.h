@@ -67,7 +67,7 @@ typedef enum {
 	CMD_MOMENT_Z=34,
 
 	/* Speed */
-	CMD_SOG=25,
+	CMD_SOG=37,
 }  __attribute__ ((packed)) CommandID_t;
 
 typedef enum {

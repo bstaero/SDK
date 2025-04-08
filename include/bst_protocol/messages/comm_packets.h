@@ -193,6 +193,7 @@ typedef enum {
 	SENSORS_ADSB=29,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_MHP_GNSS=30,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_MHP_TIMING=31,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
+	SENSORS_PROXIMITY=58,  // FIXME - TECHNICALLY IN HANDSET ADDR SPACE
 
 	/* STATE */
 	STATE_STATE=16,  // ONLY USED INTERNALLY
@@ -865,6 +866,20 @@ typedef struct _Pressure_t {
 #endif
 } __attribute__ ((packed)) Pressure_t;
 
+typedef struct _ProximitySensor_t {
+	float system_time;
+	float distance;
+	float velocity;
+
+#ifdef __cplusplus
+	_ProximitySensor_t() {
+		system_time = 0.0;
+		distance = 0.0;
+		velocity = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) ProximitySensor_t;
+
 typedef struct _RTCM_t {
 	uint8_t size;
 	uint8_t payload[64];
@@ -1107,6 +1122,7 @@ typedef struct _Sensors_t {
 	SingleValueSensor_t air_temperature;
 	SingleValueSensor_t humidity;
 	SingleValueSensor_t agl;
+	ProximitySensor_t proximity;
 
 #ifdef __cplusplus
 	_Sensors_t() {
@@ -1501,7 +1517,7 @@ typedef enum {
 	CMD_ENGINE_KILL=6,
 	CMD_FLIGHT_TERMINATE=7,
 	CMD_ABORT=8,
-	CMD_RID_EMERGENCY=37,
+	CMD_RID_EMERGENCY=39,
 	CMD_RID_IGNORE=38,
 
 	/* Navigation */

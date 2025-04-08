@@ -126,7 +126,8 @@ void updateAGL(float system_time,
 		float distance) {}
 
 void updateProximity(float system_time,
-		float distance) {}
+		float distance,
+		float velocity) {}
 
 void updateTemperature(float system_time,
 		float temperature) {
@@ -229,6 +230,9 @@ void updateOperatorID(float ts,
 		char operator_id[20]) {}
 
 void handleArmRemoteID(float ts, uint8_t arm_status) {}
+
+void updateSerialNumber(float, char*) {}
+void handleArmRemoteIDErrorMsg(float, char*) {}
 
 void printData() {
 	static bool first_run = true;
