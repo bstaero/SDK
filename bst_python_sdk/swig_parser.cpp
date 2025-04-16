@@ -47,6 +47,7 @@ std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode)
             }
 
             packet.ACTION = buf[i++];
+
             packet.SIZE = buf[i] | (buf[i + 1] << 8);
             i += 2;
 
@@ -81,6 +82,8 @@ std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode)
 
             if (check_fletcher_16(packet_data, buf_len)) {
                 packets.push_back(packet);
+            } else {
+                std::cerr << "Malformed packet: invalid checksum" << std::endl;
             }
         } else {
             i++;
@@ -102,4 +105,3 @@ bool check_fletcher_16(const std::vector<uint8_t>& data, int data_size) {
     uint16_t checksum = (sum2 << 8) | sum1;
     return checksum == 0;
 }
-

@@ -712,7 +712,7 @@ class TelemetryPayload:
 
 		offset = 0
 
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]/ 1000
+		self.system_time = struct.unpack_from('<I',buf,offset)[0]
 		offset = offset + struct.calcsize('<I')
 
 		self.node_status = PayloadControl(struct.unpack_from('<B',buf,offset)[0])
@@ -764,8 +764,6 @@ class PayloadID (Enum):
 	PAYLOAD_LICOR=205
 	PAYLOAD_SPECTROMETER=206
 	PAYLOAD_SBA5=207
-	PAYLOAD_NDVI_SYSTEM=208
-	PAYLOAD_IR_THERMOMETER=209
 
 class NDVI:
 	PACKET_TYPES = ['PAYLOAD_NDVI']

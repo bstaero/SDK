@@ -31,7 +31,7 @@ parser_module = Extension(
 with open("README.md", "r") as readme:
     long_description = readme.read()
 
-setup(
+setup_args = dict(
     name="BSTPythonSDK",
     version="3.22.0.dev7",
     author="Black Swift Technologies",
@@ -41,7 +41,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/bstaero/sdk",
     packages=find_packages(),
-    install_requires=["numpy", "scipy", "netCDF4"],
+    install_requires=["numpy", "scipy", "netCDF4", "lxml"],
     ext_modules=[parser_module],
     cmdclass={"build_ext": SwigBuildExt},
     py_modules=["swig_parser"],
@@ -50,5 +50,17 @@ setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
         "Operating System :: OS Independent",
+    ],
+    ext_modules = [
+        Extension(
+            "bst_python_sdk.swig_parser._swig_parser",
+            sources = ['bst_python_sdk/swig_parser/swig_parser.cpp',
+            'bst_python_sdk/swig_parser/swig_parser.i'],
+            include_dirs = ['bst_python_sdk/swig_parser'],
+            swig_opts = ["-c++", "-I./bst_python_sdk/swig_parser" ],
+            language = "c++",
+        )
     ]
 )
+
+setup(**setup_args)

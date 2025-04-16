@@ -712,7 +712,7 @@ class TelemetryPayload:
 
 		offset = 0
 
-		self.system_time = struct.unpack_from('<I',buf,offset)[0]
+		self.system_time = struct.unpack_from('<I',buf,offset)[0]/ 1000
 		offset = offset + struct.calcsize('<I')
 
 		self.node_status = PayloadControl(struct.unpack_from('<B',buf,offset)[0])

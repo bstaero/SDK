@@ -26,10 +26,14 @@ from .bstpacket import BSTPacket
 from .comm_packets.handler import standard_handler
 from .comm_packets.comm_packets import VehicleType, PacketTypes
 from . import swig_parser
+import copy
 import importlib
 import numpy as np
 import scipy.io as spio
 import os.path
+from .xml_payloads import XMLUserPayload
+
+from .user_payloads.s0_extra_packets import *
 
 pkt = BSTPacket()
 
@@ -44,9 +48,10 @@ gcs_name: str = "SwiftStation"
 unknown_ac: str = "unknown_ac"
 log_suffix: str = '_log_1'
 
+s0_user_payload = S0UserPayload();
 
 class Parser:
-    def __init__(self, has_addr=True, quick_mode=False, verbose=False):
+    def __init__(self, has_addr=True, quick_mode=False, verbose=False, xml_payload_path=''):
         self.has_addr = has_addr
         self.verbose = verbose
         self.quick_mode = quick_mode
@@ -58,6 +63,9 @@ class Parser:
         self.ac_sys_current_time = 0
         self.ac_sys_previous_time = 0
         self.gcs_sys_time = 0
+        self.prev_pkt_time = 0
+
+        self.prev_type = 0
 
         self.comms_rev = 0
 
@@ -66,6 +74,13 @@ class Parser:
             self.current_ac = f'{unknown_ac}{log_suffix}'
 
         self.results = {gcs_name: {}, self.current_ac:{}}
+
+        if len(xml_payload_path) > 0:
+            xml = XMLUserPayloads(xml_payload_path)
+            self.payload_classes = xml.payload_classes
+        else:
+            self.payload_classes = []
+
 
     def reimport_comms(self, new_rev: int):
         print(f'-- Using comms rev: {new_rev}')
@@ -87,7 +102,7 @@ class Parser:
         bst_packets = swig_parser.parse(filename, self.has_addr, self.quick_mode)
 
         for pkt in bst_packets:
-            if (pkt.FROM & 0xFF000000) == 0x41000000:
+            if (pkt.FROM & 0xFF000000) == 0x41000000 or not self.has_addr:
                 # AC packet
                 if self.ac_sys_current_time > self.ac_sys_previous_time:
                     self.ac_sys_previous_time = self.ac_sys_current_time
@@ -95,12 +110,18 @@ class Parser:
                     pkt,
                     self.ac_sys_current_time,
                     self.ac_vehicle_type)
+                self.ac_sys_current_time = max(
+                    self.ac_sys_current_time,
+                    self.ac_sys_previous_time)
             else:
-                # GCS packet
-                parsed_data, self.gcs_sys_time = standard_handler(
-                    pkt,
-                    self.gcs_sys_time,
-                    self.ac_vehicle_type)
+                # GCS packet - TODO: ignore tablet request packets for now
+                if pkt.ACTION != 1:
+                    parsed_data, self.gcs_sys_time = standard_handler(
+                        pkt,
+                        self.gcs_sys_time,
+                        self.ac_vehicle_type)
+                else:
+                    parsed_data = None
 
             if parsed_data is not None:
                 self.add_packet(pkt, parsed_data)
@@ -109,9 +130,40 @@ class Parser:
 
     def add_packet(self, pkt, pkt_data):
         from_aircraft = (pkt.FROM & 0xFF000000) == 0x41000000
+
         is_sys_init = pkt.TYPE == PacketTypes.SYSTEM_INITIALIZE.value
+        is_telem_sys = pkt.TYPE == PacketTypes.TELEMETRY_SYSTEM.value
+        is_telem_ctrl = pkt.TYPE == PacketTypes.TELEMETRY_CONTROL.value
+        is_telem_pos = pkt.TYPE == PacketTypes.TELEMETRY_POSITION.value
+        is_telem_orient = pkt.TYPE == PacketTypes.TELEMETRY_ORIENTATION.value
+        is_telem_pres = pkt.TYPE == PacketTypes.TELEMETRY_PRESSURE.value
+
+        is_pyld_data = pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value and pkt.TYPE <= PacketTypes.PAYLOAD_DATA_CHANNEL_7.value
+
         has_sys_time = hasattr(pkt_data, 'system_time')
-        is_new_sys_time = has_sys_time and pkt_data.system_time < self.ac_sys_previous_time
+
+        if has_sys_time and pkt_data.system_time != 0:
+            self.prev_pkt_time = pkt_data.system_time
+            #print(f'adding system time {self.prev_pkt_time} from {pkt.TYPE}')
+
+        if is_pyld_data and self.comms_rev < 3200:
+            payload_num = pkt.TYPE - PacketTypes.PAYLOAD_DATA_CHANNEL_0.value
+            try:
+                payload_class = self.payload_classes[payload_num]
+                payload_class.parse(bytes(pkt_data.buffer))
+                if payload_class.system_time != 0:
+                    self.prev_pkt_time = payload_class.system_time
+                    #print(f'adding system time {self.prev_pkt_time} from {pkt.TYPE}')
+                pkt_data = copy.deepcopy(payload_class)
+            except BufferError as ErrorMessage:
+                print(ErrorMessage)
+            except IndexError:
+                pass
+
+        if not has_sys_time and is_telem_ctrl or is_telem_sys or is_telem_pos or is_telem_orient or is_telem_pres:
+            pkt_data.system_time = self.prev_pkt_time
+
+        is_new_sys_time = has_sys_time and pkt_data.system_time < self.ac_sys_previous_time and pkt_data.system_time < 1
 
         if is_sys_init:
             sys_init_pkt: SystemInitialize = pkt_data
@@ -120,6 +172,7 @@ class Parser:
 
         if from_aircraft or not self.has_addr:
             if is_new_sys_time:
+                # print(f"new system time - type: {self.prev_type} -> {pkt.TYPE} prev: {self.ac_sys_previous_time} this: {pkt_data.system_time}")
                 # Same aircraft, new log data
                 self.current_ac = self.increment_log_name(self.current_ac)
                 self.ac_sys_previous_time = pkt_data.system_time
@@ -156,6 +209,7 @@ class Parser:
                     prev_sys_init_time = self.sys_init_times[self.current_ac]
 
                 if sys_init_pkt.system_time < prev_sys_init_time:
+                    print(f"new sys init time - type: {pkt.TYPE} prev: {sys_init_pkt.system_time} this: {prev_sys_init_time}")
                     self.current_ac = self.increment_log_name(self.current_ac)
 
                 self.sys_init_times[self.current_ac] = sys_init_pkt.system_time
@@ -172,6 +226,8 @@ class Parser:
             self.results[entry_name][pkt_type.name].append(pkt_data)
         else:
             self.results[entry_name][pkt_type.name] = [pkt_data]
+
+        self.prev_type = pkt.TYPE
 
     def increment_log_name(self, name: str) -> str:
         try:

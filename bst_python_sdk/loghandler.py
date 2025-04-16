@@ -39,6 +39,7 @@ state = type('', (), {})()
 
 command = type('', (), {})()
 waypoint = type('', (), {})()
+last_mapping_waypoint = type('', (), {})()
 payload_trigger = type('', (), {})()
 
 act = type('', (), {})()
@@ -124,6 +125,8 @@ def initialize_variables():
     waypoint.radius = []
     waypoint.action = []
 
+    last_mapping_waypoint.num = []
+
     payload_trigger.system_time = []
     payload_trigger.latitude = []
     payload_trigger.longitude = []
@@ -138,7 +141,7 @@ def initialize_variables():
 def standard_handler(pkt):
     global gps, acc, gyr, mag, dyn_p, stat_p
     global state
-    global command, sensor_cal, waypoint, payload_trigger
+    global command, sensor_cal, waypoint, last_mapping_waypoint, payload_trigger
     global sys_status
     global act
     global last_system_time
@@ -234,6 +237,12 @@ def standard_handler(pkt):
 
     # -----[ WAYPOINTS ]-----%
     if pkt.TYPE is PacketTypes.FLIGHT_PLAN_WAYPOINT:
+        try:
+            last_mapping_waypoint.num.append(struct.unpack_from('<B',pkt.DATA,0)[0])
+        except BufferError as ErrorMessage:
+            print(ErrorMessage)
+
+    if pkt.TYPE is PacketTypes.LAST_MAPPING_WAYPOINT:
         temp_struct = Waypoint()
         try:
             temp_struct.parse(pkt.DATA)

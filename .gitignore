@@ -30,3 +30,4 @@ dist/
 # SWIG output
 *.cxx
 swig_parser.py
+*eggs*
