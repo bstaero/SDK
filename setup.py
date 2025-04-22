@@ -51,16 +51,6 @@ setup_args = dict(
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
         "Operating System :: OS Independent",
     ],
-    ext_modules = [
-        Extension(
-            "bst_python_sdk.swig_parser._swig_parser",
-            sources = ['bst_python_sdk/swig_parser/swig_parser.cpp',
-            'bst_python_sdk/swig_parser/swig_parser.i'],
-            include_dirs = ['bst_python_sdk/swig_parser'],
-            swig_opts = ["-c++", "-I./bst_python_sdk/swig_parser" ],
-            language = "c++",
-        )
-    ]
 )
 
 setup(**setup_args)
