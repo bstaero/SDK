@@ -33,7 +33,7 @@ with open("README.md", "r") as readme:
 
 setup_args = dict(
     name="BSTPythonSDK",
-    version="3.22.0.dev9",
+    version="3.22.0.dev12",
     author="Black Swift Technologies",
     author_email="ben.busby@blackswifttech.com",
     description="BST Flight Management SDK",
@@ -41,7 +41,7 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     url="https://github.com/bstaero/sdk",
     packages=find_packages(),
-    install_requires=["numpy", "scipy", "netCDF4", "lxml"],
+    install_requires=["numpy", "scipy", "h5netcdf", "lxml"],
     ext_modules=[parser_module],
     cmdclass={"build_ext": SwigBuildExt},
     py_modules=["swig_parser"],

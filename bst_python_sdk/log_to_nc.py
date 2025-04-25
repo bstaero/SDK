@@ -5,7 +5,7 @@ from .logparse import Parser
 from enum import Enum
 import inspect
 
-from netCDF4 import Dataset
+import h5netcdf.legacyapi as netCDF4
 
 type_conv = {int: 'i8', float: 'f8'}
 
@@ -51,7 +51,7 @@ def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
     log_name = '.'.join(filename.split('.')[:-1])
     nc_name = f'{log_name}_{ac_name}.nc'
     nc_name = f'{out_dir}/{nc_name.split("/")[-1]}'
-    root_grp = Dataset(nc_name, 'w', format='NETCDF4')
+    root_grp = netCDF4.Dataset(nc_name, 'w')
 
     for pkt_type, pkts in parsed_log.items():
         print(f'Adding {pkt_type}...')
