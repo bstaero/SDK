@@ -31,6 +31,8 @@
 using namespace bst::comms::canpackets;
 #endif
 
+uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size);
+
 #if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32L431xx
   #include "helper_functions.h"
   #include "simulated_can.h"
@@ -59,7 +61,6 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
 	uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
 		return simulatedCANWrite(p, id, data, size);
 	}
-
 #endif
 
 #if defined ARCH_stm32f4 || defined IMPLEMENTATION_xplane // FIXME -- remove
@@ -528,9 +529,14 @@ void BRIDGE_HandleReceiverPkt(uint8_t *byte, uint8_t size)
 	if(!can_pwm_in) can_pwm_in = 1u;
 
 	CAN_Receiver_t *data = (CAN_Receiver_t *)buffer;
+	uint16_t usec[16];  // [usec]
+
+	uint8_t i;
+	for(i=0; i<16; i++)
+		usec[i] = data->usec[i];
 
 	float t0 = getElapsedTime();
-	updatePWMIn(t0, data->usec);
+	updatePWMIn(t0, usec);
 #ifndef ARCH_stm32f1
 	pwm_in_count++;
 #endif
@@ -729,7 +735,13 @@ void BRIDGE_HandleMHPRawPkt(uint8_t *byte,uint8_t size) {
 
 	float t0 = getElapsedTime();
 
-	updateMHPRaw(t0, data->differential_pressure);
+	float differential_pressure[5];  // [Pa]
+
+	uint8_t i;
+	for(i=0; i<5; i++)
+		differential_pressure[i] = data->differential_pressure[i];
+
+	updateMHPRaw(t0, differential_pressure);
 
 	pmesg(VERBOSE_CAN, "MHP RAW: <%+.1f, %+.1f, %+.1f, %+.1f, %+.1f> [Pa]\n",
 			data->differential_pressure[0],
@@ -1017,8 +1029,13 @@ void BRIDGE_HandleOrientationPkt(uint8_t *byte,uint8_t size) {
 	data = (CAN_Orientation_t *)buffer;
 
 	float t0 = getElapsedTime();
+	float q[4];
 
-	updateOrientation(t0, data->q);
+	uint8_t i;
+	for(i=0; i<4; i++)
+		q[i] = data->q[i];
+
+	updateOrientation(t0, q);
 
 	pmesg(VERBOSE_CAN, "ORIENTATION : <%+.1f, %+.1f, %+.1f, %+.1f>\n",
 			data->q[0] , data->q[1], data->q[2], data->q[3]);
@@ -1731,7 +1748,6 @@ void BRIDGE_HandleProximityPkt(uint8_t *byte, uint8_t size)
 	pmesg(VERBOSE_CAN, "PROXIMITY: %0.02f s, %0.02f m, %0.02f m/s\n", 
 			data->timestamp, data->distance, data->velocity);
 #endif
-
 	//----- packet specific code -----//
 
 	BRIDGE_BUFFER_CONCLUSION
@@ -1958,6 +1974,7 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte, uint8_t size)
 void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 {
 #if defined BOARD_core
+#if defined(VEHICLE_FIXEDWING)
 	static uint8_t pkt_size = sizeof(CAN_DeploymentTube_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleDeplyTubePkt";
@@ -1971,13 +1988,11 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 	CAN_DeploymentTube_t *data = (CAN_DeploymentTube_t *)buffer;
 
 	float t0 = getElapsedTime();
-#if defined(VEHICLE_FIXEDWING)
 	updateDeployTube(t0,
 			data->state,
 			data->parachute_door,
 			data->batt_voltage,
 			data->error);
-#endif
 
 #ifdef VERBOSE
 	// DEBUG - sanity check
@@ -2009,6 +2024,7 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 	//----- packet specific code -----//
 
 	BRIDGE_BUFFER_CONCLUSION
+#endif
 #endif
 }
 
@@ -2206,7 +2222,7 @@ uint8_t BRIDGE_SendReceiverPkt(uint8_t p, uint8_t num_channels, uint16_t *usec)
 
 	//uint8_t tries = 0;
 	//while(!CAN_Write(p, CAN_PKT_RECEIVER, &data, sizeof(CAN_Receiver_t)) && tries++ < 20) Delay(100);
-	return CAN_Write(p, CAN_PKT_RECEIVER, &data, sizeof(CAN_Receiver_t)) == sizeof(CAN_Receiver_t);
+	return (uint8_t)(CAN_Write(p, CAN_PKT_RECEIVER, &data, sizeof(CAN_Receiver_t)) == sizeof(CAN_Receiver_t));
 }
 
 /**
@@ -2228,7 +2244,7 @@ uint8_t BRIDGE_SendPressurePkt(uint8_t p, float pressureSta, float pressureDyn, 
 	data.temp = temp;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Pressure_t));
 
-	return CAN_Write(p, CAN_PKT_PRESSURE, &data, sizeof(CAN_Pressure_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_PRESSURE, &data, sizeof(CAN_Pressure_t)) == sizeof(CAN_Pressure_t));
 }
 
 /**
@@ -2255,7 +2271,7 @@ uint8_t BRIDGE_SendAirDataPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_AirData_t));
 
-	return CAN_Write(p, CAN_PKT_AIR_DATA, &data, sizeof(CAN_AirData_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_AIR_DATA, &data, sizeof(CAN_AirData_t)) == sizeof(CAN_AirData_t));
 }
 
 /**
@@ -2316,7 +2332,7 @@ uint8_t BRIDGE_SendMHPPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_MHP_t));
 
-	return CAN_Write(p, CAN_PKT_MHP, &data, sizeof(CAN_MHP_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_MHP, &data, sizeof(CAN_MHP_t)) == sizeof(CAN_MHP_t));
 }
 
 /**
@@ -2341,7 +2357,7 @@ uint8_t BRIDGE_SendWindPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Wind_t));
 
-	return CAN_Write(p, CAN_PKT_WIND, &data, sizeof(CAN_Wind_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_WIND, &data, sizeof(CAN_Wind_t)) == sizeof(CAN_Wind_t));
 }
 
 /**
@@ -2374,7 +2390,7 @@ uint8_t BRIDGE_SendIMUPkt(uint8_t p, float ax, float ay, float az, float gx, flo
 	data.temp = temp;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_IMU_t));
 
-	return CAN_Write(p, CAN_PKT_IMU, &data, sizeof(CAN_IMU_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_IMU, &data, sizeof(CAN_IMU_t)) == sizeof(CAN_IMU_t));
 }
 
 /**
@@ -2398,7 +2414,7 @@ uint8_t BRIDGE_SendAccelPkt(uint8_t p, float ax, float ay, float az, float temp)
 	data.temp = temp;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Accelerometer_t));
 
-	return CAN_Write(p, CAN_PKT_ACCEL, &data, sizeof(CAN_Accelerometer_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_ACCEL, &data, sizeof(CAN_Accelerometer_t)) == sizeof(CAN_Accelerometer_t));
 }
 
 /**
@@ -2422,7 +2438,7 @@ uint8_t BRIDGE_SendGyroPkt(uint8_t p, float gx, float gy, float gz, float temp)
 	data.temp = temp;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Gyroscope_t));
 
-	return CAN_Write(p, CAN_PKT_GYRO, &data, sizeof(CAN_Gyroscope_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GYRO, &data, sizeof(CAN_Gyroscope_t)) == sizeof(CAN_Gyroscope_t));
 }
 
 /**
@@ -2459,7 +2475,7 @@ uint8_t BRIDGE_SendMagPkt_ID(uint8_t p, uint8_t node_id, float mx, float my, flo
 
 	uint32_t id = ((uint32_t)node_id << 8) | (uint32_t)CAN_PKT_MAG;
 
-	return CAN_Write(p, id, &data, sizeof(CAN_Magnetometer_t));
+	return (uint8_t)(CAN_Write(p, id, &data, sizeof(CAN_Magnetometer_t)) == sizeof(CAN_Magnetometer_t));
 }
 
 /**
@@ -2482,7 +2498,7 @@ uint8_t BRIDGE_SendActuatorPkt(uint8_t p, uint16_t *usec)
 
 	//uint8_t tries = 0;
 	//while(!CAN_Write(p, CAN_PKT_ACTUATOR, &data, sizeof(CAN_Actuator_t)) && tries++ < 20) Delay(100);
-	return CAN_Write(p, CAN_PKT_ACTUATOR, &data, sizeof(CAN_Actuator_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_ACTUATOR, &data, sizeof(CAN_Actuator_t)) == sizeof(CAN_Actuator_t));
 #if defined ARCH_stm32f4
 	if(UART_HWIL > 0)
 		simulatedCANWrite(p, CAN_PKT_ACTUATOR, &data, sizeof(CAN_Actuator_t));
@@ -2535,7 +2551,7 @@ uint8_t BRIDGE_SendGNSSPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_GNSS_t));
 
-	return CAN_Write(p, CAN_PKT_GNSS, &data, sizeof(CAN_GNSS_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GNSS, &data, sizeof(CAN_GNSS_t)) == sizeof(CAN_GNSS_t));
 }
 
 uint8_t BRIDGE_SendGNSSUTCWPkt(uint8_t p, 
@@ -2552,7 +2568,7 @@ uint8_t BRIDGE_SendGNSSUTCWPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_GNSS_UTC_W_t));
 
-	return CAN_Write(p, CAN_PKT_GNSS_UTC_W, &data, sizeof(CAN_GNSS_UTC_W_t)) == sizeof(CAN_GNSS_UTC_W_t);
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GNSS_UTC_W, &data, sizeof(CAN_GNSS_UTC_W_t)) == sizeof(CAN_GNSS_UTC_W_t));
 }
 
 uint8_t BRIDGE_SendGNSSLLAPkt(uint8_t p, 
@@ -2567,7 +2583,7 @@ uint8_t BRIDGE_SendGNSSLLAPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_GNSS_LLA_t));
 
-	return CAN_Write(p, CAN_PKT_GNSS_LLA, &data, sizeof(CAN_GNSS_LLA_t)) == sizeof(CAN_GNSS_LLA_t);
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GNSS_LLA, &data, sizeof(CAN_GNSS_LLA_t)) == sizeof(CAN_GNSS_LLA_t));
 }
 
 uint8_t BRIDGE_SendGNSSVelPkt(uint8_t p, 
@@ -2586,7 +2602,7 @@ uint8_t BRIDGE_SendGNSSVelPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_GNSS_VEL_t));
 
-	return CAN_Write(p, CAN_PKT_GNSS_VEL, &data, sizeof(CAN_GNSS_VEL_t)) == sizeof(CAN_GNSS_VEL_t);
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GNSS_VEL, &data, sizeof(CAN_GNSS_VEL_t)) == sizeof(CAN_GNSS_VEL_t));
 }
 
 uint8_t BRIDGE_SendGNSSHealthPkt(uint8_t p, 
@@ -2601,7 +2617,7 @@ uint8_t BRIDGE_SendGNSSHealthPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_GNSS_HEALTH_2_t));
 
-	return CAN_Write(p, CAN_PKT_GNSS_HEALTH_2, &data, sizeof(CAN_GNSS_HEALTH_2_t)) == sizeof(CAN_GNSS_HEALTH_2_t);
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GNSS_HEALTH_2, &data, sizeof(CAN_GNSS_HEALTH_2_t)) == sizeof(CAN_GNSS_HEALTH_2_t));
 }
 
 uint8_t BRIDGE_SendGNSSRTCMPkt(uint8_t p, uint8_t size, uint8_t * payload) {
@@ -2614,7 +2630,7 @@ uint8_t BRIDGE_SendGNSSRTCMPkt(uint8_t p, uint8_t size, uint8_t * payload) {
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_GNSS_RTCM_t));
 
-	return CAN_Write(p, CAN_PKT_GNSS_RTCM, &data, sizeof(CAN_GNSS_RTCM_t)) == sizeof(CAN_GNSS_RTCM_t);
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GNSS_RTCM, &data, sizeof(CAN_GNSS_RTCM_t)) == sizeof(CAN_GNSS_RTCM_t));
 }
 
 uint8_t BRIDGE_SendGNSSSVINPkt(uint8_t p,
@@ -2636,7 +2652,7 @@ uint8_t BRIDGE_SendGNSSSVINPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_GNSS_SVIN_t));
 
-	return CAN_Write(p, CAN_PKT_GNSS_SVIN, &data, sizeof(CAN_GNSS_SVIN_t)) == sizeof(CAN_GNSS_SVIN_t);
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GNSS_SVIN, &data, sizeof(CAN_GNSS_SVIN_t)) == sizeof(CAN_GNSS_SVIN_t));
 }
 
 
@@ -2659,7 +2675,7 @@ uint8_t BRIDGE_SendSupplyPkt(uint8_t p, float voltage, float current, float coul
 	data.temperature = temperature; // [deg C]
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Supply_t));
 
-	return CAN_Write(p, CAN_PKT_SUPPLY, &data, sizeof(CAN_Supply_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_SUPPLY, &data, sizeof(CAN_Supply_t)) == sizeof(CAN_Supply_t));
 }
 
 typedef struct _CAN_Supply_Old_t {
@@ -2690,7 +2706,7 @@ uint8_t BRIDGE_SendSupplyPkt_Old(uint8_t p, uint16_t voltage, uint16_t current)
 	data.current = current; // [mA]
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Supply_Old_t));
 
-	return CAN_Write(p, CAN_PKT_SUPPLY, &data, sizeof(CAN_Supply_Old_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_SUPPLY, &data, sizeof(CAN_Supply_Old_t)) == sizeof(CAN_Supply_Old_t));
 }
 
 /**
@@ -2714,7 +2730,7 @@ uint8_t BRIDGE_SendNDVIPkt(uint8_t p, uint8_t id, float red, float near_ir, floa
 	data.ir_object = ir_object; // [deg C]
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_NDVI_t));
 
-	return CAN_Write(p, CAN_PKT_NDVI, &data, sizeof(CAN_NDVI_t)); // FIXME -- sending with same ID up and down packets will screw up reconstruction
+	return (uint8_t)(CAN_Write(p, CAN_PKT_NDVI, &data, sizeof(CAN_NDVI_t)) == sizeof(CAN_NDVI_t)); // FIXME -- sending with same ID up and down packets will screw up reconstruction
 }
 
 /**
@@ -2735,7 +2751,7 @@ uint8_t BRIDGE_SendAGLPkt(uint8_t p, float *ts, float *distance, float *velocity
 	data.velocity = *velocity; // [m/s]
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_AGL_t));
 
-	return CAN_Write(p, CAN_PKT_AGL, &data, sizeof(CAN_AGL_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_AGL, &data, sizeof(CAN_AGL_t)) == sizeof(CAN_AGL_t));
 }
 
 /**
@@ -2756,7 +2772,7 @@ uint8_t BRIDGE_SendProximityPkt(uint8_t p, float ts, float distance, float veloc
 	data.velocity = velocity; // [m/s]
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Proximity_t));
 
-	return CAN_Write(p, CAN_PKT_PROXIMITY, &data, sizeof(CAN_Proximity_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_PROXIMITY, &data, sizeof(CAN_Proximity_t)) == sizeof(CAN_Proximity_t));
 }
 
 uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
@@ -2794,7 +2810,7 @@ uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
 	data.squawk = squawk;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_ADSB_t));
 
-	return CAN_Write(p, CAN_PKT_ADSB, &data, sizeof(CAN_ADSB_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_ADSB, &data, sizeof(CAN_ADSB_t)) == sizeof(CAN_ADSB_t));
 }
 
 uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
@@ -2809,7 +2825,7 @@ uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
 	data.channel = channel;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Trigger_t));
 
-	return CAN_Write(p, CAN_PKT_TRIGGER, &data, sizeof(CAN_Trigger_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_TRIGGER, &data, sizeof(CAN_Trigger_t)) == sizeof(CAN_Trigger_t));
 }
 
 
@@ -2829,7 +2845,7 @@ uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
 	data.error = (CAN_DeploymentTubeErrors_t)error;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTube_t));
 
-	return CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE, &data, sizeof(CAN_DeploymentTube_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE, &data, sizeof(CAN_DeploymentTube_t)) == sizeof(CAN_DeploymentTube_t));
 }
 
 
@@ -2845,7 +2861,7 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 	data.value = value;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTubeCommand_t));
 
-	return CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE_CMD, &data, sizeof(CAN_DeploymentTubeCommand_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE_CMD, &data, sizeof(CAN_DeploymentTubeCommand_t)) == sizeof(CAN_DeploymentTubeCommand_t));
 }
 
 uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
@@ -2858,7 +2874,7 @@ uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
 	data.armed = armed;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_ArmRemoteID_t));
 
-	return CAN_Write(p, CAN_PKT_ARM_RID, &data, sizeof(CAN_ArmRemoteID_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_ARM_RID, &data, sizeof(CAN_ArmRemoteID_t)) == sizeof(CAN_ArmRemoteID_t));
 }
 
 uint8_t BRIDGE_SendArmRemoteIDErrorMsg(uint8_t p,
@@ -2871,7 +2887,7 @@ uint8_t BRIDGE_SendArmRemoteIDErrorMsg(uint8_t p,
 	memcpy(data.error_message,error,50);
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_RemoteIDErrorMessage_t));
 
-	return CAN_Write(p, CAN_PKT_REMOTE_ID_ERROR_MSG, &data, sizeof(CAN_RemoteIDErrorMessage_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_REMOTE_ID_ERROR_MSG, &data, sizeof(CAN_RemoteIDErrorMessage_t)) == sizeof(CAN_RemoteIDErrorMessage_t));
 }
 
 uint8_t BRIDGE_SendGCSLocation(uint8_t p,
@@ -2888,7 +2904,7 @@ uint8_t BRIDGE_SendGCSLocation(uint8_t p,
 	data.altitude = altitude;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_GCSLocation_t));
 
-	return CAN_Write(p, CAN_PKT_GCS_LOCATION, &data, sizeof(CAN_GCSLocation_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_GCS_LOCATION, &data, sizeof(CAN_GCSLocation_t)) == sizeof(CAN_GCSLocation_t));
 }
 
 uint8_t BRIDGE_SendRIDPacket(uint8_t p,
@@ -2907,7 +2923,7 @@ uint8_t BRIDGE_SendRIDPacket(uint8_t p,
 	data.autopilot_type = autopilot_type;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_RemoteID_t));
 
-	return CAN_Write(p, CAN_PKT_REMOTE_ID, &data, sizeof(CAN_RemoteID_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_REMOTE_ID, &data, sizeof(CAN_RemoteID_t)) == sizeof(CAN_RemoteID_t));
 }
 
 uint8_t BRIDGE_SendSerialNumber(uint8_t p,
@@ -2920,7 +2936,7 @@ uint8_t BRIDGE_SendSerialNumber(uint8_t p,
 	memcpy(data.serial_number,serial_number,20);
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_SerialNumber_t));
 
-	return CAN_Write(p, CAN_PKT_SERIAL_ID, &data, sizeof(CAN_SerialNumber_t));
+	return (uint8_t)(CAN_Write(p, CAN_PKT_SERIAL_ID, &data, sizeof(CAN_SerialNumber_t)) == sizeof(CAN_SerialNumber_t));
 }
 
 
