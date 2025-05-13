@@ -129,6 +129,7 @@ class Parser:
         return self.results
 
     def add_packet(self, pkt, pkt_data):
+        # TODO: Need to refactor this and/or move parsing to swig code
         from_aircraft = (pkt.FROM & 0xFF000000) == 0x41000000
 
         is_sys_init = pkt.TYPE == PacketTypes.SYSTEM_INITIALIZE.value
@@ -138,7 +139,11 @@ class Parser:
         is_telem_orient = pkt.TYPE == PacketTypes.TELEMETRY_ORIENTATION.value
         is_telem_pres = pkt.TYPE == PacketTypes.TELEMETRY_PRESSURE.value
 
-        is_pyld_data = pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value and pkt.TYPE <= PacketTypes.PAYLOAD_DATA_CHANNEL_7.value
+        is_pyld_data = (
+            self.comms_rev > 3140 and
+            pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value and
+            pkt.TYPE <= PacketTypes.PAYLOAD_DATA_CHANNEL_7.value
+        )
 
         has_sys_time = hasattr(pkt_data, 'system_time')
 
