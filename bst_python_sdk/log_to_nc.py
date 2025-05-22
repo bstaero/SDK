@@ -112,3 +112,6 @@ def add_primitive_to_nc(field, field_type, pkt_grp, pkts):
     group_var = pkt_grp.createVariable(field, nc_type, ('packets',))
     group_var[:] = [read_var(pkt, field) for pkt in pkts]
 
+
+if __name__ == "__main__":
+    convert_to_nc(sys.argv[1])
