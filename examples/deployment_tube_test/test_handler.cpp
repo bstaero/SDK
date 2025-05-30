@@ -200,6 +200,12 @@ void updateDeployTube(float system_time,
 	new_deployment_tube_data = 1;
 }
 
+void updateProximity(float, float, float) {}
+void updateOperatorID(float, char*) {}
+void updateSerialNumber(float, char*) {}
+void handleArmRemoteID(float, unsigned char) {}
+void handleArmRemoteIDErrorMsg(float, char*) {}
+
 void handleDeployTubeCmd(float system_time,
 		uint8_t id,
 		float value) {}

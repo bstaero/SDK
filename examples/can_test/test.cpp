@@ -202,7 +202,7 @@ void updateTest() {
 				actuators[i] = 1500;
 		} else {
 			if(i < 6)
-				actuators[i] = 1200;
+				actuators[i] = 1000;
 			else
 				actuators[i] = 1000;
 		}
