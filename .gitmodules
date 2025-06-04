@@ -1,0 +1,3 @@
+[submodule "examples/black-swift-tech-adonis"]
+	path = examples/black-swift-tech-adonis
+	url = git@gitlab.com:umex/black-swift-tech-adonis.git
