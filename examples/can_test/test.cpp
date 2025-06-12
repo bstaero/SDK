@@ -33,6 +33,7 @@
 
 // variables
 volatile bool display_telemetry = false;
+volatile bool send_actuators = false;
 volatile bool write_file = false;
 
 bool show_gps = false;
@@ -145,6 +146,7 @@ void updateTest() {
 					break;
 
 				case 'T':
+					if(!send_actuators) send_actuators = true;
 					if(!is_triggering) {
 						is_triggering = 15;
 						trigger_time = getElapsedTime();
@@ -167,6 +169,7 @@ void updateTest() {
 				case '7':
 				case '8':
 				case '9':
+					if(!send_actuators) send_actuators = true;
 					if(!is_triggering) {
 						printf("Triggerging channel %u\n",input - '0');
 						is_triggering = input - '0';
@@ -227,7 +230,8 @@ void updateTest() {
 		printf(" [%u] \n", is_triggering);
 	}
 
-	BRIDGE_SendActuatorPkt(1,actuators);
+	if(send_actuators)
+		BRIDGE_SendActuatorPkt(1,actuators);
 
 }
 

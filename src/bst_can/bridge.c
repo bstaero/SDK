@@ -40,8 +40,8 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size);
 
 #include "debug.h"
 
-#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32H743xx || defined STM32L431xx
-  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx && ! defined STM32L431xx
+#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32H743xx || defined STM32L431xx || defined STM32L496xx
+  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx && ! defined STM32L431xx && ! defined STM32L496xx
     #include "can.h"
     #include "led.h" // DEBUG
   #else
@@ -628,7 +628,7 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 
 	float t0 = getElapsedTime();
 
-#if !defined BOARD_MHP
+#if !defined BOARD_MHP || !defined SEPARATE_AIRDATA
 	if(data->static_pressure > -FLT_MAX) {
 		updateStaticPressure(t0, data->static_pressure, data->air_temperature);
 	}
@@ -1059,7 +1059,7 @@ static camera_triggered = 0u;
 #endif
 void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 {
-#if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK || defined _SP_MULTI_ACTUATOR
+#if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK || defined _SP_MULTI_ACTUATOR || defined BOARD_PSNS
 	static uint8_t pkt_size = sizeof(CAN_Actuator_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleActuatorPkt";
