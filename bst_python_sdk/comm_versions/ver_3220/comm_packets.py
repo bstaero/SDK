@@ -4009,7 +4009,7 @@ class TelemetrySystem:
 		self.batt_current = struct.unpack_from('<h',buf,offset)[0]/ 100
 		offset = offset + struct.calcsize('<h')
 
-		self.batt_watt_hours = struct.unpack_from('<H',buf,offset)[0]
+		self.batt_watt_hours = struct.unpack_from('<H',buf,offset)[0]/ 10
 		offset = offset + struct.calcsize('<H')
 
 		self.batt_percent = struct.unpack_from('<H',buf,offset)[0]/ 100

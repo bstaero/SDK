@@ -642,7 +642,7 @@ class S0Sensors:
 			self.dynamic_pressure.append(struct.unpack_from('<h',buf,offset)[0]/ 10)
 			offset = offset+struct.calcsize('<h')
 
-		self.air_temperature = struct.unpack_from('<h',buf,offset)[0]/ 10
+		self.air_temperature = struct.unpack_from('<h',buf,offset)[0]/ 100
 		offset = offset + struct.calcsize('<h')
 
 		self.humidity = struct.unpack_from('<H',buf,offset)[0]/ 100
