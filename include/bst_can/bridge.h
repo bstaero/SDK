@@ -176,6 +176,10 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 		uint8_t id,
 		float value);
 
+uint8_t BRIDGE_SendCommandPkt(uint8_t p,
+		uint8_t id,
+		float value);
+
 uint8_t BRIDGE_SendRIDPacket(uint8_t p,
 		uint8_t aircraft_type,
 		uint8_t base_mode,
