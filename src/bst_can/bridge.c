@@ -84,6 +84,8 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
   #endif
 #endif
 
+  //#include "main.h"
+
 #if defined IMPLEMENTATION_swil || defined IMPLEMENTATION_xplane
 extern uint8_t p_new_gps_data;
 #endif
@@ -284,6 +286,8 @@ void handleDeployTubeCmd(float ts, uint8_t id, float value);
 void handleArmRemoteID(float ts, uint8_t arm_status);
 void handleArmRemoteIDErrorMsg(float ts, char error[50]);
 
+void handleControlCmd(float ts, uint8_t id, float value);
+
 
 
 /** @addtogroup Low_Level
@@ -418,6 +422,8 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size);
 
+void BRIDGE_HandleControlCmd(uint8_t *byte,uint8_t size);
+
 void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size);
@@ -497,6 +503,7 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_TRIGGER:    BRIDGE_HandleTriggerPkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE:    BRIDGE_HandleDeplyTubePkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE_CMD:    BRIDGE_HandleDeplyTubeCmdPkt(data,size); break;
+		case CAN_PKT_COMMAND:    BRIDGE_HandleControlCmd(data,size); break;
 
 		case CAN_PKT_REMOTE_ID:  BRIDGE_HandleRIDPacket(data, size); break;
 		case CAN_PKT_GCS_LOCATION: BRIDGE_HandleGCSLocation(data, size); break;
@@ -610,7 +617,7 @@ void BRIDGE_HandlePressurePkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_RID
+#if defined BOARD_core || defined BOARD_RID || defined STANDALONE_BUILD
 	static uint8_t pkt_size = sizeof(CAN_AirData_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleAirDataPkt";
@@ -628,7 +635,7 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 
 	float t0 = getElapsedTime();
 
-#if !defined BOARD_MHP || !defined SEPARATE_AIRDATA
+#if !defined BOARD_MHP && !defined SEPARATE_AIRDATA && !defined STANDALONE_BUILD
 	if(data->static_pressure > -FLT_MAX) {
 		updateStaticPressure(t0, data->static_pressure, data->air_temperature);
 	}
@@ -649,6 +656,7 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 			data->air_temperature,
 			data->humidity);
 #endif
+
 
 	pmesg(VERBOSE_CAN, "AIR DATA: %+.5f [Pa], %+.5f [Pa], %+.2f [deg C] %.1f [%]\n\r", 
 			data->static_pressure, data->dynamic_pressure, data->air_temperature, data->humidity);
@@ -1069,6 +1077,10 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 	BRIDGE_BUFFER_PREAMBLE
 
 	//----- packet specific code -----//
+	//
+#if defined _SP_RECEIVER || defined _SP_FUTABA
+	last_actuator_command = GetTime();
+#endif
 	
 	CAN_Actuator_t *data;
 	data = (CAN_Actuator_t *)buffer;
@@ -1166,9 +1178,6 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 	BRIDGE_BUFFER_CONCLUSION
 
 //#endif
-#if defined _SP_RECEIVER || defined _SP_FUTABA
-	last_actuator_command = GetTimeU();
-#endif
 #endif
 }
 
@@ -1293,8 +1302,8 @@ void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 	
 	updateGPSUTCValues(t0, data->week, data->hours, data->minutes, data->seconds);
 
-	pmesg(VERBOSE_CAN, "GNSS: %02d:%02d:%02.1f\n\r",
-			data->hours, data->minutes, data->seconds);
+	pmesg(VERBOSE_CAN, "GNSS: %02d | %02d:%02d:%02.1f\n\r",
+			data->week, data->hours, data->minutes, data->seconds);
 
 	//----- packet specific code -----//
 
@@ -1409,7 +1418,7 @@ void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte, uint8_t size)
 	
 	updateGPSHealthValues(t0, data->pdop, data->satellites, data->fix_type);
 
-	pmesg(VERBOSE_CAN, "GNSS: %+.1f %d\n\r", data->pdop, data->satellites);
+	pmesg(VERBOSE_CAN, "GNSS: %d | %+.1f %d\n\r", data->fix_type, data->pdop, data->satellites);
 
 	//----- packet specific code -----//
 
@@ -1532,7 +1541,7 @@ void BRIDGE_HandleGNSSSVINPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleSupplyPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core
+#if defined BOARD_core || defined STANDALONE_BUILD
 	static uint8_t pkt_size = sizeof(CAN_Supply_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleSupplyPkt";
@@ -1973,7 +1982,7 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte, uint8_t size)
 
 void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 {
-#if defined BOARD_core
+#if defined BOARD_core || defined BOARD_PSNS
 #if defined(VEHICLE_FIXEDWING)
 	static uint8_t pkt_size = sizeof(CAN_DeploymentTube_t);
 #ifdef DEBUG
@@ -2030,7 +2039,7 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 
 void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size)
 {
-#if defined BOARD_DEPLOYMENT
+#if defined BOARD_DEPLOYMENT || defined BOARD_PSNS
 	static uint8_t pkt_size = sizeof(CAN_DeploymentTubeCommand_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleDeplyTubePkt";
@@ -2051,6 +2060,38 @@ void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size)
 #ifdef VERBOSE
 	// DEBUG - sanity check
 	pmesg(VERBOSE_CAN, "DEPLOY TUBE CMD: %0.02f s, id %u value %0.1f\n", 
+			t0, data->id, data->value);
+#endif
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+void BRIDGE_HandleControlCmd(uint8_t *byte,uint8_t size)
+{
+#if defined BOARD_core || defined BOARD_PSNS
+	static uint8_t pkt_size = sizeof(CAN_Command_t);
+#ifdef DEBUG
+	//static char * function_name = "BRIDGE_HandleControlCmd";
+#endif
+	static uint8_t buffer[sizeof(CAN_Command_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+
+	CAN_Command_t *data = (CAN_Command_t *)buffer;
+
+	float t0 = getElapsedTime();
+	handleControlCmd(t0,
+			data->id,
+			data->value);
+
+#ifdef VERBOSE
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "CMD: %0.02f s, id %u value %0.1f\n", 
 			t0, data->id, data->value);
 #endif
 
@@ -2862,6 +2903,21 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTubeCommand_t));
 
 	return (uint8_t)(CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE_CMD, &data, sizeof(CAN_DeploymentTubeCommand_t)) == sizeof(CAN_DeploymentTubeCommand_t));
+}
+
+uint8_t BRIDGE_SendCommandPkt(uint8_t p,
+		uint8_t id,
+		float value) {
+
+	CAN_Command_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.id = id;
+	data.value = value;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_Command_t));
+
+	return (uint8_t)(CAN_Write(p, CAN_PKT_COMMAND, &data, sizeof(CAN_Command_t)) == sizeof(CAN_Command_t));
 }
 
 uint8_t BRIDGE_SendArmRemoteID(uint8_t p,

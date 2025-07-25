@@ -194,6 +194,7 @@ void handleDeployTubeCmd(float system_time,
 		uint8_t id,
 		float value) {}
 
+void handleControlCmd(float ts, uint8_t id, float value) {}
 
 void updateGPSSVIN(
 		uint32_t time_elapsed,

@@ -252,6 +252,8 @@ class PacketTypes (Enum):
 
 	SENSORS_PROXIMITY=58  # FIXME - TECHNICALLY IN HANDSET ADDR SPACE
 
+	SENSORS_RTK_HEADING=59  # FIXME - TECHNICALLY IN HANDSET ADDR SPACE
+
 
 	# STATE
 
@@ -3809,10 +3811,10 @@ class TelemetryPosition:
 		self.system_time = struct.unpack_from('<I',buf,offset)[0]/ 1000
 		offset = offset + struct.calcsize('<I')
 
-		self.latitude = struct.unpack_from('<q',buf,offset)[0]
+		self.latitude = struct.unpack_from('<q',buf,offset)[0]/ 10000000000000000
 		offset = offset + struct.calcsize('<q')
 
-		self.longitude = struct.unpack_from('<q',buf,offset)[0]
+		self.longitude = struct.unpack_from('<q',buf,offset)[0]/ 10000000000000000
 		offset = offset + struct.calcsize('<q')
 
 		self.altitude = struct.unpack_from('<i',buf,offset)[0]/ 1000
@@ -4007,7 +4009,7 @@ class TelemetrySystem:
 		self.batt_current = struct.unpack_from('<h',buf,offset)[0]/ 100
 		offset = offset + struct.calcsize('<h')
 
-		self.batt_watt_hours = struct.unpack_from('<H',buf,offset)[0]
+		self.batt_watt_hours = struct.unpack_from('<H',buf,offset)[0]/ 10
 		offset = offset + struct.calcsize('<H')
 
 		self.batt_percent = struct.unpack_from('<H',buf,offset)[0]/ 100

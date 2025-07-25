@@ -194,6 +194,7 @@ typedef enum {
 	SENSORS_MHP_GNSS=30,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_MHP_TIMING=31,  // FIXME - TECHNICALLY IN STATE ADDR SPACE
 	SENSORS_PROXIMITY=58,  // FIXME - TECHNICALLY IN HANDSET ADDR SPACE
+	SENSORS_RTK_HEADING=59,  // FIXME - TECHNICALLY IN HANDSET ADDR SPACE
 
 	/* STATE */
 	STATE_STATE=16,  // ONLY USED INTERNALLY
@@ -1845,7 +1846,7 @@ typedef struct _TelemetrySystem_t {
 	uint32_t system_time;  // [s * 1000]
 	uint16_t batt_voltage;  // [V * 1000]
 	int16_t batt_current;  // [A * 100]
-	uint16_t batt_watt_hours;  // [Wh]
+	uint16_t batt_watt_hours;  // [Wh * 10]
 	uint16_t batt_percent;  // [% * 100]
 	uint16_t flight_time;  // [s]
 	uint16_t week;

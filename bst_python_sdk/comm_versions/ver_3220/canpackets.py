@@ -68,6 +68,7 @@ class CAN_PacketTypes (Enum):
 	# CONTROL
 
 	CAN_PKT_DEPLOYMENT_TUBE_CMD=129
+	CAN_PKT_COMMAND=130
 
 	# ACTUATORS
 
@@ -124,6 +125,53 @@ class CAN_DeploymentTubeState (Enum):
 	DEPLOY_TUBE_AC_RELASED=6
 	DEPLOY_TUBE_SHUTDOWN=7
 	DEPLOY_TUBE_ERROR=8
+
+class CAN_Command:
+	PACKET_TYPES = ['CAN_PKT_COMMAND']
+	SIZE = 8
+
+	def __init__ (self, startByte = 0, id = 255, value = 0.0, chk = 0):
+		self.startByte = startByte
+		self.id = id
+		self.value = value
+		self.chk = chk
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [CAN_Command]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.startByte = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.id = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.value = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.chk = struct.unpack_from('<H',buf,offset)[0]
+		offset = offset + struct.calcsize('<H')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.startByte))
+		buf.extend(struct.pack('<B', self.id))
+		buf.extend(struct.pack('<f', self.value))
+		buf.extend(struct.pack('<H', self.chk))
+		return bytearray(buf)
 
 class CAN_DeploymentTubeCommand:
 	PACKET_TYPES = ['CAN_PKT_DEPLOYMENT_TUBE_CMD']

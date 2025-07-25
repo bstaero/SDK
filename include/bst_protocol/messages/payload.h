@@ -293,7 +293,7 @@ typedef struct _S0Sensors_t {
 	uint32_t system_time;  // [s * 1000]
 	uint32_t static_pressure[2];  // [Pa * 10]
 	int16_t dynamic_pressure[5];  // [Pa * 10]
-	int16_t air_temperature;  // [deg C * 10]
+	int16_t air_temperature;  // [deg C * 100]
 	uint16_t humidity;  // [% * 100]
 	uint16_t laser_distance;  // [m * 100]
 	int16_t ground_temperature;  // [deg C * 100]

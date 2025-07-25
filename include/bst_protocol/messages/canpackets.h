@@ -79,6 +79,7 @@ typedef enum {
 
 	/* CONTROL */
 	CAN_PKT_DEPLOYMENT_TUBE_CMD=129,
+	CAN_PKT_COMMAND=130,
 
 	/* ACTUATORS */
 	CAN_PKT_ACTUATOR=2047,
@@ -128,6 +129,24 @@ typedef enum {
 	DEPLOY_TUBE_SHUTDOWN,
 	DEPLOY_TUBE_ERROR,
 }  __attribute__ ((packed)) CAN_DeploymentTubeState_t;
+
+typedef struct _CAN_Command_t {
+	uint8_t startByte;
+
+	uint8_t id;
+	float value;
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_Command_t() {
+		startByte = 0;
+		id = 255;
+		value = 0.0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_Command_t;
 
 typedef struct _CAN_DeploymentTubeCommand_t {
 	uint8_t startByte;
