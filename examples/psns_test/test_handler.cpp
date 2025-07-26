@@ -210,6 +210,8 @@ void updateSerialNumber(float, char*) {}
 void handleArmRemoteID(float, unsigned char) {}
 void handleArmRemoteIDErrorMsg(float, char*) {}
 
+void handleControlCmd(float ts, uint8_t id, float value) {}
+
 void handleDeployTubeCmd(float system_time,
 		uint8_t id,
 		float value) {}

@@ -69,6 +69,13 @@ uint8_t new_deployment_tube_data = 0;
 void SendState(CAN_DeploymentTubeState_t state);
 void SendHeartbeat();
 
+volatile CAN_SensorType_t calibration_requested = CAN_UNKNOWN_SENSOR;
+
+void sendCalibrate(CAN_SensorType_t sensor);
+
+volatile bool waiting_on_calibrate = false;
+void updateCalibration(void);
+
 // packet for transmision
 Packet              tx_packet;
 
@@ -86,6 +93,8 @@ void printTestHelp() {
 	printf("  r   : Set state ready\n");
 	printf("  a   : Set state armed\n");
 	printf("  !   : Emergency aircraft release\n");
+	printf("\n");
+	printf("  H   : Command humidity recondition\n");
 	printf("\n");
 	printf("  p   : print this help\n");
 }
@@ -204,6 +213,15 @@ void updateTest() {
 					SendState(DEPLOY_TUBE_ARMED);
 					break;
 
+
+				case 'H':
+					sendCalibrate(CAN_HUMIDITY);
+					waiting_on_calibrate = true;
+					printf("Humidity Recondition Requested.. ");
+					fflush(stdout);
+					break;
+
+
 				case 'p':
 					printTestHelp();
 					break;
@@ -226,21 +244,17 @@ void updateTest() {
 
 	for(uint8_t i=0; i<16; i++) {
 		if(is_triggering && (is_triggering-1) == i) {
-			if(i < 6)
-				actuators[i] = 1800;
-			else
-				actuators[i] = 1500;
+			actuators[i] = 1500;
 		} else {
-			if(i < 6)
-				actuators[i] = 1000;
-			else
-				actuators[i] = 1000;
+			actuators[i] = 1000;
 		}
 	}
 	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) is_triggering = 0;
 
 	if(send_actuators)
 		BRIDGE_SendActuatorPkt(1,actuators);
+
+	if(waiting_on_calibrate) updateCalibration();
 
 	if(display_telemetry) {
 		if(new_deployment_tube_data) {
@@ -265,7 +279,7 @@ void updateTest() {
 			if(deployment_tube.parachute_door) sprintf(door,"OPEN  ");
 			else sprintf(door,"CLOSED");
 
-			printf("%s door %s %0.1fV 0x%08x  ", 
+			printf("%s door %s %0.1fV 0x%08x ", 
 					state, door, (float)deployment_tube.batt_voltage / 10.f, deployment_tube.error);
 
 			for(uint8_t i=0; i<16; i++)
@@ -339,6 +353,49 @@ void SendHeartbeat() {
 	uint8_t size = sizeof(CAN_DeploymentTubeCommand_t);
 
 	sendOverCAN(id,&data,size);
+}
+
+void sendCalibrate(CAN_SensorType_t sensor) {
+	if(calibration_requested != CAN_UNKNOWN_SENSOR) {
+		return;
+	}
+
+	CAN_CalibrateSensor_t data;
+
+	data.sensor = sensor;
+	data.state = CAN_REQUESTED;
+
+	calibration_requested = sensor;
+
+	uint32_t id = CAN_PKT_CALIBRATE;
+	uint8_t size = sizeof(CAN_CalibrateSensor_t);
+
+	sendOverCAN(id,&data,size);
+}
+
+void updateCalibration() {
+	static float end_time = 0.0;
+	if(end_time == 0.0 && calibration_requested != CAN_UNKNOWN_SENSOR) {
+		switch(calibration_requested) {
+			case CAN_DYNAMIC_PRESSURE: end_time = getElapsedTime() + 2.0; break;
+			case CAN_GYROSCOPE:        end_time = getElapsedTime() + 2.0; break;
+			case CAN_MAGNETOMETER:     end_time = getElapsedTime() + 60.0; break;
+			case CAN_HUMIDITY:         end_time = getElapsedTime() + 260.0; break;
+		}
+	}
+
+	if(calibration_requested != CAN_UNKNOWN_SENSOR && getElapsedTime() < end_time)
+		return;
+
+	if(getElapsedTime() < end_time) {
+		printf("SUCCESS\n");
+	} else {
+		calibration_requested = CAN_UNKNOWN_SENSOR;
+		printf("FAILED\n");
+	}
+
+	end_time = 0.0;
+	waiting_on_calibrate = false;
 }
 
 void exitTest() {
