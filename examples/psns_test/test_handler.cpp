@@ -42,6 +42,9 @@ uint8_t p_new_gps_data;
 extern CAN_AirData_t local_air_data;
 extern CAN_Supply_t local_supply;
 
+extern bool engine_kill_action;
+extern bool engine_kill_requested;
+
 /*<---Local Functions----->*/
 void printData(void);
 /*<-End Local Functions--->*/
@@ -210,7 +213,23 @@ void updateSerialNumber(float, char*) {}
 void handleArmRemoteID(float, unsigned char) {}
 void handleArmRemoteIDErrorMsg(float, char*) {}
 
-void handleControlCmd(float ts, uint8_t id, float value) {}
+void handleControlCmd(float ts, uint8_t id, float value) {
+	printf("Got command 0x%02x\n", id);
+
+	switch(id) {
+		case CMD_ENGINE_KILL:
+			if(engine_kill_requested) {
+				engine_kill_requested = false;
+				engine_kill_action = value;
+			} else {
+				printf("ERROR: Received unexpected CMD_ENGINE_KILL 0x%02x\n", id);
+			}
+			break;
+		default:
+			printf("Unhandled command 0x%02x\n", id);
+			break;
+	}
+}
 
 void handleDeployTubeCmd(float system_time,
 		uint8_t id,

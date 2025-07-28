@@ -21,6 +21,13 @@
 #ifndef __BRIDGE_H
 #define __BRIDGE_H
 
+#include "canpackets.h"
+
+#ifdef __cplusplus
+using namespace bst::comms::canpackets;
+#endif
+
+
 #ifndef ARCH_stm32f4 
   #include <inttypes.h>
 #endif
@@ -161,6 +168,10 @@ uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
 		uint8_t tslc,
 		uint16_t flags,
 		uint16_t squawk);
+
+uint8_t BRIDGE_SendCalibratePkt(uint8_t p,
+		CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state);
 
 uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
 		uint16_t id,

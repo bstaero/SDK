@@ -25,12 +25,6 @@
 #include <string.h>
 #include "bridge.h"
 
-#include "canpackets.h"
-
-#ifdef __cplusplus
-using namespace bst::comms::canpackets;
-#endif
-
 uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size);
 
 #if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32L431xx
@@ -1817,7 +1811,7 @@ void BRIDGE_HandleADSBPkt(uint8_t *byte, uint8_t size)
  * @retval None
  */
 void BRIDGE_HandleCalibratePkt(uint8_t *byte,uint8_t size) {
-#if defined BOARD_MHP
+#if defined BOARD_MHP || defined BOARD_PSNS
 	static uint8_t pkt_size = sizeof(CAN_CalibrateSensor_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleCalibratePkt";
@@ -2852,6 +2846,21 @@ uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_ADSB_t));
 
 	return (uint8_t)(CAN_Write(p, CAN_PKT_ADSB, &data, sizeof(CAN_ADSB_t)) == sizeof(CAN_ADSB_t));
+}
+
+uint8_t BRIDGE_SendCalibratePkt(uint8_t p,
+		CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state) {
+
+	CAN_CalibrateSensor_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.sensor = sensor;
+	data.state = state;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_CalibrateSensor_t));
+
+	return (uint8_t)(CAN_Write(p, CAN_PKT_CALIBRATE, &data, sizeof(CAN_CalibrateSensor_t)) == sizeof(CAN_CalibrateSensor_t));
 }
 
 uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,

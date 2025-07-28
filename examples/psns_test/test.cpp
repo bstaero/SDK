@@ -35,29 +35,14 @@ volatile bool display_telemetry = false;
 volatile bool send_actuators = false;
 volatile bool write_file = false;
 
-bool show_gps = false;
-bool show_mag = false;
-bool show_dynamic = false;
-bool show_static = false;
-
-bool new_gps = false;
-bool new_mag = false;
-bool new_dynamic = false;
-bool new_static = false;
-
 bool print_timing = false;
 float last_print_time = 0;
 
-extern uint32_t gnss_lla_cnt;
-extern uint32_t gnss_utc_cnt;
-extern uint32_t gnss_vel_cnt;
-extern uint32_t gnss_hs_cnt;
-
-extern uint32_t mag_cnt;
-
 extern uint32_t stat_p_cnt;
 
+
 #define TRIGGER_LENGTH 1.0
+
 
 CAN_AirData_t local_air_data;
 CAN_Supply_t local_supply;
@@ -65,16 +50,18 @@ CAN_Supply_t local_supply;
 CAN_DeploymentTube_t deployment_tube;
 uint8_t new_deployment_tube_data = 0;
 
-// functional definitions
-void SendState(CAN_DeploymentTubeState_t state);
-void SendHeartbeat();
 
 volatile CAN_SensorType_t calibration_requested = CAN_UNKNOWN_SENSOR;
 
-void sendCalibrate(CAN_SensorType_t sensor);
-
 volatile bool waiting_on_calibrate = false;
 void updateCalibration(void);
+
+
+bool engine_kill = true;
+bool engine_kill_action = true;
+volatile bool engine_kill_requested = false;
+
+void updateEngineKill(void);
 
 // packet for transmision
 Packet              tx_packet;
@@ -142,7 +129,7 @@ void updateTest() {
 	if(last_heartbeat == 0) last_heartbeat = getElapsedTime();
 
 	if(sending_heartbeat && (getElapsedTime() - last_heartbeat > 1.0)) {
-		SendHeartbeat();
+		BRIDGE_SendDeployTubeCmdPkt(1, CMD_HEARTBEAT, 0);
 		last_heartbeat = getElapsedTime();
 	}
 
@@ -200,24 +187,40 @@ void updateTest() {
 
 				case 'r':
 					printf("Requesting state READY\n");
-					SendState(DEPLOY_TUBE_READY);
+					BRIDGE_SendDeployTubeCmdPkt(1, CMD_SET_STATE, (float)DEPLOY_TUBE_READY);
 					break;
 
 				case '!':
 					printf("Requesting emergency aircraft release\n");
-					SendState(DEPLOY_TUBE_AC_RELASED);
+					BRIDGE_SendDeployTubeCmdPkt(1, CMD_SET_STATE, (float)DEPLOY_TUBE_AC_RELASED);
 					break;
 
 				case 'a':
 					printf("Requesting state ARMED\n");
-					SendState(DEPLOY_TUBE_ARMED);
+					BRIDGE_SendDeployTubeCmdPkt(1, CMD_SET_STATE, (float)DEPLOY_TUBE_ARMED);
 					break;
 
 
 				case 'H':
-					sendCalibrate(CAN_HUMIDITY);
+					BRIDGE_SendCalibratePkt(1, CAN_HUMIDITY, CAN_REQUESTED);
+
+					calibration_requested = CAN_HUMIDITY;
 					waiting_on_calibrate = true;
 					printf("Humidity Recondition Requested.. ");
+					fflush(stdout);
+					break;
+
+
+				case 'k':
+					if(engine_kill_requested) break;
+					engine_kill_requested = true;
+
+					BRIDGE_SendCommandPkt(1, CMD_ENGINE_KILL, (float)!engine_kill);
+
+					if(!engine_kill)
+						printf("Engine Enable Sent.. "); // FIXME
+					else
+						printf("Engine Kill Sent.. "); // FIXME
 					fflush(stdout);
 					break;
 
@@ -252,9 +255,11 @@ void updateTest() {
 	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) is_triggering = 0;
 
 	if(send_actuators)
-		BRIDGE_SendActuatorPkt(1,actuators);
+		BRIDGE_SendActuatorPkt(1, actuators);
 
 	if(waiting_on_calibrate) updateCalibration();
+
+	if(engine_kill_requested) updateEngineKill();
 
 	if(display_telemetry) {
 		if(new_deployment_tube_data) {
@@ -311,68 +316,6 @@ void updateTest() {
 
 }
 
-void sendOverCAN(uint32_t id, void * data, uint8_t size) {
-	((char *)data)[0] = '@';
-	setFletcher16((uint8_t *)data, size);	
-
-	uint8_t can_tx_buffer[500];
-
-	uint8_t ptr = 0;
-
-	memcpy(can_tx_buffer + ptr,&id,4); ptr += 4;
-	memcpy(can_tx_buffer + ptr,&size,1); ptr += 1;
-	memcpy(can_tx_buffer + ptr,data,size); ptr += size;
-
-	tx_packet.setAddressing(false);
-	tx_packet.setType(HWIL_CAN);
-	tx_packet.setAction(PKT_ACTION_STATUS);
-	tx_packet.setData(can_tx_buffer, ptr);
-
-	writeBytes(tx_packet.getPacket(),tx_packet.getSize());
-}
-
-void SendState(CAN_DeploymentTubeState_t state) {
-		CAN_DeploymentTubeCommand_t data;
-
-		data.id = CMD_SET_STATE;
-		data.value = (float)state;
-
-		uint32_t id = CAN_PKT_DEPLOYMENT_TUBE_CMD;
-		uint8_t size = sizeof(CAN_DeploymentTubeCommand_t);
-
-		sendOverCAN(id,&data,size);
-}
-
-void SendHeartbeat() {
-	CAN_DeploymentTubeCommand_t data;
-
-	data.id = CMD_HEARTBEAT;
-	data.value = 0;
-
-	uint32_t id = CAN_PKT_DEPLOYMENT_TUBE_CMD;
-	uint8_t size = sizeof(CAN_DeploymentTubeCommand_t);
-
-	sendOverCAN(id,&data,size);
-}
-
-void sendCalibrate(CAN_SensorType_t sensor) {
-	if(calibration_requested != CAN_UNKNOWN_SENSOR) {
-		return;
-	}
-
-	CAN_CalibrateSensor_t data;
-
-	data.sensor = sensor;
-	data.state = CAN_REQUESTED;
-
-	calibration_requested = sensor;
-
-	uint32_t id = CAN_PKT_CALIBRATE;
-	uint8_t size = sizeof(CAN_CalibrateSensor_t);
-
-	sendOverCAN(id,&data,size);
-}
-
 void updateCalibration() {
 	static float end_time = 0.0;
 	if(end_time == 0.0 && calibration_requested != CAN_UNKNOWN_SENSOR) {
@@ -397,6 +340,28 @@ void updateCalibration() {
 	end_time = 0.0;
 	waiting_on_calibrate = false;
 }
+
+void updateEngineKill() {
+	static float end_time = 0.0;
+
+	if(end_time == 0.0 && engine_kill_requested) {
+		end_time = getElapsedTime() + 0.5;
+	}
+
+	if(engine_kill_requested && getElapsedTime() < end_time)
+		return;
+
+	if(getElapsedTime() < end_time && engine_kill_action == engine_kill) {
+		engine_kill = engine_kill_action; // set new state
+		printf("SUCCESS\n");
+	} else {
+		printf("FAILED\n");
+	}
+
+	end_time = 0.0;
+	engine_kill_requested = false;
+}
+
 
 void exitTest() {
 	tcsetattr(0, TCSANOW, &initial_settings);
