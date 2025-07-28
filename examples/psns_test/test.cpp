@@ -41,6 +41,8 @@ float last_print_time = 0;
 extern uint32_t stat_p_cnt;
 
 
+static float last_actuators = 0;
+
 #define TRIGGER_LENGTH 1.0
 
 
@@ -57,9 +59,10 @@ volatile bool waiting_on_calibrate = false;
 void updateCalibration(void);
 
 
-bool engine_kill = true;
-bool engine_kill_action = true;
-volatile bool engine_kill_requested = false;
+#define CAN_COMMAND_TIMEOUT 2.0
+
+int8_t local_engine_kill = 1; // start killed
+int8_t remote_engine_kill = -1;
 
 void updateEngineKill(void);
 
@@ -212,16 +215,11 @@ void updateTest() {
 
 
 				case 'k':
-					if(engine_kill_requested) break;
-					engine_kill_requested = true;
-
-					BRIDGE_SendCommandPkt(1, CMD_ENGINE_KILL, (float)!engine_kill);
-
-					if(!engine_kill)
-						printf("Engine Enable Sent.. "); // FIXME
+					if(local_engine_kill == 1)
+						local_engine_kill = 0;
 					else
-						printf("Engine Kill Sent.. "); // FIXME
-					fflush(stdout);
+						local_engine_kill = 1;
+
 					break;
 
 
@@ -247,19 +245,25 @@ void updateTest() {
 
 	for(uint8_t i=0; i<16; i++) {
 		if(is_triggering && (is_triggering-1) == i) {
-			actuators[i] = 1500;
+			if(i == 2 || i == 3)
+				actuators[i] = 1050;
+			else
+				actuators[i] = 1800;
 		} else {
 			actuators[i] = 1000;
 		}
 	}
 	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) is_triggering = 0;
 
-	if(send_actuators)
+	if(send_actuators && getElapsedTime() - last_actuators > 0.02) {
+		last_actuators = getElapsedTime();
 		BRIDGE_SendActuatorPkt(1, actuators);
+	}
 
 	if(waiting_on_calibrate) updateCalibration();
 
-	if(engine_kill_requested) updateEngineKill();
+	updateEngineKill();
+
 
 	if(display_telemetry) {
 		if(new_deployment_tube_data) {
@@ -344,22 +348,32 @@ void updateCalibration() {
 void updateEngineKill() {
 	static float end_time = 0.0;
 
-	if(end_time == 0.0 && engine_kill_requested) {
-		end_time = getElapsedTime() + 0.5;
+	if(local_engine_kill != remote_engine_kill) {
+		if(end_time == 0.0 ) {
+			end_time = getElapsedTime() + CAN_COMMAND_TIMEOUT;
+
+			BRIDGE_SendCommandPkt(1, CMD_ENGINE_KILL, (float)local_engine_kill);
+
+			if(local_engine_kill)
+				printf("Engine Kill Sent.. ");
+			else
+				printf("Engine Enable Sent.. ");
+			fflush(stdout);
+		}
 	}
 
-	if(engine_kill_requested && getElapsedTime() < end_time)
-		return;
-
-	if(getElapsedTime() < end_time && engine_kill_action == engine_kill) {
-		engine_kill = engine_kill_action; // set new state
-		printf("SUCCESS\n");
-	} else {
-		printf("FAILED\n");
+	if(end_time > 0.0) {
+		if(getElapsedTime() > end_time) {
+			printf("TIMED OUT \n");
+			end_time = 0.0;
+		} else {
+			if(remote_engine_kill == local_engine_kill) {
+				end_time = 0.0;
+				printf("SUCCESS \n");
+			}
+		}
 	}
 
-	end_time = 0.0;
-	engine_kill_requested = false;
 }
 
 
