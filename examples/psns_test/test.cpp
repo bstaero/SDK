@@ -86,6 +86,8 @@ void printTestHelp() {
 	printf("\n");
 	printf("  H   : Command humidity recondition\n");
 	printf("\n");
+	printf("  f   : Toggle flight mode heartbeat\n");
+	printf("\n");
 	printf("  p   : print this help\n");
 }
 
@@ -126,14 +128,22 @@ void updateTest() {
 	static float trigger_time = 0;
 	static uint16_t actuators[16];
 
-	static uint8_t sending_heartbeat = 0;
+	static uint8_t sending_heartbeat = 1;
 	static float last_heartbeat = 0;
+
+	static uint8_t sending_flight_mode = 0;
+	static float last_flight_mode = 0;
 
 	if(last_heartbeat == 0) last_heartbeat = getElapsedTime();
 
 	if(sending_heartbeat && (getElapsedTime() - last_heartbeat > 1.0)) {
 		BRIDGE_SendDeployTubeCmdPkt(1, CMD_HEARTBEAT, 0);
 		last_heartbeat = getElapsedTime();
+	}
+
+	if(sending_flight_mode && (getElapsedTime() - last_flight_mode > 0.5)) {
+		BRIDGE_SendCommandPkt(1, CMD_FLIGHT_MODE, FLIGHT_MODE_FLYING);
+		last_flight_mode = getElapsedTime();
 	}
 
 	if( inputAvailable() ) {
@@ -186,6 +196,9 @@ void updateTest() {
 						sending_heartbeat = 1;
 					else
 						sending_heartbeat = 0;
+
+					if(sending_heartbeat)	printf("Sending heartbeat\n");
+					else	printf("Paused heartbeat\n");
 					break;
 
 				case 'r':
@@ -205,12 +218,24 @@ void updateTest() {
 
 
 				case 'H':
-					BRIDGE_SendCalibratePkt(1, CAN_HUMIDITY, CAN_REQUESTED);
+					if(calibration_requested == CAN_UNKNOWN_SENSOR) {
+						BRIDGE_SendCalibratePkt(1, CAN_HUMIDITY, CAN_REQUESTED);
 
-					calibration_requested = CAN_HUMIDITY;
-					waiting_on_calibrate = true;
-					printf("Humidity Recondition Requested.. ");
-					fflush(stdout);
+						calibration_requested = CAN_HUMIDITY;
+						waiting_on_calibrate = true;
+						printf("Humidity Recondition Requested.. ");
+						fflush(stdout);
+					}
+					break;
+
+				case 'f':
+					if(!sending_flight_mode)
+						sending_flight_mode = 1;
+					else
+						sending_flight_mode = 0;
+
+					if(sending_flight_mode)	printf("Sending Flight Mode Flying\n");
+					else	printf("Paused Flight Mode\n");
 					break;
 
 
@@ -318,6 +343,14 @@ void updateTest() {
 		}
 	}
 
+}
+
+void updateCalibration(CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state) {
+
+	if(state == CAN_CALIBRATED)
+		if(sensor == (CAN_SensorType_t)calibration_requested)
+			calibration_requested = CAN_UNKNOWN_SENSOR;
 }
 
 void updateCalibration() {
