@@ -3054,7 +3054,7 @@ class AutopilotMode (Enum):
 class CommandID (Enum):
 	# NOTE - you must check the numbers in the CommandID values
 
-	# contained in the children folders if you modify or change these numbers
+	# contained in the subfolders if you modify or change these numbers
 
 	#
 
@@ -3075,6 +3075,8 @@ class CommandID (Enum):
 	CMD_ENGINE_KILL=6
 	CMD_FLIGHT_TERMINATE=7
 	CMD_ABORT=8
+	CMD_RID_EMERGENCY=37
+	CMD_RID_IGNORE=38
 
 	# Navigation
 
@@ -3110,7 +3112,7 @@ class CommandID (Enum):
 
 	CMD_TRIGGER_PAYLOAD=23
 
-	CMD_INVALID=47
+	CMD_INVALID=48
 
 class FlightMode (Enum):
 	FLIGHT_MODE_INIT=0
@@ -3756,10 +3758,10 @@ class TelemetryPosition:
 		self.system_time = struct.unpack_from('<I',buf,offset)[0]/ 1000
 		offset = offset + struct.calcsize('<I')
 
-		self.latitude = struct.unpack_from('<q',buf,offset)[0]
+		self.latitude = struct.unpack_from('<q',buf,offset)[0]/ 10000000000000000
 		offset = offset + struct.calcsize('<q')
 
-		self.longitude = struct.unpack_from('<q',buf,offset)[0]
+		self.longitude = struct.unpack_from('<q',buf,offset)[0]/ 10000000000000000
 		offset = offset + struct.calcsize('<q')
 
 		self.altitude = struct.unpack_from('<i',buf,offset)[0]/ 1000

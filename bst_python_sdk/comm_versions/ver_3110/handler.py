@@ -41,6 +41,7 @@ packet_mapping = {
     PacketTypes.TELEMETRY_GCS.value: GCSStatus,
     PacketTypes.TELEMETRY_GCS_LOCATION.value: TelemetryGCS,
 
+
     # Aircraft Packets
     PacketTypes.ACTUATORS_CALIBRATION.value: ActuatorCalibration,
     PacketTypes.ACTUATORS_VALUES.value: Actuators,
@@ -156,8 +157,11 @@ def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
             return None, sys_time
 
     try:
-        if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
-            pkt_map[pkt.TYPE].buffer = [None] * 64
+        try:
+            if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
+                pkt_map[pkt.TYPE].buffer = [None] * 64
+        except AttributeError:
+            pass
 
         if pkt_map[pkt.TYPE] == int:
             packet_data = int.from_bytes(bytearray(pkt.DATA))
