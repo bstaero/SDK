@@ -136,10 +136,12 @@ void updateTest() {
 
 	if(last_heartbeat == 0) last_heartbeat = getElapsedTime();
 
-	if(sending_heartbeat && (getElapsedTime() - last_heartbeat > 1.0)) {
+	if(sending_heartbeat && (getElapsedTime() - last_heartbeat > 0.5)) {
 		BRIDGE_SendDeployTubeCmdPkt(1, CMD_HEARTBEAT, 0);
 		last_heartbeat = getElapsedTime();
 	}
+
+	if(last_flight_mode == 0) last_flight_mode = getElapsedTime();
 
 	if(sending_flight_mode && (getElapsedTime() - last_flight_mode > 0.5)) {
 		BRIDGE_SendCommandPkt(1, CMD_FLIGHT_MODE, FLIGHT_MODE_FLYING);
