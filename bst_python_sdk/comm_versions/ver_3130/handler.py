@@ -79,14 +79,6 @@ packet_mapping = {
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem,
 
     # Payload Packets
-    PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_1.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_2.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_3.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_4.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_5.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_6.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_7.value: UserPayload,
     PacketTypes.PAYLOAD_CAMERA_TAG.value: CameraTag,
     PacketTypes.PAYLOAD_LDCR.value: LDCR,
     PacketTypes.PAYLOAD_NDVI.value: NDVI,
