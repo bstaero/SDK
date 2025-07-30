@@ -1,3 +1,4 @@
+import argparse
 import sys
 import os.path
 
@@ -114,4 +115,15 @@ def add_primitive_to_nc(field, field_type, pkt_grp, pkts):
 
 
 if __name__ == "__main__":
-    convert_to_nc(sys.argv[1])
+    parser = argparse.ArgumentParser(
+                    prog='Log to NC',
+                    description='Binary log to netCDF converter')
+    parser.add_argument('filename')
+    parser.add_argument('-q', '--quick',
+                    action='store_true',
+                    help='Enables "quick mode" conversion')
+    parser.add_argument('-a', '--addr',
+                    action='store_true',
+                    help='Enables addressing in parsing (GCS logs only)')
+    args = parser.parse_args()
+    convert_to_nc(args.filename, quick_mode=args.quick, has_addr=args.addr)
