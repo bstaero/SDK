@@ -32,14 +32,16 @@
 
 // variables
 volatile bool display_telemetry = false;
-volatile bool send_actuators = false;
 volatile bool write_file = false;
 
-bool print_timing = false;
-float last_print_time = 0;
+static bool send_actuators = false;
+static bool print_timing = false;
+static float last_print_time = 0;
 
 extern uint32_t stat_p_cnt;
 
+static uint8_t sending_heartbeat = 1;
+static uint8_t sending_flight_mode = 0;
 
 static float last_actuators = 0;
 
@@ -128,10 +130,8 @@ void updateTest() {
 	static float trigger_time = 0;
 	static uint16_t actuators[16];
 
-	static uint8_t sending_heartbeat = 1;
 	static float last_heartbeat = 0;
 
-	static uint8_t sending_flight_mode = 0;
 	static float last_flight_mode = 0;
 
 	if(last_heartbeat == 0) last_heartbeat = getElapsedTime();
@@ -411,6 +411,15 @@ void updateEngineKill() {
 
 }
 
+void simuatedShutdown(void) {
+	printf("Shutdown requested\n");
+	BRIDGE_SendCommandPkt(1,CMD_DOWNLOAD_LOG, 2.0);
+
+	// Stop sending packets
+	send_actuators = false;
+	sending_heartbeat = 0;
+	sending_flight_mode = 0;
+}
 
 void exitTest() {
 	tcsetattr(0, TCSANOW, &initial_settings);

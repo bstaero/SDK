@@ -225,8 +225,7 @@ void handleControlCmd(float ts, uint8_t id, float value) {
 
 		case CMD_DOWNLOAD_LOG:
 			if(value == 2.0) {
-				printf("Shutdown requested\n");
-				BRIDGE_SendCommandPkt(1,CMD_DOWNLOAD_LOG, 2.0);
+				simuatedShutdown();
 			}
 			break;
 

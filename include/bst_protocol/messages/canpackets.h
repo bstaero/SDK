@@ -783,6 +783,7 @@ typedef struct _CAN_CalibrateSensor_t {
 typedef enum {
 	CMD_HEARTBEAT,
 	CMD_SET_STATE,
+	CMD_POWER_DOWN,
 }  __attribute__ ((packed)) CAN_DeploymentTubeCommandID_t;
 
 typedef enum {

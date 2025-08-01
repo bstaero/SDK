@@ -35,4 +35,6 @@ void updateTest(void);
 void exitTest(void);
 void printTestHelp(void);
 
+void simuatedShutdown(void);
+
 #endif
