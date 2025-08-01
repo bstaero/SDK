@@ -83,6 +83,7 @@ packet_mapping = {
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem,
 
     # Payload Packets
+
     PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_1.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_2.value: UserPayload,
@@ -146,37 +147,40 @@ ignore_pkts = [
 
 can_actuators = CAN_Actuator()
 
-def standard_handler(pkt, vehicle_type=VehicleType.VEHICLE_UNKNOWN.value):
+def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
     packet_data = None
 
     pkt_map = packet_mapping
 
     if pkt.TYPE not in pkt_map:
-        if vehicle_type != VehicleType.VEHICLE_UNKNOWN.value:
+        if vehicle_type != VehicleType.VEHICLE_UNKNOWN:
             # FIXED_WING
-            if vehicle_type == 1 and pkt.TYPE in fw_mapping:
+            if vehicle_type.value == 1 and pkt.TYPE in fw_mapping:
                 pkt_map = fw_mapping
             # MULTI_COPTER
-            elif vehicle_type == 2 and pkt.TYPE in mr_mapping:
+            elif vehicle_type.value == 2 and pkt.TYPE in mr_mapping:
                 pkt_map = mr_mapping
-            # TAIL_SITTER
-            elif vehicle_type == 5 and pkt.TYPE in ts_mapping:
-                pkt_map = ts_mapping
             # VTOL
-            elif vehicle_type == 6 and pkt.TYPE in vt_mapping:
+            elif vehicle_type.value == 6 and pkt.TYPE in vt_mapping:
                 pkt_map = vt_mapping
+            # TAIL_SITTER
+            elif vehicle_type.value == 5 and pkt.TYPE in ts_mapping:
+                pkt_map = ts_mapping
             else:
-                if pkt.TYPE in ignore_pkts:
-                    print(f'Parsing not set up for {VehicleType(vehicle_type).name} packet {pkt.TYPE}...')
-                return None
+                if pkt.TYPE not in ignore_pkts:
+                    print(f'Parsing not set up for {vehicle_type.name} packet {pkt.TYPE}...')
+                return None, sys_time
         else:
             if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT.value:
                 print(f'Parsing not set up for packet {pkt.TYPE}...')
-            return None
+            return None, sys_time
 
     try:
-        if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
-            pkt_map[pkt.TYPE].buffer = [None] * 64
+        try:
+            if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
+                pkt_map[pkt.TYPE].buffer = [None] * 64
+        except AttributeError:
+            pass
 
         if pkt_map[pkt.TYPE] == int:
             packet_data = int.from_bytes(bytearray(pkt.DATA))
@@ -186,14 +190,14 @@ def standard_handler(pkt, vehicle_type=VehicleType.VEHICLE_UNKNOWN.value):
             packet_data = pkt_cls
     except BufferError as ErrorMessage:
         print(ErrorMessage)
-        return None
+        return None, sys_time
     except ValueError as ErrorMessage:
         print(ErrorMessage)
-        return None
+        return None, sys_time
 
     if hasattr(packet_data, "system_time"):
-        return packet_data
+        return packet_data, packet_data.system_time
     elif pkt.TYPE not in primitive_pkts:
-        packet_data.set_system_time(pkt.SYSTEM_TIME)
-    return packet_data
+        packet_data.set_system_time(sys_time)
+    return packet_data, sys_time
 

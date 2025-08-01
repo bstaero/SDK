@@ -90,6 +90,7 @@ packet_mapping = {
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem,
 
     # Payload Packets
+
     PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_1.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_2.value: UserPayload,
@@ -188,8 +189,11 @@ def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
             return None, sys_time
 
     try:
-        if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
-            pkt_map[pkt.TYPE].buffer = [None] * 64
+        try:
+            if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
+                pkt_map[pkt.TYPE].buffer = [None] * 64
+        except AttributeError:
+            pass
 
         if pkt_map[pkt.TYPE] == int:
             packet_data = int.from_bytes(bytearray(pkt.DATA))

@@ -40,7 +40,7 @@ packet_mapping = {
     # GCS Packets
     PacketTypes.TELEMETRY_GCS.value: GCSStatus,
     PacketTypes.TELEMETRY_GCS_LOCATION.value: TelemetryGCS,
-    PacketTypes.TELEMETRY_GCS_SVIN.value: GCSSurveyIn,
+
 
     # Aircraft Packets
     PacketTypes.ACTUATORS_CALIBRATION.value: ActuatorCalibration,
@@ -78,14 +78,6 @@ packet_mapping = {
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem,
 
     # Payload Packets
-    PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_1.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_2.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_3.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_4.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_5.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_6.value: UserPayload,
-    PacketTypes.PAYLOAD_DATA_CHANNEL_7.value: UserPayload,
     PacketTypes.PAYLOAD_CAMERA_TAG.value: CameraTag,
     PacketTypes.PAYLOAD_LDCR.value: LDCR,
     PacketTypes.PAYLOAD_NDVI.value: NDVI,
@@ -165,8 +157,11 @@ def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
             return None, sys_time
 
     try:
-        if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
-            pkt_map[pkt.TYPE].buffer = [None] * 64
+        try:
+            if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
+                pkt_map[pkt.TYPE].buffer = [None] * 64
+        except AttributeError:
+            pass
 
         if pkt_map[pkt.TYPE] == int:
             packet_data = int.from_bytes(bytearray(pkt.DATA))
