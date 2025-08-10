@@ -114,6 +114,7 @@ typedef enum {
 	CAN_PKT_TRIGGER=83,
 
 	/* ERRORS */
+	CAN_PKT_DEBUG=1792,
 }  __attribute__ ((packed)) CAN_PacketTypes_t;
 
 /*--------[ Control ]--------*/

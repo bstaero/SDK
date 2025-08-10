@@ -212,5 +212,10 @@ void handleDeployTubeCmd(float system_time,
 
 void handleControlCmd(float ts, uint8_t id, float value) {}
 
+void handleCANDebugMsg(float ts, char * byte, uint8_t size) {
+	printf("%s",byte);
+	fflush(stdout);
+}
+
 void printData() {
 }

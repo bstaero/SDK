@@ -211,6 +211,10 @@ uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
 uint8_t BRIDGE_SendArmRemoteIDErrorMsg(uint8_t p,
 		char error[50]);
 
+uint8_t BRIDGE_SendDebug(uint8_t p,
+		char * message,
+		uint8_t size);
+
 uint32_t BRIDGE_GetPktDrop(void);
 /**
   * @}

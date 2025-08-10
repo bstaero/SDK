@@ -282,6 +282,7 @@ void handleArmRemoteIDErrorMsg(float ts, char error[50]);
 
 void handleControlCmd(float ts, uint8_t id, float value);
 
+void handleCANDebugMsg(float ts, char * byte, uint8_t size);
 
 
 /** @addtogroup Low_Level
@@ -425,6 +426,8 @@ void BRIDGE_HandleArmRemoteIDErrorMsg(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size);
 
+void BRIDGE_HandleDebug(uint8_t * byte, uint8_t size);
+
 /**
  * @}
  */ 
@@ -504,6 +507,8 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_ARM_RID:		 BRIDGE_HandleArmRemoteID(data, size); break;
 		case CAN_PKT_REMOTE_ID_ERROR_MSG:	BRIDGE_HandleArmRemoteIDErrorMsg(data, size); break;
 		case CAN_PKT_SERIAL_ID:	 BRIDGE_HandleSerialNumber(data, size); break;
+
+		case CAN_PKT_DEBUG:	     BRIDGE_HandleDebug(data, size); break;
 
 		default: break;
 	}
@@ -2231,6 +2236,19 @@ void BRIDGE_HandleArmRemoteIDErrorMsg(uint8_t * byte, uint8_t size)
 #endif
 }
 
+void BRIDGE_HandleDebug(uint8_t * byte, uint8_t size)
+{
+#if defined CAN_DEBUG_MSG
+
+	float t0 = getElapsedTime();
+	handleCANDebugMsg(t0,(char *)byte,size);
+
+#ifdef VERBOSE
+	pmesg(VERBOSE_CAN, "DEBUG MSG: %s\n", byte);
+#endif
+#endif
+}
+
 
 // ==============================================================================
 // FUNCTIONS FOR SENDING CAN-BUS PACKETS
@@ -3002,6 +3020,13 @@ uint8_t BRIDGE_SendSerialNumber(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_SerialNumber_t));
 
 	return (uint8_t)(CAN_Write(p, CAN_PKT_SERIAL_ID, &data, sizeof(CAN_SerialNumber_t)) == sizeof(CAN_SerialNumber_t));
+}
+
+uint8_t BRIDGE_SendDebug(uint8_t p,
+		char * message,
+		uint8_t size) {
+
+	return (uint8_t)(CAN_Write(p, CAN_PKT_DEBUG, message, size) == size);
 }
 
 
