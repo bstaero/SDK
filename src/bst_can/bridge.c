@@ -3025,7 +3025,6 @@ uint8_t BRIDGE_SendSerialNumber(uint8_t p,
 uint8_t BRIDGE_SendDebug(uint8_t p,
 		char * message,
 		uint8_t size) {
-
 	return (uint8_t)(CAN_Write(p, CAN_PKT_DEBUG, message, size) == size);
 }
 
