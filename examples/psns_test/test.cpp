@@ -68,6 +68,11 @@ int8_t remote_engine_kill = -1;
 
 void updateEngineKill(void);
 
+int8_t local_ap_enable = 1; // start on
+int8_t remote_ap_enable = 1;
+
+void updateAPEnable(void);
+
 // packet for transmision
 Packet              tx_packet;
 
@@ -244,6 +249,9 @@ void updateTest() {
 					break;
 					
 				case 'S':
+					local_ap_enable = 0;
+					
+					remote_engine_kill = local_engine_kill;
 
 					break;
 
@@ -297,6 +305,7 @@ void updateTest() {
 
 	updateEngineKill();
 
+	updateAPEnable();
 
 	if(display_telemetry) {
 		if(new_deployment_tube_data) {
@@ -409,6 +418,37 @@ void updateEngineKill() {
 			end_time = 0.0;
 		} else {
 			if(remote_engine_kill == local_engine_kill) {
+				end_time = 0.0;
+				printf("SUCCESS \n");
+			}
+		}
+	}
+
+}
+
+void updateAPEnable() {
+	static float end_time = 0.0;
+
+	if(local_ap_enable != remote_ap_enable && local_ap_enable == 0) {
+		if(end_time == 0.0 ) {
+			end_time = getElapsedTime() + CAN_COMMAND_TIMEOUT;
+
+			BRIDGE_SendCommandPkt(1, CMD_DOWNLOAD_LOG, 2.0);
+
+			if(!local_ap_enable)
+				printf("AP Commanded to Shut Down.. ");
+			fflush(stdout);
+
+			local_ap_enable = 1;  // FIXME - need to confirm with response
+		}
+	} 
+
+	if(end_time > 0.0) {
+		if(getElapsedTime() > end_time) {
+			printf("TIMED OUT \n");
+			end_time = 0.0;
+		} else {
+			if(remote_ap_enable == local_ap_enable) {
 				end_time = 0.0;
 				printf("SUCCESS \n");
 			}

@@ -47,15 +47,20 @@ extern CAN_Supply_t local_supply;
 extern int8_t local_engine_kill;
 extern int8_t remote_engine_kill;
 
+extern int8_t local_ap_enable;
+extern int8_t remote_ap_enable;
+
 /*<---Local Functions----->*/
 void printData(void);
 /*<-End Local Functions--->*/
 
 
 void updateActuatorValues(uint16_t * values) { 
-	printf("Act:");
-	for(uint8_t i=0; i<16; i++) printf(" [%04u]",values[i]);
-	printf("\n");
+	if(display_telemetry) {
+		printf("Act:");
+		for(uint8_t i=0; i<16; i++) printf(" [%04u]",values[i]);
+		printf("\n");
+	}
 }
 void updatePWMIn(float system_time, uint16_t * usec) {}
 
@@ -224,8 +229,13 @@ void handleControlCmd(float ts, uint8_t id, float value) {
 			break;
 
 		case CMD_DOWNLOAD_LOG:
-			if(value == 2.0) {
-				simuatedShutdown();
+			printf("CMD_DOWNLOAD_LOG\n");
+			if(local_ap_enable == 0) {
+				remote_ap_enable = 0;
+			} else {
+				if(value == 2.0) {
+					simuatedShutdown();
+				}
 			}
 			break;
 
