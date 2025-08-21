@@ -294,7 +294,7 @@ typedef enum {
 
 /*--------[ Configuration ]--------*/
 
-#define COMMS_VERSION 3220
+#define COMMS_VERSION 3230
 
 #define MAX_ALTITUDE 20000
 

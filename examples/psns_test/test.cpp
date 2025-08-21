@@ -85,7 +85,10 @@ void printTestHelp() {
 	printf("  r   : Set state ready\n");
 	printf("  a   : Set state armed\n");
 	printf("  !   : Emergency aircraft release\n");
+	printf("  s   : Send shutdown to deployment tube\n");
 	printf("\n");
+	printf("  k   : Toggle engine enable\n");
+	printf("  S   : Send shutdown to ap\n");
 	printf("  H   : Command humidity recondition\n");
 	printf("\n");
 	printf("  f   : Toggle flight mode heartbeat\n");
@@ -239,7 +242,10 @@ void updateTest() {
 					if(sending_flight_mode)	printf("Sending Flight Mode Flying\n");
 					else	printf("Paused Flight Mode\n");
 					break;
+					
+				case 'S':
 
+					break;
 
 				case 'k':
 					if(local_engine_kill == 1)

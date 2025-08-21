@@ -100,6 +100,7 @@ float checkLimit(float value, float limit_min, float limit_max);
 
 #define MPH_TO_MPS 0.44704f
 #define KTS_TO_MPS 0.514444444f
+#define MPS_TO_KTS 1.94384449f
 #define FPM_TO_MPS 0.00508f
 
 #define LBF_TO_N 4.448222f

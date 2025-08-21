@@ -797,3 +797,17 @@ float lla2Bearing(const double f_lat, const double f_lon, const double t_lat, co
 
 	return atan2f(y, x);
 }
+
+void calc_endpoint_from_originBearingDistance(double *lonlat_deg, double orig_longitude_deg, double orig_latitude_deg, float bearing_rads, float dist)
+{
+	double R = 6378137.0;
+
+	double lon1 = orig_longitude_deg * DEG_TO_RAD;
+	double lat1 = orig_latitude_deg * DEG_TO_RAD;
+	// double a = bearing_rads;
+
+	double lat2 = asin(sin(lat1) * cos(dist/R) + cos(lat1) * sin(dist/R) * cos(bearing_rads));
+	double lon2 = lon1 + atan2(sin(bearing_rads) * sin(dist/R) * cos(lat1), cos(dist/R) - sin(lat1) * sin(lat2));
+	lonlat_deg[0] = lon2 * RAD_TO_DEG;
+	lonlat_deg[1] = lat2 * RAD_TO_DEG;
+}

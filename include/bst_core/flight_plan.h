@@ -36,6 +36,7 @@ void lla2local(float &x, float &y, double to_lat, double to_lon, double from_lat
 float lla2Bearing(const Waypoint_t * const wp1, const Waypoint_t * const wp2);
 float lla2Bearing(const double lat, const double lon, const Waypoint_t * const wp2);
 float lla2Bearing(const double f_lat, const double f_lon, const double t_lat, const double t_lon);
+void calc_endpoint_from_originBearingDistance(double *lonlat_deg, double orig_longitude_deg, double orig_latitude_deg, float bearing_rads, float dist);
 
 inline bool isValidInd(const int num) {
 	return ( num != INVALID_WAYPOINT && num < MAX_WAYPOINTS );
