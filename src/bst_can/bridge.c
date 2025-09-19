@@ -1816,11 +1816,12 @@ void BRIDGE_HandleADSBPkt(uint8_t *byte, uint8_t size)
  * @retval None
  */
 void BRIDGE_HandleCalibratePkt(uint8_t *byte,uint8_t size) {
-#if defined BOARD_MHP || defined BOARD_PSNS
+#if defined BOARD_MHP || defined BOARD_PSNS || defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_CalibrateSensor_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleCalibratePkt";
 #endif
+
 	static uint8_t buffer[sizeof(CAN_CalibrateSensor_t)];
 
 	BRIDGE_BUFFER_PREAMBLE

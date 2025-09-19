@@ -845,48 +845,6 @@ typedef struct _CAN_GNSS_LLA_t {
 #endif
 } __attribute__ ((packed)) CAN_GNSS_LLA_t;
 
-typedef struct _CAN_GNSS_RELPOSNED_t {
-	uint8_t startByte;
-
-	uint32_t timestamp;
-	uint16_t refStationId;
-	uint32_t iTOW;
-	float relative_north;
-	float relative_east;
-	float relative_down;
-	float relative_length;
-	float relative_heading;
-	uint32_t accN;
-	uint32_t accE;
-	uint32_t accD;
-	uint32_t accLength;
-	uint32_t accHeading;
-	uint32_t flags;
-
-	uint16_t chk;
-
-#ifdef __cplusplus
-	_CAN_GNSS_RELPOSNED_t() {
-		startByte = 0;
-		timestamp = 0;
-		refStationId = 0;
-		iTOW = 0;
-		relative_north = 0.0;
-		relative_east = 0.0;
-		relative_down = 0.0;
-		relative_length = 0.0;
-		relative_heading = 0.0;
-		accN = 0;
-		accE = 0;
-		accD = 0;
-		accLength = 0;
-		accHeading = 0;
-		flags = 0;
-		chk = 0;
-	}
-#endif
-} __attribute__ ((packed)) CAN_GNSS_RELPOSNED_t;
-
 typedef struct _CAN_GNSS_RTCM_t {
 	uint8_t startByte;
 

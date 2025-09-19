@@ -183,6 +183,9 @@ void updateADSB(float system_time,
 		uint16_t flags,
 		uint16_t squawk) {}
 
+void updateCalibration(CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state) {}
+
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel) {}
 
