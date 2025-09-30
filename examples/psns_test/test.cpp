@@ -141,6 +141,7 @@ void updateTest() {
 	static float last_heartbeat = 0;
 
 	static float last_flight_mode = 0;
+	static uint8_t cleared_flight_mode = 1;
 
 	if(last_heartbeat == 0) last_heartbeat = getElapsedTime();
 
@@ -152,8 +153,14 @@ void updateTest() {
 	if(last_flight_mode == 0) last_flight_mode = getElapsedTime();
 
 	if(sending_flight_mode && (getElapsedTime() - last_flight_mode > 0.5)) {
+		cleared_flight_mode = 0;
 		BRIDGE_SendCommandPkt(1, CMD_FLIGHT_MODE, FLIGHT_MODE_FLYING);
 		last_flight_mode = getElapsedTime();
+	}
+
+	if(!sending_flight_mode && !cleared_flight_mode) {
+		cleared_flight_mode = 1;
+		BRIDGE_SendCommandPkt(1, CMD_FLIGHT_MODE, FLIGHT_MODE_PREFLIGHT);
 	}
 
 	if( inputAvailable() ) {
