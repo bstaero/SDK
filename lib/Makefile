@@ -1,5 +1,8 @@
 CC=gcc
 CXX=g++
+#CC=-aarch64-linux-gnu-gcc
+#CXX=aarch64-linux-gnu-g++
+
 CFLAGS= -fPIC
 
 libbstfw_FLAGS= -DVEHICLE_MULTIROTOR

@@ -21,8 +21,10 @@
 
 HOST_OS := $(shell uname -s)
 
-CC=gcc
-CXX=g++
+#CC=gcc
+#CXX=g++
+CC=-aarch64-linux-gnu-gcc
+CXX=aarch64-linux-gnu-g++
 
 VPATH     = ../../src \
             ../../src/bst_protocol \

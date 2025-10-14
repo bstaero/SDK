@@ -565,6 +565,7 @@ void updateTest() {
 	// send heartbeat
 	send_hb();
 
+#if 0
 	/** Update control interval */
 	static float last_ctrl = 0.0;
 	float now = getElapsedTime();
@@ -577,6 +578,7 @@ void updateTest() {
 		/** Get agl value for raw control */
 		comm_handler->request(SENSORS_AGL, 0);
 	}
+#endif
 
 }
 

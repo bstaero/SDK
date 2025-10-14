@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
 	char param[3][32];
 
-	char c;
+	int c;
 	while ((c = getopt(argc, argv, "b:d:i:p:t:x:h")) != -1) {
 		switch(c) {
 			case 'b':
