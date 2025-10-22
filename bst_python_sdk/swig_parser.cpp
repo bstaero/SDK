@@ -85,9 +85,10 @@ std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode)
 
             if (check_fletcher_16(packet_data, buf_len)) {
                 packets.push_back(packet);
-            } else {
-                std::cerr << "Malformed packet: invalid checksum" << std::endl;
             }
+            //else {
+                //std::cerr << "Malformed packet: invalid checksum" << std::endl;
+            //}
         } else {
             i++;
         }
