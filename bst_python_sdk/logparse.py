@@ -168,7 +168,7 @@ class Parser:
         if not has_sys_time and is_telem_ctrl or is_telem_sys or is_telem_pos or is_telem_orient or is_telem_pres:
             pkt_data.system_time = self.prev_pkt_time
 
-        is_new_sys_time = has_sys_time and pkt_data.system_time < self.ac_sys_previous_time and pkt_data.system_time < 1
+        is_new_sys_time = has_sys_time and pkt_data.system_time < self.ac_sys_previous_time and (self.ac_sys_previous_time - pkt_data.system_time > 100)
 
         if is_sys_init:
             sys_init_pkt: SystemInitialize = pkt_data
@@ -176,12 +176,7 @@ class Parser:
                 self.reimport_comms(sys_init_pkt.comms_rev)
 
         if from_aircraft or not self.has_addr:
-            if is_new_sys_time:
-                # print(f"new system time - type: {self.prev_type} -> {pkt.TYPE} prev: {self.ac_sys_previous_time} this: {pkt_data.system_time}")
-                # Same aircraft, new log data
-                self.current_ac = self.increment_log_name(self.current_ac)
-                self.ac_sys_previous_time = pkt_data.system_time
-            elif is_sys_init:
+            if is_sys_init:
                 sys_init_pkt: SystemInitialize = pkt_data
                 self.ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type.value)
 
@@ -214,10 +209,15 @@ class Parser:
                     prev_sys_init_time = self.sys_init_times[self.current_ac]
 
                 if sys_init_pkt.system_time < prev_sys_init_time:
-                    print(f"new sys init time - type: {pkt.TYPE} prev: {sys_init_pkt.system_time} this: {prev_sys_init_time}")
+                    # print(f"new sys init time - type: {pkt.TYPE} prev: {sys_init_pkt.system_time} this: {prev_sys_init_time}")
                     self.current_ac = self.increment_log_name(self.current_ac)
 
                 self.sys_init_times[self.current_ac] = sys_init_pkt.system_time
+            elif is_new_sys_time:
+                # Same aircraft, new log data
+                self.current_ac = self.increment_log_name(self.current_ac)
+                self.ac_sys_current_time = pkt_data.system_time
+                self.ac_sys_previous_time = pkt_data.system_time
 
             entry_name = self.current_ac
         else:
