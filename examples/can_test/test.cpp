@@ -59,7 +59,7 @@ extern uint32_t mag_cnt;
 
 extern uint32_t stat_p_cnt;
 
-#define TRIGGER_LENGTH 1.0
+#define TRIGGER_LENGTH 5.0
 
 #define CMD_BUF_SIZE 8
 Packet cmd_buf[CMD_BUF_SIZE];
@@ -86,7 +86,7 @@ void printTestHelp() {
 	printf("  t        : Toggle telemetry display\n");
 	printf("\n");
 	printf("  T        : take a picture\n");
-	printf("  1 to A   : test channel n\n");
+	printf("  0 to A   : test channel n\n");
 	printf("\n");
 	printf("  p        : print this help\n");
 }
@@ -126,6 +126,7 @@ void updateTest() {
 	char input; 
 	static char auto_char = '0'; 
 	static uint8_t is_triggering = 0;
+	static uint8_t is_triggering_ch = 0;
 	static float trigger_time = 0;
 	static uint16_t actuators[16];
 
@@ -148,7 +149,8 @@ void updateTest() {
 				case 'T':
 					if(!send_actuators) send_actuators = true;
 					if(!is_triggering) {
-						is_triggering = 15;
+						is_triggering = 1;
+						is_triggering_ch = 15;
 						trigger_time = getElapsedTime();
 					}
 					break;
@@ -160,6 +162,7 @@ void updateTest() {
 				case 'E':
 				case 'F':
 					input = input-'A'+1+'9';
+				case '0':
 				case '1':
 				case '2':
 				case '3':
@@ -172,7 +175,8 @@ void updateTest() {
 					if(!send_actuators) send_actuators = true;
 					if(!is_triggering) {
 						printf("Triggerging channel %u\n",input - '0');
-						is_triggering = input - '0';
+						is_triggering = 1;
+						is_triggering_ch = input - '0';
 						trigger_time = getElapsedTime();
 					}
 					break;
@@ -198,11 +202,11 @@ void updateTest() {
 	}
 
 	for(uint8_t i=0; i<16; i++) {
-		if(is_triggering && (is_triggering-1) == i) {
+		if(is_triggering && (is_triggering_ch) == i) {
 			if(i < 6)
-				actuators[i] = 1800;
+				actuators[i] = 2000;
 			else
-				actuators[i] = 1500;
+				actuators[i] = 2000;
 		} else {
 			if(i < 6)
 				actuators[i] = 1000;
@@ -210,7 +214,10 @@ void updateTest() {
 				actuators[i] = 1000;
 		}
 	}
-	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) is_triggering = 0;
+	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) {
+		is_triggering = 0;
+		is_triggering_ch = 15;
+	}
 
 
 	if(print_timing) {
@@ -227,7 +234,7 @@ void updateTest() {
 	if(display_telemetry) {
 		for(uint8_t i=0; i<16; i++)
 			printf("%04u ",actuators[i]);
-		printf(" [%u] \n", is_triggering);
+		printf(" [%u] \n", is_triggering_ch);
 	}
 
 	if(send_actuators)
