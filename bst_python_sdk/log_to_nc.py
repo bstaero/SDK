@@ -17,7 +17,7 @@ sys.path.insert(0, root_dir)
 
 def convert_to_nc(
     filename: str,
-    has_addr: bool=False,
+    has_addr: bool=True,
     quick_mode: bool=False,
     out_dir: str='.',
 ) -> list[str]:
