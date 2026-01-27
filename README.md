@@ -8,35 +8,104 @@ Official SDK for the Black Swift Technologies SwiftCore flight management system
 
 ## Overview
 
-The BST SDK provides both **Python** and **C/C++** interfaces for:
-- Parsing binary telemetry logs
-- Real-time communication with aircraft
-- Custom payload integration
-- Ground station development
-- Hardware-in-the-loop simulation
+The BST SDK enables real-time communication with SwiftCore autopilots, custom payload development, ground station integration, and hardware-in-the-loop simulation.
+
+- **C/C++ SDK** - Primary implementation for embedded systems, real-time applications, payload development, and ground stations
+- **Python SDK** - Wrapper for log parsing, data analysis, and web-based applications
 
 ## Documentation
 
 Full documentation: [GitLab Wiki](https://gitlab.com/bstaero/sdk/-/wikis/home)
 
-### Getting Started
-| Python | C/C++ |
-|--------|-------|
-| [Installation](https://gitlab.com/bstaero/sdk/-/wikis/Python-Installation) | [Installation](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-Installation) |
-| [Quick Start](https://gitlab.com/bstaero/sdk/-/wikis/Python-Quick-Start) | [Quick Start](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-Quick-Start) |
-| [API Overview](https://gitlab.com/bstaero/sdk/-/wikis/Python-API-Overview) | [API Overview](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-API-Overview) |
+### C/C++ SDK (Primary)
+
+| Guide | Description |
+|-------|-------------|
+| [Installation](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-Installation) | Build setup and dependencies |
+| [Quick Start](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-Quick-Start) | First application walkthrough |
+| [API Overview](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-API-Overview) | Classes, headers, and patterns |
+
+### Python SDK (Data Processing)
+
+| Guide | Description |
+|-------|-------------|
+| [Installation](https://gitlab.com/bstaero/sdk/-/wikis/Python-Installation) | pip install and prerequisites |
+| [Quick Start](https://gitlab.com/bstaero/sdk/-/wikis/Python-Quick-Start) | Log parsing basics |
+| [API Overview](https://gitlab.com/bstaero/sdk/-/wikis/Python-API-Overview) | Module structure and usage |
 
 ### Core References
+
 - [BST Protocol](https://gitlab.com/bstaero/sdk/-/wikis/BST-Protocol) - Packet structure, addressing, checksums
-- [Packet Types](https://gitlab.com/bstaero/sdk/-/wikis/Packet-Types) - All packet types and enumerations
 - [Data Structures](https://gitlab.com/bstaero/sdk/-/wikis/Data-Structures-Reference) - Complete struct documentation (State, GPS, IMU, IAS, TAS, etc.)
+- [Packet Types](https://gitlab.com/bstaero/sdk/-/wikis/Packet-Types) - All packet types and enumerations
 - [Communication Interfaces](https://gitlab.com/bstaero/sdk/-/wikis/Communication-Interfaces) - Serial, socket, CAN, file
 
 ### Example Applications
-- [Examples Overview](https://gitlab.com/bstaero/sdk/-/wikis/Examples-Overview) - File structure and architecture
-- [CAN Test](https://gitlab.com/bstaero/sdk/-/wikis/Example-CAN-Test) - CAN bus communication
-- [Gazebo Simulation](https://gitlab.com/bstaero/sdk/-/wikis/Example-Gazebo) - HITL simulation
-- [Payload Integration](https://gitlab.com/bstaero/sdk/-/wikis/Example-Payload) - Custom sensor template
+
+- [Examples Overview](https://gitlab.com/bstaero/sdk/-/wikis/Examples-Overview) - Architecture and file structure
+- [CAN Communication](https://gitlab.com/bstaero/sdk/-/wikis/Example-CAN-Test) - CAN bus testing
+
+---
+
+## C/C++ SDK
+
+### Directory Structure
+
+```
+sdk/
+├── include/
+│   ├── bst_protocol/       # Protocol headers
+│   │   ├── bst_protocol.h  # Main handler
+│   │   ├── bst_packet.h    # Packet class
+│   │   ├── bst_module.h    # Module base
+│   │   └── messages/       # Data structures
+│   ├── bst_core/           # Utilities
+│   └── bst_can/            # CAN bridge
+├── src/                    # Implementation
+└── examples/               # Example applications
+```
+
+### Quick Start
+
+```cpp
+#include "bst_protocol.h"
+#include "bst_module_basic.h"
+#include "netuas_socket.h"
+
+void receive(uint8_t type, void* data, uint16_t size, const void* param) {
+    if (type == STATE_STATE) {
+        State_t* state = (State_t*)data;
+        printf("IAS: %.1f m/s\n", state->ias);
+        printf("TAS: %.1f m/s\n", state->tas);
+        printf("Alt: %.1f m\n", state->altitude);
+    }
+}
+
+int main() {
+    BSTProtocol* protocol = new BSTProtocol();
+    NetuasSocket* socket = new NetuasSocket();
+    socket->initialize("localhost", "55555", "udp");
+    protocol->setInterface(socket);
+
+    BSTModuleBasic basic;
+    basic.registerReceive(receive);
+    protocol->registerModule(&basic);
+
+    socket->open();
+    while (true) {
+        protocol->update();
+        usleep(1000);
+    }
+}
+```
+
+### Building Examples
+
+```bash
+cd examples/can_test
+make
+./test -i localhost -p 55555
+```
 
 ---
 
@@ -101,67 +170,6 @@ output_files = convert_to_nc("flight.bin", out_dir="./output")
 
 ---
 
-## C/C++ SDK
-
-### Directory Structure
-
-```
-sdk/
-├── include/
-│   ├── bst_protocol/       # Protocol headers
-│   │   ├── bst_protocol.h  # Main handler
-│   │   ├── bst_packet.h    # Packet class
-│   │   ├── bst_module.h    # Module base
-│   │   └── messages/       # Data structures
-│   ├── bst_core/           # Utilities
-│   └── bst_can/            # CAN bridge
-├── src/                    # Implementation
-└── examples/               # Example applications
-```
-
-### Quick Start
-
-```cpp
-#include "bst_protocol.h"
-#include "bst_module_basic.h"
-#include "netuas_socket.h"
-
-void receive(uint8_t type, void* data, uint16_t size, const void* param) {
-    if (type == STATE_STATE) {
-        State_t* state = (State_t*)data;
-        printf("IAS: %.1f m/s\n", state->ias);
-        printf("TAS: %.1f m/s\n", state->tas);
-    }
-}
-
-int main() {
-    BSTProtocol* protocol = new BSTProtocol();
-    NetuasSocket* socket = new NetuasSocket();
-    socket->initialize("localhost", "55555", "udp");
-    protocol->setInterface(socket);
-
-    BSTModuleBasic basic;
-    basic.registerReceive(receive);
-    protocol->registerModule(&basic);
-
-    socket->open();
-    while (true) {
-        protocol->update();
-        usleep(1000);
-    }
-}
-```
-
-### Building Examples
-
-```bash
-cd examples/can_test
-make
-./test -i localhost -p 55555
-```
-
----
-
 ## Example Applications
 
 Located in `examples/`:
@@ -173,9 +181,6 @@ Located in `examples/`:
 | `payload` | Generic payload template |
 | `mhp` | Multi-hole probe meteorological |
 | `python_payload` | Python real-time visualization |
-| `ch4` | Methane sensor integration |
-| `s0` | Ground state testing |
-| `psns_test` | Pressure sensor network |
 
 ### Example File Structure
 
@@ -183,9 +188,9 @@ All C++ examples follow this pattern:
 
 | File | Purpose |
 |------|---------|
-| `main.cpp` | CLI parsing, interface setup, main loop |
-| `main.h` | Configuration, timing functions |
-| `test.cpp` | Display, file output, user interaction |
+| `main.cpp` | Entry point, CLI parsing, comms setup |
+| `main.h` | Configuration, includes, timing |
+| `test.cpp` | Display formatting, file output |
 | `test.h` | Data structures |
 | `test_handler.cpp` | Incoming packet handlers |
 
@@ -200,28 +205,25 @@ All C++ examples follow this pattern:
 
 ## Key Data Fields
 
-Common fields you'll access:
+Common fields in `State_t`:
 
-| Field | Location | Unit | Description |
-|-------|----------|------|-------------|
-| `ias` | State_t | m/s | Indicated airspeed |
-| `tas` | State_t | m/s | True airspeed |
-| `altitude` | State_t | m | Barometric altitude |
-| `latitude` | GPS_t | deg | Latitude |
-| `longitude` | GPS_t | deg | Longitude |
-| `q[4]` | State_t | - | Attitude quaternion |
-| `usec[16]` | Actuators_t | µs | Servo PWM values |
+| Field | Unit | Description |
+|-------|------|-------------|
+| `ias` | m/s | Indicated airspeed |
+| `tas` | m/s | True airspeed |
+| `altitude` | m | Barometric altitude |
+| `q[4]` | - | Attitude quaternion |
 
 See [Data Structures Reference](https://gitlab.com/bstaero/sdk/-/wikis/Data-Structures-Reference) for complete documentation.
 
 ## Protocol Versions
 
-The SDK supports protocol versions 3.11.0 through 3.23.0. Version is automatically detected from log files.
+Supports protocol versions 3.11.0 through 3.23.0. Version is automatically detected from log files.
 
 ## Dependencies
 
-**Python:** numpy, scipy, h5netcdf, lxml, swig
 **C++:** C++11 compiler, libnetuas_lib
+**Python:** numpy, scipy, h5netcdf, lxml, swig
 
 ## Support
 
