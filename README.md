@@ -1,92 +1,94 @@
-# BST Python SDK
+# BST SDK
 
-This is the public SDK for the Black Swift Technologies SwiftCore flight management system. More information on the products this works with can be found on our website https://bst.aero
+Official SDK for the Black Swift Technologies SwiftCore flight management system.
 
-**Package:** `BSTPythonSDK`
 **Version:** 3.23.0
+**Website:** https://bst.aero
 **License:** GNU General Public License v2
+
+## Overview
+
+The BST SDK provides both **Python** and **C/C++** interfaces for:
+- Parsing binary telemetry logs
+- Real-time communication with aircraft
+- Custom payload integration
+- Ground station development
+- Hardware-in-the-loop simulation
 
 ## Documentation
 
-Full API documentation is available on the [GitLab Wiki](https://gitlab.com/bstaero/sdk/-/wikis/home):
+Full documentation: [GitLab Wiki](https://gitlab.com/bstaero/sdk/-/wikis/home)
 
 ### Getting Started
-- [Installation](https://gitlab.com/bstaero/sdk/-/wikis/Installation)
-- [Quick Start](https://gitlab.com/bstaero/sdk/-/wikis/Quick-Start)
+| Python | C/C++ |
+|--------|-------|
+| [Installation](https://gitlab.com/bstaero/sdk/-/wikis/Python-Installation) | [Installation](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-Installation) |
+| [Quick Start](https://gitlab.com/bstaero/sdk/-/wikis/Python-Quick-Start) | [Quick Start](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-Quick-Start) |
+| [API Overview](https://gitlab.com/bstaero/sdk/-/wikis/Python-API-Overview) | [API Overview](https://gitlab.com/bstaero/sdk/-/wikis/Cpp-API-Overview) |
 
-### Core API
-- [API Overview](https://gitlab.com/bstaero/sdk/-/wikis/API-Overview)
-- [Log Parsing](https://gitlab.com/bstaero/sdk/-/wikis/Log-Parsing)
-- [Packet Types](https://gitlab.com/bstaero/sdk/-/wikis/Packet-Types)
-- [Vehicle-Specific Packets](https://gitlab.com/bstaero/sdk/-/wikis/Vehicle-Specific-Packets)
+### Core References
+- [BST Protocol](https://gitlab.com/bstaero/sdk/-/wikis/BST-Protocol) - Packet structure, addressing, checksums
+- [Packet Types](https://gitlab.com/bstaero/sdk/-/wikis/Packet-Types) - All packet types and enumerations
+- [Data Structures](https://gitlab.com/bstaero/sdk/-/wikis/Data-Structures-Reference) - Complete struct documentation (State, GPS, IMU, IAS, TAS, etc.)
+- [Communication Interfaces](https://gitlab.com/bstaero/sdk/-/wikis/Communication-Interfaces) - Serial, socket, CAN, file
 
-### Advanced Topics
-- [NetCDF Export](https://gitlab.com/bstaero/sdk/-/wikis/NetCDF-Export)
-- [Custom Payloads](https://gitlab.com/bstaero/sdk/-/wikis/Custom-Payloads)
-- [Protocol Versions](https://gitlab.com/bstaero/sdk/-/wikis/Protocol-Versions)
-- [SWIG Parser](https://gitlab.com/bstaero/sdk/-/wikis/SWIG-Parser)
+### Example Applications
+- [Examples Overview](https://gitlab.com/bstaero/sdk/-/wikis/Examples-Overview) - File structure and architecture
+- [CAN Test](https://gitlab.com/bstaero/sdk/-/wikis/Example-CAN-Test) - CAN bus communication
+- [Gazebo Simulation](https://gitlab.com/bstaero/sdk/-/wikis/Example-Gazebo) - HITL simulation
+- [Payload Integration](https://gitlab.com/bstaero/sdk/-/wikis/Example-Payload) - Custom sensor template
 
-### Integration Guides
-- [Gazebo Setup](https://gitlab.com/bstaero/sdk/-/wikis/Gazebo-Setup)
-- [SwiftFlow Interface](https://gitlab.com/bstaero/sdk/-/wikis/SwiftFlow-Interface)
-- [Payload Interface](https://gitlab.com/bstaero/sdk/-/wikis/Payload-Interface)
+---
 
 ## Python SDK
 
-### Prerequisites
+### Installation
 
-Installing the Python SDK requires the following to be installed on your machine:
-
-- swig
-- python3-dev
-
-**Ubuntu/Debian:**
+**Prerequisites:**
 ```bash
+# Ubuntu/Debian
 sudo apt-get install swig python3-dev
-```
 
-**macOS (with Homebrew):**
-```bash
+# macOS
 brew install swig
 ```
 
-### Install
-
+**Install:**
 ```bash
 pip install BSTPythonSDK
 ```
 
-Or install from source:
-
+**From source:**
 ```bash
 git clone https://gitlab.com/bstaero/sdk.git
 cd sdk
 pip install -e .
 ```
 
-### Import
-
-```python
-import bst_python_sdk
-```
-
-## Quick Start
-
-### Parse Log
+### Quick Start
 
 ```python
 from bst_python_sdk.logparse import Parser
 
+# Parse a flight log
 parser = Parser()
-parsed_log = parser.parse_log("path/to/log.bin")
+data = parser.parse_log("flight.bin")
 
 # Access data by aircraft and packet type
-for aircraft, packets in parsed_log.items():
+for aircraft, packets in data.items():
     print(f"Aircraft: {aircraft}")
 
+    # GPS data
     if 'SENSORS_GPS' in packets:
         for gps in packets['SENSORS_GPS']:
-            print(f"  GPS: {gps.latitude:.6f}, {gps.longitude:.6f}")
+            print(f"  Position: {gps.latitude:.6f}, {gps.longitude:.6f}")
+
+    # State data (includes IAS, TAS)
+    if 'STATE_STATE' in packets:
+        for state in packets['STATE_STATE']:
+            print(f"  IAS: {state.ias:.1f} m/s")
+            print(f"  TAS: {state.tas:.1f} m/s")
+            print(f"  Altitude: {state.altitude:.1f} m")
 ```
 
 ### Convert to NetCDF
@@ -94,37 +96,100 @@ for aircraft, packets in parsed_log.items():
 ```python
 from bst_python_sdk.log_to_nc import convert_to_nc
 
-# Convert and export to current directory
-output_files = convert_to_nc("path/to/log.bin")
-# Returns: ["log_010_FW0001.nc", "log_010_SwiftStation.nc"]
+output_files = convert_to_nc("flight.bin", out_dir="./output")
 ```
 
-### Access State Data
+---
 
-```python
-from bst_python_sdk.logparse import Parser
+## C/C++ SDK
 
-parser = Parser()
-data = parser.parse_log("flight.bin")
+### Directory Structure
 
-for aircraft, packets in data.items():
-    if 'STATE_STATE' in packets:
-        for state in packets['STATE_STATE']:
-            print(f"Time: {state.system_time:.2f}s")
-            print(f"Altitude: {state.altitude:.1f}m")
-            print(f"Airspeed: {state.ias:.1f}m/s")
+```
+sdk/
+├── include/
+│   ├── bst_protocol/       # Protocol headers
+│   │   ├── bst_protocol.h  # Main handler
+│   │   ├── bst_packet.h    # Packet class
+│   │   ├── bst_module.h    # Module base
+│   │   └── messages/       # Data structures
+│   ├── bst_core/           # Utilities
+│   └── bst_can/            # CAN bridge
+├── src/                    # Implementation
+└── examples/               # Example applications
 ```
 
-### Parser Options
+### Quick Start
 
-```python
-parser = Parser(
-    has_addr=True,      # Log uses packet addressing (default: True)
-    quick_mode=False,   # Fast mode, essential packets only (default: False)
-    verbose=False,      # Print debug info (default: False)
-    xml_payload_path="" # Path to custom payload XML
-)
+```cpp
+#include "bst_protocol.h"
+#include "bst_module_basic.h"
+#include "netuas_socket.h"
+
+void receive(uint8_t type, void* data, uint16_t size, const void* param) {
+    if (type == STATE_STATE) {
+        State_t* state = (State_t*)data;
+        printf("IAS: %.1f m/s\n", state->ias);
+        printf("TAS: %.1f m/s\n", state->tas);
+    }
+}
+
+int main() {
+    BSTProtocol* protocol = new BSTProtocol();
+    NetuasSocket* socket = new NetuasSocket();
+    socket->initialize("localhost", "55555", "udp");
+    protocol->setInterface(socket);
+
+    BSTModuleBasic basic;
+    basic.registerReceive(receive);
+    protocol->registerModule(&basic);
+
+    socket->open();
+    while (true) {
+        protocol->update();
+        usleep(1000);
+    }
+}
 ```
+
+### Building Examples
+
+```bash
+cd examples/can_test
+make
+./test -i localhost -p 55555
+```
+
+---
+
+## Example Applications
+
+Located in `examples/`:
+
+| Example | Purpose |
+|---------|---------|
+| `can_test` | CAN bus testing and visualization |
+| `gazebo` | Gazebo HITL simulation |
+| `payload` | Generic payload template |
+| `mhp` | Multi-hole probe meteorological |
+| `python_payload` | Python real-time visualization |
+| `ch4` | Methane sensor integration |
+| `s0` | Ground state testing |
+| `psns_test` | Pressure sensor network |
+
+### Example File Structure
+
+All C++ examples follow this pattern:
+
+| File | Purpose |
+|------|---------|
+| `main.cpp` | CLI parsing, interface setup, main loop |
+| `main.h` | Configuration, timing functions |
+| `test.cpp` | Display, file output, user interaction |
+| `test.h` | Data structures |
+| `test_handler.cpp` | Incoming packet handlers |
+
+---
 
 ## Supported Vehicles
 
@@ -133,40 +198,32 @@ parser = Parser(
 - VTOL (tilt-rotor, quad-plane)
 - Tail-sitter
 
-## Packet Categories
+## Key Data Fields
 
-The SDK parses the following packet types:
+Common fields you'll access:
 
-| Category | Examples |
-|----------|----------|
-| Sensors | GPS, IMU, Pressure, Magnetometer |
-| State | Attitude, Altitude, Airspeed |
-| Control | Commands, PID gains, Flight parameters |
-| Actuators | Servo PWM values, Calibration |
-| Navigation | Waypoints, Flight plans |
-| System | Health, Errors, Initialization |
-| Telemetry | Position, Orientation, System status |
-| Payload | Trigger events, Custom data channels |
+| Field | Location | Unit | Description |
+|-------|----------|------|-------------|
+| `ias` | State_t | m/s | Indicated airspeed |
+| `tas` | State_t | m/s | True airspeed |
+| `altitude` | State_t | m | Barometric altitude |
+| `latitude` | GPS_t | deg | Latitude |
+| `longitude` | GPS_t | deg | Longitude |
+| `q[4]` | State_t | - | Attitude quaternion |
+| `usec[16]` | Actuators_t | µs | Servo PWM values |
 
-See [Packet Types](https://gitlab.com/bstaero/sdk/-/wikis/Packet-Types) for complete reference.
+See [Data Structures Reference](https://gitlab.com/bstaero/sdk/-/wikis/Data-Structures-Reference) for complete documentation.
 
 ## Protocol Versions
 
 The SDK supports protocol versions 3.11.0 through 3.23.0. Version is automatically detected from log files.
 
-See [Protocol Versions](https://gitlab.com/bstaero/sdk/-/wikis/Protocol-Versions) for details.
-
 ## Dependencies
 
-- numpy
-- scipy
-- h5netcdf
-- lxml
+**Python:** numpy, scipy, h5netcdf, lxml, swig
+**C++:** C++11 compiler, libnetuas_lib
 
 ## Support
 
-For issues and feature requests, please use the [GitLab issue tracker](https://gitlab.com/bstaero/sdk/-/issues).
-
-## License
-
-GNU General Public License v2
+- [GitLab Issues](https://gitlab.com/bstaero/sdk/-/issues)
+- [Documentation Wiki](https://gitlab.com/bstaero/sdk/-/wikis/home)
