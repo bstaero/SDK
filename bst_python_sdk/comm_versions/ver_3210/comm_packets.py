@@ -250,6 +250,10 @@ class PacketTypes (Enum):
 
 	SENSORS_MHP_TIMING=31  # FIXME - TECHNICALLY IN STATE ADDR SPACE
 
+	SENSORS_PROXIMITY=58  # FIXME - TECHNICALLY IN HANDSET ADDR SPACE
+
+	SENSORS_RTK_HEADING=59  # FIXME - TECHNICALLY IN HANDSET ADDR SPACE
+
 
 	# STATE
 
@@ -369,7 +373,7 @@ class PacketTypes (Enum):
 
 #---------[ Configuration ]---------#
 
-COMMS_VERSION = 3210
+COMMS_VERSION = 3220
 MAX_ALTITUDE = 20000
 MAX_VEHICLES = 5
 
@@ -1146,7 +1150,7 @@ class MHP:
 		return bytearray(buf)
 
 class MHP9HSensors:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_9H_SENSORS']
 	SIZE = 77
 
 	def __init__ (self, system_time = 0.0, error_code = 0,
@@ -1244,7 +1248,7 @@ class MHP9HSensors:
 		return bytearray(buf)
 
 class MHP9HTiming:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_9H_TIMING']
 	SIZE = 64
 
 	def __init__ (self, system_time = 0.0, static_pressure_time = 0.0,
@@ -1325,7 +1329,7 @@ class MHP9HTiming:
 		return bytearray(buf)
 
 class MHPSensors:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_SENSORS']
 	SIZE = 61
 
 	def __init__ (self, system_time = 0.0, error_code = 0, static_pressure = 0.0,
@@ -1423,7 +1427,7 @@ class MHPSensors:
 		return bytearray(buf)
 
 class MHPSensorsGNSS:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_GNSS']
 	SIZE = 60
 
 	def __init__ (self, system_time = 0.0, magnetometer = [None] * 3,
@@ -1529,7 +1533,7 @@ class MHPSensorsGNSS:
 		return bytearray(buf)
 
 class MHPTiming:
-	PACKET_TYPES = ['SENSORS_MHP']
+	PACKET_TYPES = ['SENSORS_MHP_TIMING']
 	SIZE = 48
 
 	def __init__ (self, system_time = 0.0, static_pressure_time = 0.0,
@@ -1649,6 +1653,48 @@ class Pressure:
 		buf.extend(struct.pack('<f', self.system_time))
 		buf.extend(struct.pack('<f', self.pressure))
 		buf.extend(struct.pack('<f', self.temperature))
+		return bytearray(buf)
+
+class ProximitySensor:
+	PACKET_TYPES = ['SENSORS_PROXIMITY']
+	SIZE = 12
+
+	def __init__ (self, system_time = 0.0, distance = 0.0, velocity = 0.0):
+		self.system_time = system_time
+		self.distance = distance
+		self.velocity = velocity
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [ProximitySensor]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.system_time = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.distance = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.velocity = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<f', self.system_time))
+		buf.extend(struct.pack('<f', self.distance))
+		buf.extend(struct.pack('<f', self.velocity))
 		return bytearray(buf)
 
 class RTCM:
@@ -1841,7 +1887,7 @@ class SingleValue:
 		return bytearray(buf)
 
 class SingleValueSensor:
-	PACKET_TYPES = ['SENSORS_AIR_TEMPERATURE', 'SENSORS_AGL']
+	PACKET_TYPES = ['SENSORS_AIR_TEMPERATURE', 'SENSORS_AGL', 'SENSORS_HUMIDITY', 'SENSORS_RTK_HEADING']
 	SIZE = 8
 
 	def __init__ (self, system_time = 0.0, value = 0.0):
@@ -2377,10 +2423,10 @@ class ThreeAxisFirstOrderCorrection:
 
 class Sensors:
 	PACKET_TYPES = []
-	SIZE = 170
+	SIZE = 182
 
 	def __init__ (self, imu = 0, gps = 0, dynamic_pressure = 0, static_pressure = 0,
-	air_temperature = 0, humidity = 0, agl = 0):
+	air_temperature = 0, humidity = 0, agl = 0, proximity = 0):
 		self.imu = IMU(imu)
 
 		self.gps = GPS(gps)
@@ -2394,6 +2440,8 @@ class Sensors:
 		self.humidity = SingleValueSensor(humidity)
 
 		self.agl = SingleValueSensor(agl)
+
+		self.proximity = ProximitySensor(proximity)
 
 	def parse(self,buf):
 		if (len(buf) != self.SIZE):
@@ -2429,6 +2477,10 @@ class Sensors:
 		self.agl.parse(buf[offset:offset+SingleValueSensor.SIZE])
 		offset = offset+SingleValueSensor.SIZE
 
+		self.proximity = ProximitySensor()
+		self.proximity.parse(buf[offset:offset+ProximitySensor.SIZE])
+		offset = offset+ProximitySensor.SIZE
+
 	def getSize(self):
 		return self.SIZE
 
@@ -2449,6 +2501,7 @@ class Sensors:
 		buf.extend(self.air_temperature.serialize())
 		buf.extend(self.humidity.serialize())
 		buf.extend(self.agl.serialize())
+		buf.extend(self.proximity.serialize())
 		return bytearray(buf)
 
 #---------[ Status ]---------#
@@ -3075,7 +3128,7 @@ class CommandID (Enum):
 	CMD_ENGINE_KILL=6
 	CMD_FLIGHT_TERMINATE=7
 	CMD_ABORT=8
-	CMD_RID_EMERGENCY=37
+	CMD_RID_EMERGENCY=39
 	CMD_RID_IGNORE=38
 
 	# Navigation
@@ -3956,7 +4009,7 @@ class TelemetrySystem:
 		self.batt_current = struct.unpack_from('<h',buf,offset)[0]/ 100
 		offset = offset + struct.calcsize('<h')
 
-		self.batt_watt_hours = struct.unpack_from('<H',buf,offset)[0]
+		self.batt_watt_hours = struct.unpack_from('<H',buf,offset)[0]/ 10
 		offset = offset + struct.calcsize('<H')
 
 		self.batt_percent = struct.unpack_from('<H',buf,offset)[0]/ 100

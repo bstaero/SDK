@@ -1887,7 +1887,7 @@ class SingleValue:
 		return bytearray(buf)
 
 class SingleValueSensor:
-	PACKET_TYPES = ['SENSORS_AIR_TEMPERATURE', 'SENSORS_AGL', 'SENSORS_HUMIDITY']
+	PACKET_TYPES = ['SENSORS_AIR_TEMPERATURE', 'SENSORS_AGL', 'SENSORS_HUMIDITY', 'SENSORS_RTK_HEADING']
 	SIZE = 8
 
 	def __init__ (self, system_time = 0.0, value = 0.0):

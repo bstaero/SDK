@@ -61,6 +61,7 @@ class CAN_PacketTypes (Enum):
 	CAN_PKT_CALIBRATE=160
 	CAN_PKT_BOARD_ORIENTATION=161
 	CAN_PKT_GNSS_ORIENTATION=162
+	CAN_PKT_GNSS_RELPOSNED=163
 
 	# STATE
 
@@ -112,6 +113,8 @@ class CAN_PacketTypes (Enum):
 	CAN_PKT_TRIGGER=83
 
 	# ERRORS
+
+	CAN_PKT_DEBUG=1792
 
 #---------[ Control ]---------#
 
@@ -1776,6 +1779,7 @@ class CAN_CalibrateSensor:
 class CAN_DeploymentTubeCommandID (Enum):
 	CMD_HEARTBEAT=0
 	CMD_SET_STATE=1
+	CMD_POWER_DOWN=2
 
 class CAN_DeploymentTubeDoorStatus (Enum):
 	CLOSED=0

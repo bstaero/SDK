@@ -26,6 +26,10 @@ from .comm_packets import *
 #                                 msg-gen.py                                   #
 #                                DO NOT EDIT                                   #
 
+#---------[ Actuators ]---------#
+
+MAX_NUM_ROTORS = 16
+
 #---------[ Controller ]---------#
 
 class CommandID (Enum):
@@ -94,7 +98,8 @@ class ControlLoop (Enum):
 
 	CTRL_NAV_2_ROLL=14  # no I or D terms
 
-	CTRL_INVALID=15
+	CTRL_IAS_2_VFF=15
+	CTRL_INVALID=16
 
 class TECSMode (Enum):
 	TECS_MODE_OFF=0
@@ -393,6 +398,112 @@ class LogFlightControl:
 
 		for val in self.data:
 		    buf.extend(struct.pack('<B', val))
+		return bytearray(buf)
+
+#---------[ Rotors ]---------#
+
+class RotorDir (Enum):
+	ROTOR_DIR_CW=0
+	ROTOR_DIR_CCW=1
+	ROTOR_DIR_INVALID=2
+
+class RotorParameters:
+	PACKET_TYPES = ['ACTUATORS_ROTOR_PARAMS']
+	SIZE = 43
+
+	def __init__ (self, id = 0, channel = 0, k_wv = 0.0, pwm_o = 0.0,
+	pos_x = 0.0, pos_y = 0.0, pos_z = 0.0, t_x = 0.0, t_y = 0.0, t_z = 0.0,
+	dir = RotorDir.ROTOR_DIR_INVALID, rpm_to_thrust = 0.0,
+	thrust_to_moment = 0.0):
+		self.id = id
+		self.channel = channel
+		self.k_wv = k_wv
+		self.pwm_o = pwm_o
+		self.pos_x = pos_x
+		self.pos_y = pos_y
+		self.pos_z = pos_z
+		self.t_x = t_x
+		self.t_y = t_y
+		self.t_z = t_z
+
+		self.dir = RotorDir(dir)
+
+		self.rpm_to_thrust = rpm_to_thrust
+		self.thrust_to_moment = thrust_to_moment
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [RotorParameters]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.id = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.channel = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.k_wv = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.pwm_o = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.pos_x = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.pos_y = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.pos_z = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.t_x = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.t_y = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.t_z = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.dir = RotorDir(struct.unpack_from('<B',buf,offset)[0])
+		offset = offset+struct.calcsize('<B')
+
+		self.rpm_to_thrust = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.thrust_to_moment = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<B', self.id))
+		buf.extend(struct.pack('<B', self.channel))
+		buf.extend(struct.pack('<f', self.k_wv))
+		buf.extend(struct.pack('<f', self.pwm_o))
+		buf.extend(struct.pack('<f', self.pos_x))
+		buf.extend(struct.pack('<f', self.pos_y))
+		buf.extend(struct.pack('<f', self.pos_z))
+		buf.extend(struct.pack('<f', self.t_x))
+		buf.extend(struct.pack('<f', self.t_y))
+		buf.extend(struct.pack('<f', self.t_z))
+
+		buf.put(RotorDir.encode(self.dir));
+
+		buf.extend(struct.pack('<f', self.rpm_to_thrust))
+		buf.extend(struct.pack('<f', self.thrust_to_moment))
 		return bytearray(buf)
 
 #---------[ System ]---------#

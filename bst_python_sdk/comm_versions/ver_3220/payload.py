@@ -151,6 +151,99 @@ class K30:
 		buf.extend(struct.pack('<H', self.temp))
 		return bytearray(buf)
 
+class Licor850Data:
+	PACKET_TYPES = ['PAYLOAD_LICOR']
+	SIZE = 42
+
+	def __init__ (self, celltemp = 0.0, cellpres = 0.0, co2 = 0.0,
+	co2abs = 0.0, h2o = 0.0, h2oabs = 0.0, h2odewpoint = 0.0, flowrate = 0.0,
+	pump_on = 0, zeroed = 0, span_set = [None] * 2):
+		self.celltemp = celltemp
+		self.cellpres = cellpres
+		self.co2 = co2
+		self.co2abs = co2abs
+		self.h2o = h2o
+		self.h2oabs = h2oabs
+		self.h2odewpoint = h2odewpoint
+		self.flowrate = flowrate
+		self.pump_on = pump_on
+		self.zeroed = zeroed
+
+		if (len(span_set) != 2):
+			raise ValueError('array span_set expecting length '+str(2)+' got '+str(len(span_set)))
+
+		self.span_set = list(span_set)
+
+	def parse(self,buf):
+		if (len(buf) != self.SIZE):
+			raise BufferError('INVALID PACKET SIZE [Licor850Data]: Expected=' + str(self.SIZE) + ' Received='+ str(len(buf)))
+
+		offset = 0
+
+		self.celltemp = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.cellpres = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.co2 = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.co2abs = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.h2o = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.h2oabs = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.h2odewpoint = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.flowrate = struct.unpack_from('<f',buf,offset)[0]
+		offset = offset + struct.calcsize('<f')
+
+		self.pump_on = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.zeroed = struct.unpack_from('<B',buf,offset)[0]
+		offset = offset + struct.calcsize('<B')
+
+		self.span_set = [];
+
+		for i in range(0,2):
+			self.span_set.append(struct.unpack_from('<f',buf,offset)[0])
+			offset = offset+struct.calcsize('<f')
+
+	def getSize(self):
+		return self.SIZE
+
+	def set_system_time(self, sys_time):
+		self.system_time = sys_time
+
+	def get_packet_types(self):
+		types = getattr(sys.modules[__name__], "PacketTypes")
+		return [getattr(types, pkt, types.INVALID_PACKET) for pkt in self.PACKET_TYPES]
+
+	def serialize(self):
+		buf = []
+
+		buf.extend(struct.pack('<f', self.celltemp))
+		buf.extend(struct.pack('<f', self.cellpres))
+		buf.extend(struct.pack('<f', self.co2))
+		buf.extend(struct.pack('<f', self.co2abs))
+		buf.extend(struct.pack('<f', self.h2o))
+		buf.extend(struct.pack('<f', self.h2oabs))
+		buf.extend(struct.pack('<f', self.h2odewpoint))
+		buf.extend(struct.pack('<f', self.flowrate))
+		buf.extend(struct.pack('<B', self.pump_on))
+		buf.extend(struct.pack('<B', self.zeroed))
+
+		for val in self.span_set:
+		    buf.extend(struct.pack('<f', val))
+		return bytearray(buf)
+
 class MiniGAS:
 	PACKET_TYPES = ['PAYLOAD_MINIGAS']
 	SIZE = 60

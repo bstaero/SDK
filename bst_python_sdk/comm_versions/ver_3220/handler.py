@@ -78,6 +78,7 @@ packet_mapping = {
     PacketTypes.SENSORS_MHP_SENSORS.value: MHPSensors,
     PacketTypes.SENSORS_MHP_TIMING.value: MHPTiming,
     PacketTypes.SENSORS_PROXIMITY.value: ProximitySensor,
+    PacketTypes.SENSORS_RTK_HEADING.value: SingleValueSensor,
     PacketTypes.SENSORS_STATIC_PRESSURE.value: Pressure,
     PacketTypes.STATE_ESTIMATOR_PARAM.value: EstimatorParameters,
     PacketTypes.STATE_STATE.value: State,
@@ -111,6 +112,7 @@ packet_mapping = {
     PacketTypes.PAYLOAD_STATUS.value: PayloadStatus,
     PacketTypes.PAYLOAD_TRIGGER.value: PayloadTrigger,
     PacketTypes.TELEMETRY_PAYLOAD.value: TelemetryPayload,
+    PayloadID.PAYLOAD_LICOR.value: Licor850Data,
 }
 
 fw_mapping = {
@@ -191,7 +193,7 @@ def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
                 return None, sys_time
         else:
             if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT.value:
-                print(f'Parsing not set up for packet {pkt.TYPE}...')
+                print(f'3220 Parsing not set up for packet {pkt.TYPE}...')
             return None, sys_time
 
     try:
