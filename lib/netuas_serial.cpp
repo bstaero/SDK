@@ -76,7 +76,12 @@ int16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
 	val = select(maxFD + 1, &readFDs, NULL, NULL, &timeout);
 
 	if( val < 0 ) {
-		if (errno != EINTR) pmesg(VERBOSE_ERROR,"select error\n");
+		if (errno == EBADF) {
+			// File descriptor invalid - device disconnected
+			pmesg(VERBOSE_WARN,"serial device disconnected (EBADF), will attempt reconnection\n");
+			connected = false;
+		} else if (errno != EINTR)
+			pmesg(VERBOSE_ERROR,"select error: %s\n", strerror(errno));
 	}
 	else if(val != 0) {
 	/*<----One FD is Active--->*/
@@ -88,12 +93,16 @@ int16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
 			int n = serial_ptr->read((char *)buf, buf_size);
 			if( n > 0) { // data available
 				return n;
-			} 
+			}
 			else {
 				if(n == 0) {
 					pmesg(VERBOSE_WARN,"read from serial returned zero bytes\n");
 					initialize(device_str.c_str(), baud_str.c_str(), NULL);
-				} else if( errno != EWOULDBLOCK && errno != EINTR && errno != EAGAIN) 
+				} else if( errno == EIO || errno == ENODEV || errno == ENXIO) {
+					// Device disconnected - reinitialize for reconnection
+					pmesg(VERBOSE_WARN,"serial device disconnected, will attempt reconnection\n");
+					connected = false;
+				} else if( errno != EWOULDBLOCK && errno != EINTR && errno != EAGAIN)
 					pmesg(VERBOSE_ERROR,"bad read from client\n");
 			}
 		}
@@ -122,8 +131,12 @@ int16_t NetuasSerial::write(uint8_t * buf, uint16_t buf_size) {
 	val = select(maxFD + 1, NULL, &writeFDs, NULL, &timeout);
 
 	if( val < 0 ) {
-		if (errno != EINTR)
-			pmesg(VERBOSE_ERROR,"select error\n");
+		if (errno == EBADF) {
+			// File descriptor invalid - device disconnected
+			pmesg(VERBOSE_WARN,"serial device disconnected on write (EBADF), will attempt reconnection\n");
+			connected = false;
+		} else if (errno != EINTR)
+			pmesg(VERBOSE_ERROR,"select error: %s\n", strerror(errno));
 	}
 	else if(val != 0) {
 	/*<----One FD is Active--->*/
@@ -136,9 +149,13 @@ int16_t NetuasSerial::write(uint8_t * buf, uint16_t buf_size) {
 		if( n != buf_size ) {
 			if( n == 0)
 				pmesg(VERBOSE_WARN,"write to client returned zero bytes\n");
-			else if( errno != EWOULDBLOCK || errno != EINTR) 
+			else if( n < 0 && (errno == EIO || errno == ENODEV || errno == ENXIO)) {
+				// Device disconnected - mark for reconnection
+				pmesg(VERBOSE_WARN,"serial device disconnected on write, will attempt reconnection\n");
+				connected = false;
+			} else if( errno != EWOULDBLOCK && errno != EINTR && errno != EAGAIN)
 				pmesg(VERBOSE_ERROR,"bad write to client\n");
-			else 
+			else
 				pmesg(VERBOSE_WARN,"did not write all bytes to serial\n");
 		}
 	}

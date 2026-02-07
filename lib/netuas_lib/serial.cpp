@@ -669,7 +669,20 @@ int SerialPort::write( const char * buf, int buf_len )
 
 	int nwrite=-1;
 
-	nwrite = ::write(Sd, (char *)buf, buf_len);	
+	nwrite = ::write(Sd, (char *)buf, buf_len);
+
+	if(nwrite < 0 && !(errno == EINTR || errno == EAGAIN)) {
+#ifdef DEBUG
+		cout << "SerialPort::write - write error: " << strerror(errno) << endl;
+#endif
+		// Device disconnected - close and mark for reconnection
+		if(errno == EIO || errno == ENODEV || errno == ENXIO) {
+			::close(Sd);
+			Sd = -1;
+			Status = Error;
+		}
+		return ERROR;
+	}
 
 	if( nwrite > 0)
 		totalBytes[1] += nwrite;
@@ -755,8 +768,14 @@ int SerialPort::read( char * buf, int buf_len )
 
 	if(nread < 0 && !(errno == EINTR || errno == EAGAIN)) {
 #ifdef DEBUG
-		cout << "SerialPort::read - read error" << endl;
+		cout << "SerialPort::read - read error: " << strerror(errno) << endl;
 #endif
+		// Device disconnected - close and mark for reconnection
+		if(errno == EIO || errno == ENODEV || errno == ENXIO) {
+			::close(Sd);
+			Sd = -1;
+			Status = Error;
+		}
 		return ERROR;
 	}
 

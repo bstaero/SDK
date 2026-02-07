@@ -140,37 +140,43 @@ int16_t NetuasSocket::read(uint8_t * buf, uint16_t buf_size) {
 					// is that client active
 					if(status & 0x1 << last_client) { // check if FD is active
 
-						// get date from the client
+						// get data from the client
 						n = sock_ptr->read(last_client, (char *)buf, buf_size);
-						
+
 						// data available
-						if( n > 0) { 
+						if( n > 0) {
 #ifdef DEBUG
 							//printf("read %d bytes from socket client %d\n",n, last_client);
 #endif
 							return n;
-						} else {
-							if(n == 0) {
-#ifdef DEBUG 
-								printf("NetuasSocket::read from client returned zero bytes\n");
-#endif
-							} else if( errno != EWOULDBLOCK || errno != EINTR) 
+						} else if(n == 0) {
+							// Client closed connection gracefully
 #ifdef DEBUG
-								printf("NetuasSocket::bad read from client\n");
+							printf("NetuasSocket::read from client returned zero bytes - removing client\n");
 #endif
-
 							if(sock_ptr->removeClient(last_client) != last_client) {
 #ifdef DEBUG
 								printf("NetuasSocket::could not remove client\n");
 #endif
-							} else {
-#ifdef DEBUG
-								printf("NetuasSocket::removed client\n");
-#endif
 							}
-
 							// reset last_client
 							last_client = sock_ptr->getNumClients();
+						} else {
+							// n < 0: error
+							if(errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR) {
+								// Real error - remove client
+#ifdef DEBUG
+								printf("NetuasSocket::bad read from client, removing\n");
+#endif
+								if(sock_ptr->removeClient(last_client) != last_client) {
+#ifdef DEBUG
+									printf("NetuasSocket::could not remove client\n");
+#endif
+								}
+								// reset last_client
+								last_client = sock_ptr->getNumClients();
+							}
+							// else: EWOULDBLOCK/EAGAIN/EINTR - just try again later
 						}
 					}
 				} while(i < sock_ptr->getNumClients());
@@ -197,26 +203,33 @@ int16_t NetuasSocket::write(uint8_t * buf, uint16_t buf_size) {
 		for(int i = 0; i < sock_ptr->getNumClients(); i++) {
 			if(status & 0x1 << i) { // check if FD is active
 				n = sock_ptr->write(i,(char *)buf, buf_size);
-				if( buf_size != n) { 
+				if( buf_size != n) {
 					success = false;
 					if(n == 0) {
+						// Client closed connection
 #ifdef DEBUG
-						printf("NetuasSocket::write to client returned zero bytes\n");
+						printf("NetuasSocket::write to client returned zero bytes - removing client\n");
 #endif
-					} else if( errno != EWOULDBLOCK || errno != EINTR) 
+						if(sock_ptr->removeClient(i) != i) {
 #ifdef DEBUG
-						printf("NetuasSocket::bad write to client\n");
+							printf("NetuasSocket::could not remove client\n");
 #endif
-					if(sock_ptr->removeClient(i) != i) {
+						}
+						i--; // Adjust index after removal
+					} else if(n < 0 && errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR) {
+						// Real error - remove client
 #ifdef DEBUG
-						printf("NetuasSocket::could not remove client\n");
+						printf("NetuasSocket::bad write to client - removing\n");
 #endif
-					} else {
+						if(sock_ptr->removeClient(i) != i) {
 #ifdef DEBUG
-						printf("NetuasSocket::removed client\n");
+							printf("NetuasSocket::could not remove client\n");
 #endif
+						}
+						i--; // Adjust index after removal
 					}
-				} 
+					// else: EWOULDBLOCK/EAGAIN/EINTR or partial write - don't remove
+				}
 #ifdef DEBUG
 				//else printf("wrote %d bytes to socket client %d\n",n, i);
 #endif

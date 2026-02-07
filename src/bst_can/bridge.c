@@ -27,7 +27,7 @@
 
 uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size);
 
-#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32L431xx
+#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32L431xx && ! defined STM32L496xx
   #include "helper_functions.h"
   #include "simulated_can.h"
 #endif
@@ -46,7 +46,8 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
     #endif
   #endif
 
-  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32L431xx
+  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32L431xx || STM32L496xx
+    #include <math.h>
     uint8_t checkFletcher16(uint8_t * data, uint8_t size);
     void setFletcher16 (uint8_t * data, uint8_t size);
   #endif
@@ -3040,7 +3041,7 @@ __inline uint32_t BRIDGE_GetPktDrop(void)
 	return BRIDGE_pktDrops;
 }
 
-#if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
+#if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32L496xx
 uint8_t checkFletcher16(uint8_t * data, uint8_t size) {
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;
