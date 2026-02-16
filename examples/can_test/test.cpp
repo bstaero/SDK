@@ -59,7 +59,7 @@ extern uint32_t mag_cnt;
 
 extern uint32_t stat_p_cnt;
 
-#define TRIGGER_LENGTH 5.0
+#define TRIGGER_LENGTH 1.0
 
 #define CMD_BUF_SIZE 8
 Packet cmd_buf[CMD_BUF_SIZE];
@@ -203,14 +203,8 @@ void updateTest() {
 
 	for(uint8_t i=0; i<16; i++) {
 		if(is_triggering && (is_triggering_ch) == i) {
-			if(i < 6)
-				actuators[i] = 2000;
-			else
-				actuators[i] = 2000;
+				actuators[i] = 1200;
 		} else {
-			if(i < 6)
-				actuators[i] = 1000;
-			else
 				actuators[i] = 1000;
 		}
 	}
