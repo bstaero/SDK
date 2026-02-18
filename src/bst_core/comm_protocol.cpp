@@ -27,7 +27,8 @@ uint16_t CommunicationsProtocol::update() {
 
 uint16_t CommunicationsProtocol::read(uint8_t * buffer, uint16_t size) {
 	if(interface == NULL) return 0u;
-	return interface->read(buffer,size);
+	int16_t n = interface->read(buffer,size);
+	return (n > 0) ? (uint16_t)n : 0u;
 }
 
 uint16_t CommunicationsProtocol::write(uint8_t * buffer, uint16_t size) {

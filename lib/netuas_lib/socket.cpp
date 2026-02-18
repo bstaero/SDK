@@ -945,6 +945,13 @@ int Socket::connectClient()
 	if(!is_blocking)
 		setNonBlocking(tempFD);
 
+	// Set TCP_NODELAY on accepted client socket to prevent Nagle + Delayed ACK
+	// interaction causing ~40-200ms latency on small packet ping-pong exchanges
+	if( type == TCP && tempFD != INVALID_SOCKET ) {
+		int flag = 1;
+		setsockopt(tempFD, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag));
+	}
+
 	if( tempFD != INVALID_SOCKET ) {
 		connected = TRUE;
 		//g_ptr_array_add( clientList, &(clientIndex[client]) );

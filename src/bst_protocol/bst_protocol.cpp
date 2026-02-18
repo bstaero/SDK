@@ -57,12 +57,31 @@ void BSTProtocol::parseData(uint8_t byte) {
 	}
 }
 
+// P400 NB Transparent mode timeout tuning (S128=0, S103=3 → 4800 bps OTA):
+// At 4800 bps, a 50-byte packet takes ~83ms over the air, 100 bytes ~167ms.
+// S113=5 radio-level retransmissions each add a full packet time.
+// S136=1 (RX priority) means radio is effectively half-duplex.
+// Values must account for: packet TX time + turnaround + possible retransmissions.
+#if defined(RADIO_P400)
+#define CMD_TIMEOUT_FP     5.0   // Flight plan operations (s) — FP packets are large
+#define CMD_TIMEOUT_STD    2.0   // Normal commands (s) — allows ~3 retransmissions at 4800 bps
+#define RADIO_TIMEOUT_FP   0.35  // TX spacing during FP exchange (s) — 167ms TX + turnaround
+#define RADIO_TIMEOUT_STD  0.20  // TX spacing during normal commands (s) — 83ms TX + margin
+#define RADIO_TIMEOUT_INIT 0.25  // Default TX spacing (s)
+#else
+#define CMD_TIMEOUT_FP     3.0
+#define CMD_TIMEOUT_STD    1.0
+#define RADIO_TIMEOUT_FP   0.25
+#define RADIO_TIMEOUT_STD  0.02
+#define RADIO_TIMEOUT_INIT 0.25
+#endif
+
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-static float RADIO_TIMEOUT = 0.25;
+static float RADIO_TIMEOUT = RADIO_TIMEOUT_INIT;
 #endif
 
 #if defined (NO_DUPLEX_COMMS)
-static float CMD_TIMEOUT = 3.0;
+static float CMD_TIMEOUT = CMD_TIMEOUT_FP;
 static float last_cmd_rx = -1.0;
 #endif
 
@@ -75,7 +94,13 @@ uint16_t BSTProtocol::update() {
 		}
 	}
 
+	// Drain rx_queue: on high-bandwidth links (socket), process all queued packets per update;
+	// on radio links, process one at a time to avoid blocking the main loop
+#if !defined(LOW_BANDWIDTH) && !defined(SERIAL_COMMS)
+	while(rx_queue.size() > 0) {
+#else
 	if(rx_queue.size() > 0) {
+#endif
 		temp_packet = rx_queue.front();
 		last_address = temp_packet.getFromAddress();
 		rx_queue.pop();
@@ -95,18 +120,18 @@ uint16_t BSTProtocol::update() {
 						 temp_packet.getType() == LAST_MAPPING_WAYPOINT ||
 						 temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
 						 temp_packet.getType() == SYSTEM_INITIALIZE) {
-						CMD_TIMEOUT = 3.0;
+						CMD_TIMEOUT = CMD_TIMEOUT_FP;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-						RADIO_TIMEOUT = 0.25;
+						RADIO_TIMEOUT = RADIO_TIMEOUT_FP;
 #endif
 					} else {
-						CMD_TIMEOUT = 1.0;
+						CMD_TIMEOUT = CMD_TIMEOUT_STD;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-						RADIO_TIMEOUT = 0.02;
+						RADIO_TIMEOUT = RADIO_TIMEOUT_STD;
 #endif
 					}
 #endif
-				} 
+				}
 			} else {
 				last_cmd_rx = getElapsedTime();
 				last_request = temp_packet.getType();
@@ -116,14 +141,14 @@ uint16_t BSTProtocol::update() {
 						temp_packet.getType() == LAST_MAPPING_WAYPOINT ||
 						temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
 						temp_packet.getType() == SYSTEM_INITIALIZE) {
-					CMD_TIMEOUT = 3.0;
+					CMD_TIMEOUT = CMD_TIMEOUT_FP;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-					RADIO_TIMEOUT = 0.25;
+					RADIO_TIMEOUT = RADIO_TIMEOUT_FP;
 #endif
 				} else {
-					CMD_TIMEOUT = 1.0;
+					CMD_TIMEOUT = CMD_TIMEOUT_STD;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-					RADIO_TIMEOUT = 0.02;
+					RADIO_TIMEOUT = RADIO_TIMEOUT_STD;
 #endif
 				}
 #endif
@@ -140,6 +165,18 @@ uint16_t BSTProtocol::update() {
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
 	if(getElapsedTime() - last_tx > RADIO_TIMEOUT) {
 #endif
+		// Drain tx_priority_queue: on high-bandwidth links, send all queued priority packets
+#if !defined(LOW_BANDWIDTH) && !defined(SERIAL_COMMS)
+		while(tx_priority_queue.size() > 0) {
+			temp_packet = tx_priority_queue.front();
+			if(CommunicationsProtocol::write(temp_packet.getPacket(), temp_packet.getSize()) == temp_packet.getSize()) {
+				tx_priority_queue.pop();
+			} else {
+				break;
+			}
+		}
+		if(tx_priority_queue.size() == 0) {
+#else
 		if(tx_priority_queue.size() > 0) {
 			temp_packet = tx_priority_queue.front();
 			if(CommunicationsProtocol::write(temp_packet.getPacket(), temp_packet.getSize()) == temp_packet.getSize()) {
@@ -149,6 +186,7 @@ uint16_t BSTProtocol::update() {
 #endif
 			}
 		} else {
+#endif
 #if defined (NO_DUPLEX_COMMS)
 			if(last_cmd_rx >= 0 && getElapsedTime() - last_cmd_rx < CMD_TIMEOUT) {
 				return 0;
@@ -165,14 +203,14 @@ uint16_t BSTProtocol::update() {
 							temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
 							temp_packet.getType() == SYSTEM_INITIALIZE) {
 						//last_cmd_rx = getElapsedTime();
-						CMD_TIMEOUT = 3.0;
+						CMD_TIMEOUT = CMD_TIMEOUT_FP;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-						RADIO_TIMEOUT = 0.25;
+						RADIO_TIMEOUT = RADIO_TIMEOUT_FP;
 #endif
 					} else {
-						CMD_TIMEOUT = 1.0;
+						CMD_TIMEOUT = CMD_TIMEOUT_STD;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-						RADIO_TIMEOUT = 0.02;
+						RADIO_TIMEOUT = RADIO_TIMEOUT_STD;
 #endif
 					}
 #endif

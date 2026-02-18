@@ -61,10 +61,15 @@ bool NetuasSocket::initialize(const char * hostname, const char * port, const ch
 		return false;
 	}
 
-	sock_ptr->setNonBlocking();
-	//return true;
-
-	if( open() ) return true;
+	// Note: setNonBlocking() must be called AFTER open(), because open() creates
+	// the actual OS socket. Calling it before open() is a no-op (sock == INVALID_SOCKET).
+	// Only set non-blocking for CLIENT mode — SERVER mode uses select() for I/O
+	// multiplexing and its blocking behavior is handled by checkFDActive().
+	if( open() ) {
+		if( mode_type == Socket::CLIENT )
+			sock_ptr->setNonBlocking();
+		return true;
+	}
 
 	return false;
 }
