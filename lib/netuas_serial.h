@@ -35,6 +35,7 @@ class NetuasSerial : public CommunicationsInterface {
 		bool setNonBlocking();
 
 		bool setFlowControl();
+		bool setEvenParity();
 
 	private:
 		SerialPort *serial_ptr;

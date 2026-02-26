@@ -473,6 +473,18 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 				switch(action) {
 					case PKT_ACTION_COMMAND:
 
+						// If we're in the termination handshake and receive
+						// a duplicate command with the same map, just re-ACK
+						// instead of resetting (common on slow radio links).
+						// Compare only the map bitmap — rx_fp_map.mode is FINISH
+						// (set by sendTermination) while the duplicate has ADD.
+						if( fp_send_state == WAITING_FOR_FINAL_MAP_RX &&
+								memcmp(rx_fp_map.map, ((FlightPlanMap_t*)data)->map, sizeof(rx_fp_map.map)) == 0 ) {
+							pmesg(VERBOSE_FP,"duplicate FLIGHT_PLAN_MAP during termination, re-ACK\n");
+							parent->write(type,PKT_ACTION_ACK,data,size,NULL);
+							break;
+						}
+
 						if( fp_send_state != WAITING ) {
 							pmesg(VERBOSE_ERROR,"FLIGHT PLAN MODULE IS NOT IN READY STATE - RESETTING\n");
 							reset();

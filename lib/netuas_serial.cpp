@@ -56,6 +56,13 @@ bool NetuasSerial::setFlowControl() {
 	return false;
 }
 
+bool NetuasSerial::setEvenParity() {
+	if( serial_ptr )
+		return serial_ptr->setEvenParity();
+
+	return false;
+}
+
 int16_t NetuasSerial::read(uint8_t * buf, uint16_t buf_size) {
 	int maxFD, val;
 	fd_set readFDs;

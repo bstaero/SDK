@@ -205,6 +205,7 @@ class SerialPort {
 		bool setRaw();
 		bool setLocal();
 		bool setModem();
+		bool setEvenParity();
 
 		// get bytes sent/received
 		size_t in() const { return totalBytes[0]; }

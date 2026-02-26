@@ -26,7 +26,7 @@
 
 #include <queue>
 
-#define PACKET_BUFFER_SIZE 8
+#define PACKET_BUFFER_SIZE 32
 
 class BSTCommunicationsModule; // FIXME -- shouldn't need forward declaration if written correctly
 

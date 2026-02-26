@@ -594,6 +594,45 @@ bool SerialPort::setModem()
 
 }
 
+bool SerialPort::setEvenParity()
+{
+#if defined( VXWORKS )
+	return false;
+#else
+
+	struct termios config;
+	if ( tcgetattr( Sd, &config ) != 0 ) {
+#ifdef DEBUG
+		cout << "SerialPort::setEvenParity - Unable to poll port settings" <<  endl;
+#endif
+		return false;
+	}
+
+	// 8E1: 8 data bits, even parity, 1 stop bit
+	config.c_cflag |= PARENB;    // enable parity
+	config.c_cflag &= ~PARODD;   // even parity
+	config.c_cflag &= ~CSTOPB;   // 1 stop bit
+	config.c_cflag &= ~CSIZE;
+	config.c_cflag |= CS8;       // 8 data bits
+
+	// parity checking on input
+	config.c_iflag &= ~IGNPAR;   // don't ignore parity errors
+	config.c_iflag |= INPCK;     // enable input parity checking
+
+	tcflush( Sd, TCIOFLUSH );
+
+	if ( tcsetattr( Sd, TCSANOW, &config ) == ERROR ){
+#ifdef DEBUG
+		perror("SerialPort::setEvenParity - Unable to set port options");
+#endif
+		return false;
+	}
+
+	return true;
+
+#endif
+}
+
 bool SerialPort::setBaud( int baud )
 {
 #if defined( VXWORKS )
