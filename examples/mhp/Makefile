@@ -36,8 +36,8 @@ ifneq ($(HOST_OS), Darwin)
 LDFLAGS+=-lrt
 endif
 
-#----------[ NetUAS ]----------#
-INCLUDES  += -I../../lib -I../../lib/netuas
+#----------[ BST ]----------#
+INCLUDES  += -I../../lib
 
 #-------[ BST Protocol ]-------#
 VPATH     += ../../src \
@@ -57,18 +57,18 @@ OBJ       += comm_interface.o bst_packet.o helper_functions.o debug.o
  
 all: default
 
-default: libnetuas test
+default: libbst test
 
 test: $(OBJ)
-	$(CXX) -o $@ $^ -L../../lib -lnetuas_lib $(LDFLAGS) 
+	$(CXX) -o $@ $^ -L../../lib -lbst_lib $(LDFLAGS)
 
 clean:
 	cd ../../lib && $(MAKE) clean
 	rm -f *.o
 	rm -f test
 
-libnetuas: ../../lib/libnetuas_lib.a
+libbst: ../../lib/libbst_lib.a
 
-../../lib/libnetuas_lib.a:
+../../lib/libbst_lib.a:
 	cd ../../lib && $(MAKE)
 

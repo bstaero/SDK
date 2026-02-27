@@ -36,7 +36,6 @@ INCLUDES += -I. \
 					  -I../../include/bst_protocol/modules \
 					  -I../../include/bst_core \
 					  -I../../lib \
-					  -I../../lib/netuas \
 
 FLAGS=-g -DVERBOSE -DVEHICLE_FIXEDWING
 
@@ -56,15 +55,15 @@ endif
 default: bstsdklibs test
 
 test: $(OBJ) main.o test.o test_handler.o
-	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lrt
+	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lbst_lib -lrt
 
 clean:
 	cd ../../lib && $(MAKE) clean
 	rm -f *.o
 	rm -f test
 
-bstsdklibs: ../../lib/libnetuas_lib.a
+bstsdklibs: ../../lib/libbst_lib.a
 
-../../lib/libnetuas_lib.a:
+../../lib/libbst_lib.a:
 	cd ../../lib && $(MAKE)
 

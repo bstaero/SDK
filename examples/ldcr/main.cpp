@@ -24,9 +24,9 @@
 #include "bst_packet.h"
 #include "helper_functions.h"
 
-/* NetUAS */
-#include "netuas_serial.h"
-#include "netuas_socket.h"
+/* BST */
+#include "bst_serial.h"
+#include "bst_socket.h"
 
 /* STD LIBS */
 #include <stdio.h>
@@ -145,9 +145,9 @@ int main(int argc, char *argv[])
 	// set interface
 	if(comm_type == COMM_SERIAL || comm_type == COMM_SOCKET) {
 		if(comm_type == COMM_SERIAL) {
-			comm_interface = new NetuasSerial;
+			comm_interface = new BSTSerial;
 		} else if(comm_type == COMM_SOCKET) {
-			comm_interface = new NetuasSocket;
+			comm_interface = new BSTSocket;
 		}
 
 		comm_interface->initialize(param[0],param[1],param[2]);

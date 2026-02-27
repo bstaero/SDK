@@ -18,22 +18,20 @@ FLAGS += -DLOW_BANDWIDTH
 endif
 
 INCLUDES+=-I. \
-			    -I./netuas_lib \
 			    -I../include/bst_can \
 			    -I../include/bst_core \
 			    -I../include/bst_protocol \
 			    -I../include/bst_protocol/messages \
 			    -I../include/bst_protocol/modules \
 
-VPATH+=./netuas_lib \
-			 ../src/bst_can \
+VPATH+=../src/bst_can \
 			 ../src/bst_core \
 			 ../src/bst_protocol \
 			 ../src/bst_protocol/modules \
 
 OBJ=
 
-NETUAS_OBJ=netuas_serial.o netuas_socket.o serial.o socket.o timeLib.o 
+BST_COMM_OBJ=bst_serial.o bst_socket.o bst_interface.o bst_time.o
 
 BST_OBJ= simulated_can.o \
 			   bridge.o \
@@ -50,15 +48,15 @@ BST_OBJ= simulated_can.o \
 			   bst_module_flight_plan.o \
 			   bst_module_basic.o \
 
-.PHONY: default libnetuas libbstfw libbstmr
+.PHONY: default libbst libbstfw libbstmr
 default:
-	BIN_DIR=bin/netuas make libnetuas
+	BIN_DIR=bin/bst make libbst
 	BIN_DIR=bin/libbstfw make libbstfw
 	BIN_DIR=bin/libbstmr make libbstmr
 
-libnetuas: ${BIN_DIR} libnetuas_lib.a
+libbst: ${BIN_DIR} libbst_lib.a
 
-libnetuas_lib.a: $(addprefix ${BIN_DIR}/, $(NETUAS_OBJ))
+libbst_lib.a: $(addprefix ${BIN_DIR}/, $(BST_COMM_OBJ))
 	ar rcs $@ $^
 
 libbstfw: FLAGS+= -DVEHICLE_FIXEDWING
@@ -90,7 +88,6 @@ ${BIN_DIR}/%.o: %.c %.h
 	$(CXX) -c -o $@ $< $(INCLUDES) $(DEFINES) $(FLAGS)
 
 allclean: clean
-	rmdir netuas
 
 clean:
 	rm -rf bin

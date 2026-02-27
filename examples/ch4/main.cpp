@@ -27,9 +27,9 @@
 #include "helper_functions.h"
 #include "file_interface.h"
 
-/* NetUAS */
-#include "netuas_serial.h"
-#include "netuas_socket.h"
+/* BST */
+#include "bst_serial.h"
+#include "bst_socket.h"
 
 /* STD LIBS */
 #include <stdio.h>
@@ -153,9 +153,9 @@ int main(int argc, char *argv[])
 
 	// set interface
 	if(comm_type == COMM_SERIAL) {
-		comm_handler->setInterface(new NetuasSerial);
+		comm_handler->setInterface(new BSTSerial);
 	} else if(comm_type == COMM_SOCKET) {
-		comm_handler->setInterface(new NetuasSocket);
+		comm_handler->setInterface(new BSTSocket);
 	} else if(comm_type == COMM_FILE) {
 		comm_handler->setInterface(new FileInterface);
 		comm_handler->setAddressing(false);

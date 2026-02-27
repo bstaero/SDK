@@ -33,7 +33,6 @@ INCLUDES += -I. \
 					  -I../../include/bst_protocol/modules \
 					  -I../../include/bst_core \
 					  -I../../lib \
-					  -I../../lib/netuas \
 
 FLAGS=-g -DVERBOSE -DVEHICLE_MULTIROTOR -lm
 
@@ -51,11 +50,11 @@ endif
  
 default: bstsdklibs test fp_test
 
-test: $(OBJ) ../../lib/libnetuas_lib.a ../../lib/libbstmr_lib.a
-	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lbstmr_lib -lrt
+test: $(OBJ) ../../lib/libbst_lib.a ../../lib/libbstmr_lib.a
+	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lbst_lib -lbstmr_lib -lrt
 
-fp_test: fp_main.o fp_test.o test_handler.o ../../lib/libnetuas_lib.a ../../lib/libbstmr_lib.a
-	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lnetuas_lib -lbstmr_lib -lrt
+fp_test: fp_main.o fp_test.o test_handler.o ../../lib/libbst_lib.a ../../lib/libbstmr_lib.a
+	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lbst_lib -lbstmr_lib -lrt
 
 clean:
 	cd ../../lib && $(MAKE) clean
@@ -65,7 +64,7 @@ clean:
 bstsdklibs: 
 	cd ../../lib && $(MAKE)
 
-../../lib/libnetuas_lib.a:
+../../lib/libbst_lib.a:
 	cd ../../lib && $(MAKE)
 
 ../../lib/libbstmr_lib.a:

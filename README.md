@@ -70,7 +70,7 @@ sdk/
 ```cpp
 #include "bst_protocol.h"
 #include "bst_module_basic.h"
-#include "netuas_socket.h"
+#include "bst_socket.h"
 
 void receive(uint8_t type, void* data, uint16_t size, const void* param) {
     if (type == STATE_STATE) {
@@ -83,7 +83,7 @@ void receive(uint8_t type, void* data, uint16_t size, const void* param) {
 
 int main() {
     BSTProtocol* protocol = new BSTProtocol();
-    NetuasSocket* socket = new NetuasSocket();
+    BSTSocket* socket = new BSTSocket();
     socket->initialize("localhost", "55555", "udp");
     protocol->setInterface(socket);
 
@@ -222,7 +222,7 @@ Supports protocol versions 3.11.0 through 3.23.0. Version is automatically detec
 
 ## Dependencies
 
-**C++:** C++11 compiler, libnetuas_lib
+**C++:** C++11 compiler, libbst_lib
 **Python:** numpy, scipy, h5netcdf, lxml, swig
 
 ## Support
