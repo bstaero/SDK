@@ -51,6 +51,8 @@ BSTSocket::BSTSocket() : BSTInterface() {
 	bytes_out_total = 0;
 
 	memset(&server_addr, 0, sizeof(server_addr));
+	memset(&last_udp_sender, 0, sizeof(last_udp_sender));
+	has_udp_sender = false;
 
 	for (int i = 0; i < BST_MAX_CLIENTS; i++) {
 		client_fds[i] = BST_INVALID_SOCKET;
@@ -124,12 +126,46 @@ int16_t BSTSocket::read(uint8_t * buf, uint16_t buf_size) {
 		return (int16_t)n;
 	}
 
-	/* Server mode: try to read from the first client with data.
-	   For more fine-grained control, use setFD/checkFD/readFrom directly. */
+	/* Server mode */
+	if (sock_type == BST_UDP) {
+		/* UDP server: recvfrom on server_fd */
+		if (server_fd == BST_INVALID_SOCKET) return 0;
+
+		struct sockaddr_in from;
+		socklen_t fromlen = sizeof(from);
+		int n = ::recvfrom(server_fd, buf, buf_size, 0,
+		                   (struct sockaddr *)&from, &fromlen);
+		if (n < 0) {
+			if (errno != EAGAIN && errno != EWOULDBLOCK)
+				pmesg(VERBOSE_ERROR, "BSTSocket::read UDP server error: %s\n", strerror(errno));
+			return 0;
+		}
+		if (n > 0) {
+			last_udp_sender = from;
+			has_udp_sender = true;
+			rx_bytes += n;
+			bytes_in_total += n;
+		}
+		return (int16_t)n;
+	}
+
+	/* TCP server: accept pending connections, then read from clients */
+	acceptPendingClients();
+
 	for (int i = 0; i < num_clients; i++) {
 		if (client_fds[i] == BST_INVALID_SOCKET) continue;
 		int n = readFrom(i, (char *)buf, buf_size);
 		if (n > 0) return (int16_t)n;
+		if (n == 0) {
+			/* Client disconnected */
+			pmesg(VERBOSE_WARN, "BSTSocket::read: client %d disconnected\n", i);
+			removeClient(i);
+			i--;
+		} else if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+			pmesg(VERBOSE_WARN, "BSTSocket::read: removing client %d: %s\n", i, strerror(errno));
+			removeClient(i);
+			i--;
+		}
 	}
 	return 0;
 }
@@ -150,7 +186,26 @@ int16_t BSTSocket::write(uint8_t * buf, uint16_t size) {
 		return (int16_t)n;
 	}
 
-	/* Server mode: write to all connected clients */
+	/* Server mode */
+	if (sock_type == BST_UDP) {
+		/* UDP server: sendto last known sender */
+		if (server_fd == BST_INVALID_SOCKET) return 0;
+		if (!has_udp_sender) return 0;
+
+		int n = ::sendto(server_fd, buf, size, 0,
+		                 (struct sockaddr *)&last_udp_sender, sizeof(last_udp_sender));
+		if (n < 0) {
+			if (errno != EAGAIN && errno != EWOULDBLOCK)
+				pmesg(VERBOSE_ERROR, "BSTSocket::write UDP server error: %s\n", strerror(errno));
+			return 0;
+		}
+		tx_bytes += n;
+		bytes_out_total += n;
+		return (int16_t)n;
+	}
+
+	/* TCP server: accept pending connections, then write to all connected clients */
+	acceptPendingClients();
 	int total = 0;
 	for (int i = 0; i < num_clients; i++) {
 		if (client_fds[i] == BST_INVALID_SOCKET) continue;
@@ -191,9 +246,10 @@ bool BSTSocket::close() {
 
 bool BSTSocket::connectHost() {
 	if (socket_mode != CLIENT) return false;
-	if (this->fd < 0) return false;
+	int local_fd = this->fd;
+	if (local_fd < 0 || local_fd >= FD_SETSIZE) return false;
 
-	if (::connect(this->fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+	if (::connect(local_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
 		if (errno != EINPROGRESS) {
 			pmesg(VERBOSE_ERROR, "BSTSocket::connectHost failed: %s\n", strerror(errno));
 			return false;
@@ -202,18 +258,18 @@ bool BSTSocket::connectHost() {
 		/* Non-blocking connect: poll with select */
 		fd_set wset;
 		FD_ZERO(&wset);
-		FD_SET(this->fd, &wset);
+		FD_SET(local_fd, &wset);
 
 		struct timeval tv;
 		tv.tv_sec  = 0;
 		tv.tv_usec = 1000;
 
-		int res = select(this->fd + 1, NULL, &wset, NULL, &tv);
+		int res = select(local_fd + 1, NULL, &wset, NULL, &tv);
 		if (res <= 0) return false;
 
 		int valopt;
 		socklen_t lon = sizeof(int);
-		if (getsockopt(this->fd, SOL_SOCKET, SO_ERROR, (void *)&valopt, &lon) < 0)
+		if (getsockopt(local_fd, SOL_SOCKET, SO_ERROR, (void *)&valopt, &lon) < 0)
 			return false;
 		if (valopt) return false;
 	}
@@ -326,21 +382,21 @@ int BSTSocket::setFD(fd_set & set, bool is_tx) {
 
 	if (socket_mode == SERVER) {
 		/* Add the listening socket for incoming connections */
-		if (!is_tx && server_fd != BST_INVALID_SOCKET) {
+		if (!is_tx && server_fd != BST_INVALID_SOCKET && server_fd < FD_SETSIZE) {
 			FD_SET(server_fd, &set);
 			if (server_fd > max_fd) max_fd = server_fd;
 		}
 
 		/* Add all connected client fds */
 		for (int i = 0; i < num_clients; i++) {
-			if (client_fds[i] != BST_INVALID_SOCKET) {
+			if (client_fds[i] != BST_INVALID_SOCKET && client_fds[i] < FD_SETSIZE) {
 				FD_SET(client_fds[i], &set);
 				if (client_fds[i] > max_fd) max_fd = client_fds[i];
 			}
 		}
 	} else {
 		/* Client mode: just the connection fd */
-		if (this->fd >= 0) {
+		if (this->fd >= 0 && this->fd < FD_SETSIZE) {
 			FD_SET(this->fd, &set);
 			if (this->fd > max_fd) max_fd = this->fd;
 		}
@@ -354,16 +410,16 @@ BSTSocket::SocketWait BSTSocket::checkFD(fd_set & set) {
 
 	if (socket_mode == SERVER) {
 		/* Check for incoming connections on the listening socket */
-		if (server_fd != BST_INVALID_SOCKET && FD_ISSET(server_fd, &set))
+		if (server_fd != BST_INVALID_SOCKET && server_fd < FD_SETSIZE && FD_ISSET(server_fd, &set))
 			result |= SWAIT_PEER;
 
 		/* Check each client for data */
 		for (int i = 0; i < num_clients; i++) {
-			if (client_fds[i] != BST_INVALID_SOCKET && FD_ISSET(client_fds[i], &set))
+			if (client_fds[i] != BST_INVALID_SOCKET && client_fds[i] < FD_SETSIZE && FD_ISSET(client_fds[i], &set))
 				result |= (1 << i);
 		}
 	} else {
-		if (this->fd >= 0 && FD_ISSET(this->fd, &set))
+		if (this->fd >= 0 && this->fd < FD_SETSIZE && FD_ISSET(this->fd, &set))
 			result = SWAIT_DATA;
 	}
 
@@ -538,6 +594,31 @@ bool BSTSocket::setBlockingFD(int sock_fd) {
 	int flags = fcntl(sock_fd, F_GETFL, 0);
 	if (flags < 0) return false;
 	return fcntl(sock_fd, F_SETFL, flags & ~O_NONBLOCK) >= 0;
+}
+
+void BSTSocket::acceptPendingClients() {
+	if (socket_mode != SERVER) return;
+	if (server_fd == BST_INVALID_SOCKET) return;
+	if (sock_type != BST_TCP) return;
+
+	/* Non-blocking check for pending connections */
+	while (num_clients < BST_MAX_CLIENTS) {
+		struct sockaddr_in addr;
+		socklen_t len = sizeof(addr);
+		int new_fd = ::accept(server_fd, (struct sockaddr *)&addr, &len);
+		if (new_fd < 0) break; /* EAGAIN / no more pending */
+
+		setNonBlockingFD(new_fd);
+
+		int flag = 1;
+		setsockopt(new_fd, IPPROTO_TCP, TCP_NODELAY, (void *)&flag, sizeof(flag));
+
+		client_fds[num_clients]   = new_fd;
+		client_addrs[num_clients] = addr;
+		num_clients++;
+
+		pmesg(VERBOSE_STATUS, "BSTSocket::acceptPendingClients: accepted client %d\n", num_clients - 1);
+	}
 }
 
 void BSTSocket::closeAllClients() {

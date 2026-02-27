@@ -58,7 +58,7 @@ endif
  
 default: bstsdklibs test
 
-test: $(OBJ) main.o test.o test_handler.o
+test: $(OBJ) main.o test.o test_handler.o log_replay.o
 	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L../../lib -lbst_lib -lrt
 
 clean:

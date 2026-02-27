@@ -29,6 +29,7 @@
 #include "flight_plan.h"
 
 #include "bridge.h"
+#include "log_replay.h"
 
 
 // variables
@@ -71,6 +72,9 @@ Packet pkt_buf[PKT_BUF_SIZE];
 uint8_t pkt_buf_start = 0;
 uint8_t pkt_buf_end = 0;
 
+static uint8_t actuator_types[16];
+static uint16_t actuators[16];
+
 extern CommunicationsInterface * comm_interface;
 
 // functional definitions
@@ -81,12 +85,15 @@ Packet              tx_packet;
 // for command line (terminal) input
 struct termios initial_settings, new_settings;
 
+extern char log_filename[];
+
 void printTestHelp() {
 	printf("Keys:\n");
 	printf("  t        : Toggle telemetry display\n");
 	printf("\n");
 	printf("  T        : take a picture\n");
 	printf("  0 to A   : test channel n\n");
+	printf("  f        : replay actuators from log file\n");
 	printf("\n");
 	printf("  p        : print this help\n");
 }
@@ -105,6 +112,19 @@ bool inputAvailable()
 	return (FD_ISSET(0, &fds));
 }
 
+void zeroAcutators() {
+	for(uint8_t i=0; i<16; i++) {
+		if( (actuator_types[i] == ACT_L_THROTTLE) ||
+				(actuator_types[i] == ACT_R_THROTTLE) ||
+				(actuator_types[i] == ACT_ROTOR) ) {
+			actuators[i] = 1000;
+		} else {
+			actuators[i] = 1500;
+		}
+	}
+	BRIDGE_SendActuatorPkt(1, actuators);
+}
+
 
 void initializeTest() {
 
@@ -119,6 +139,17 @@ void initializeTest() {
 	new_settings.c_cc[VTIME] = 0;
 
 	tcsetattr(0, TCSANOW, &new_settings);
+
+	//s0-vtol
+	actuator_types[0] = ACT_L_THROTTLE;
+	actuator_types[1] = ACT_L_AILERON;
+	actuator_types[2] = ACT_L_FRONT_PIVOT;
+	actuator_types[3] = ACT_R_THROTTLE;
+	actuator_types[4] = ACT_R_AILERON;
+	actuator_types[5] = ACT_R_FRONT_PIVOT;
+	actuator_types[6] = ACT_ROTOR;
+	actuator_types[7] = ACT_L_ELEVON;
+	actuator_types[8] = ACT_R_ELEVON;
 }
 
 
@@ -128,7 +159,6 @@ void updateTest() {
 	static uint8_t is_triggering = 0;
 	static uint8_t is_triggering_ch = 0;
 	static float trigger_time = 0;
-	static uint16_t actuators[16];
 
 	if( inputAvailable() || auto_test ) {
 		if(auto_test) {
@@ -181,14 +211,40 @@ void updateTest() {
 					}
 					break;
 
+				case 'f':
+					{
+						char path[256];
+						if(strlen(log_filename)) {
+							strcpy(path, log_filename);
+						} else {
+							// restore terminal for line input
+							tcsetattr(0, TCSANOW, &initial_settings);
+							printf("Enter log file path: ");
+							fflush(stdout);
+							if(fgets(path, sizeof(path), stdin)) {
+								char *nl = strchr(path, '\n');
+								if(nl) *nl = '\0';
+							}
+							tcsetattr(0, TCSANOW, &new_settings);
+						}
+						if(strlen(path)) {
+							if(!runLogReplay(path)) {
+								return;
+							}
+							printTestHelp();
+						}
+					}
+					break;
+
 				case 'p':
 					printTestHelp();
 					break;
 
-				case 3: // <CTRL-C> 
+				case 3: // <CTRL-C>
 					// allow flowthrough
 				case 'q':
 					printf("Keyboard caught exit signal ...\n");
+					zeroAcutators();
 					running = false;
 					break;
 
@@ -202,10 +258,20 @@ void updateTest() {
 	}
 
 	for(uint8_t i=0; i<16; i++) {
-		if(is_triggering && (is_triggering_ch) == i) {
-				actuators[i] = 1200;
-		} else {
+		if( (actuator_types[i] == ACT_L_THROTTLE) ||
+				(actuator_types[i] == ACT_R_THROTTLE) ||
+				(actuator_types[i] == ACT_ROTOR) ) {
+			if(is_triggering && (is_triggering_ch) == i) {
+				actuators[i] = 1100;
+			} else {
 				actuators[i] = 1000;
+			}
+		} else {
+			if(is_triggering && (is_triggering_ch) == i) {
+					actuators[i] = 1700;
+			} else {
+					actuators[i] = 1500;
+			}
 		}
 	}
 	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) {

@@ -19,6 +19,7 @@
 #include "main.h"
 #include "test.h"
 #include "test_handler.h"
+#include "log_replay.h"
 
 /* BST */
 #include "bst_module_basic.h"
@@ -41,6 +42,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <getopt.h>
 
 #ifdef __APPLE__
 #include <mach/mach_time.h> // system time
@@ -64,6 +66,8 @@ extern "C"  {
 }
 
 extern bool auto_test;
+
+char log_filename[256] = {0};
 /*<-End Global Variables-->*/
 
 enum {COMM_SERIAL, COMM_SOCKET, COMM_UNKNOWN, COMM_INVALID};
@@ -72,6 +76,23 @@ bool big_endian = false;
 bool running = true;
 
 void printHelp();
+
+// parse "hh:mm:ss" or "mm:ss" or bare seconds into float seconds
+static float parseTimeStr(const char * str) {
+	int h = 0, m = 0;
+	float s = 0.0f;
+	if(sscanf(str, "%d:%d:%f", &h, &m, &s) == 3) {
+		return h * 3600.0f + m * 60.0f + s;
+	}
+	h = 0;
+	if(sscanf(str, "%d:%f", &m, &s) == 2) {
+		return m * 60.0f + s;
+	}
+	if(sscanf(str, "%f", &s) == 1) {
+		return s;
+	}
+	return -1.0f;
+}
 
 int main(int argc, char *argv[])
 {
@@ -91,8 +112,18 @@ int main(int argc, char *argv[])
 
 	bzero(outfile,132);
 
-	char c;
-	while ((c = getopt(argc, argv, "ab:d:i:o:p:t:x:h")) != -1) {
+	float dd_duration = -1.0f;
+
+	static struct option long_options[] = {
+		{"ss", required_argument, 0, 0x100},
+		{"tt", required_argument, 0, 0x101},
+		{"dd", required_argument, 0, 0x102},
+		{0, 0, 0, 0}
+	};
+
+	int c;
+	int option_index = 0;
+	while ((c = getopt_long(argc, argv, "ab:d:f:i:o:p:t:x:h", long_options, &option_index)) != -1) {
 		switch(c) {
 			case 'a':
 				auto_test = true;
@@ -104,6 +135,9 @@ int main(int argc, char *argv[])
 			case 'd':
 				strcpy(&param[0][0],optarg);
 				comm_type != COMM_SOCKET ? comm_type = COMM_SERIAL : comm_type = COMM_INVALID;
+				break;
+			case 'f':
+				strncpy(log_filename, optarg, sizeof(log_filename)-1);
 				break;
 			case 'i':
 				strcpy(&param[0][0],optarg);
@@ -118,10 +152,25 @@ int main(int argc, char *argv[])
 			case 'o':
 				strcpy(outfile,optarg);
 				break;
+			case 0x100: // --ss
+				replay_start_s = parseTimeStr(optarg);
+				break;
+			case 0x101: // --tt
+				replay_stop_s = parseTimeStr(optarg);
+				break;
+			case 0x102: // --dd
+				dd_duration = parseTimeStr(optarg);
+				break;
 			default:
 				printHelp();
 				break;
 		}
+	}
+
+	// --dd converts to --tt (stop = start + duration)
+	if(dd_duration >= 0.0f && replay_stop_s < 0.0f) {
+		float ss = (replay_start_s >= 0.0f) ? replay_start_s : 0.0f;
+		replay_stop_s = ss + dd_duration;
 	}
 
 	// set default
@@ -169,14 +218,17 @@ int main(int argc, char *argv[])
 	printTestHelp();
 
 	while(comm_interface->isConnected() && running) {
+		// Perform user functions first for responsive keyboard handling
+		updateTest();
+
 		// Update communications
 		simulatedCANRead(1);
 
-		// Perform user functions
-		updateTest();
-
 		usleep(1000);
 	}
+
+	// connection lost or user quit – zero actuators before closing
+	zeroAcutators();
 
 	comm_handler->getInterface()->close();
 
@@ -197,7 +249,10 @@ void printHelp() {
 	printf("    -i <server ip number>   : default localhost\n");
 	printf("    -p <socket port number> : default 55552\n");
 	printf("  File paramerters:\n");
-	printf("    -f <input file> \n");
+	printf("    -f <log file>           : BST binary log for actuator replay\n");
+	printf("    --ss hh:mm:ss           : replay start time (relative to log start)\n");
+	printf("    --tt hh:mm:ss           : replay stop time (relative to log start)\n");
+	printf("    --dd hh:mm:ss           : replay duration (from start time)\n");
 	printf("\n");
 	printf("  -h        Print this help\n");
 	exit(0);

@@ -108,6 +108,8 @@ class BSTSocket : public BSTInterface {
 		int  num_clients;
 
 		struct sockaddr_in server_addr;
+		struct sockaddr_in last_udp_sender;
+		bool has_udp_sender;
 
 		bool closed;
 		long bytes_in_total;
@@ -119,6 +121,7 @@ class BSTSocket : public BSTInterface {
 		bool setNonBlockingFD(int sock_fd);
 		bool setBlockingFD(int sock_fd);
 		void closeAllClients();
+		void acceptPendingClients();
 };
 
 #endif

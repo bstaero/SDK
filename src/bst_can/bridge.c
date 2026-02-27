@@ -1,21 +1,19 @@
-/*=+--+=#=+--            SwiftPilot Autopilot Software            --+=#=+--+=#*\
+/*=+--+=#=+--         SwiftCore Flight Management Software        --+=#=+--+=#*\
 |               Copyright (C) 2012 Black Swift Technologies LLC.               |
 |                             All Rights Reserved.                             |
 
-     This program is free software: you can redistribute it and/or modify
-     it under the terms of the GNU General Public License version 2 as
-     published by the Free Software Foundation.
+     NOTICE:  All information contained herein is, and remains the property
+     of Black Swift Technologies.
 
-     This program is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     GNU General Public License for more details.
+     The intellectual and technical concepts contained herein are
+     proprietary to Black Swift Technologies LLC and may be covered by U.S.
+     and foreign patents, patents in process, and are protected by trade
+     secret or copyright law.
 
-     You should have received a copy of the GNU General Public License
-     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-                                  Jack Elston                                   
-|                          elstonj@blackswifttech.com                          |
+     Dissemination of this information or reproduction of this material is
+     strictly forbidden unless prior written permission is obtained from
+     Black Swift Technologies LLC.
+|                                                                              |
 |                                                                              |
 \*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*/
 

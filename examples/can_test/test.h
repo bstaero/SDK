@@ -28,5 +28,6 @@ void initializeTest(void);
 void updateTest(void);
 void exitTest(void);
 void printTestHelp(void);
+void zeroAcutators(void);
 
 #endif

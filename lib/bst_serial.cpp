@@ -223,14 +223,14 @@ bool BSTSerial::isBlocking() const {
 /* ---- Select/fd_set integration ---- */
 
 int BSTSerial::setFD(fd_set & set) {
-	if (this->fd < 0) return -1;
+	if (this->fd < 0 || this->fd >= FD_SETSIZE) return -1;
 
 	FD_SET(this->fd, &set);
 	return this->fd;
 }
 
 bool BSTSerial::checkFD(fd_set & set) {
-	if (this->fd < 0 || status == STATUS_ERROR)
+	if (this->fd < 0 || this->fd >= FD_SETSIZE || status == STATUS_ERROR)
 		return false;
 
 	return FD_ISSET(this->fd, &set) != 0;
@@ -273,6 +273,16 @@ speed_t BSTSerial::baudToSpeed(int baud) {
 		case 230400: return B230400;
 		case 460800: return B460800;
 		case 921600: return B921600;
+#if !defined __APPLE__
+		case 1000000: return B1000000;
+		case 1152000: return B1152000;
+		case 1500000: return B1500000;
+		case 2000000: return B2000000;
+		case 2500000: return B2500000;
+		case 3000000: return B3000000;
+		case 3500000: return B3500000;
+		case 4000000: return B4000000;
+#endif
 		default:
 			pmesg(VERBOSE_ERROR, "ERROR: unsupported baud rate %d\n", baud);
 			return B9600;
