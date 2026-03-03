@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <termios.h>
 
 #include "test.h"
 #include "main.h"
@@ -82,9 +81,6 @@ extern CommunicationsInterface * comm_interface;
 // packet for transmision
 Packet              tx_packet;
 
-// for command line (terminal) input
-struct termios initial_settings, new_settings;
-
 extern char log_filename[];
 
 void printTestHelp() {
@@ -98,20 +94,6 @@ void printTestHelp() {
 	printf("  p        : print this help\n");
 }
 
-bool inputAvailable()  
-{
-	// check for input on terminal
-	struct timeval tv;
-	fd_set fds;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	FD_ZERO(&fds);
-	FD_SET(STDIN_FILENO, &fds);
-	select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
-
-	return (FD_ISSET(0, &fds));
-}
-
 void zeroAcutators() {
 	for(uint8_t i=0; i<16; i++) {
 		if( (actuator_types[i] == ACT_L_THROTTLE) ||
@@ -123,33 +105,6 @@ void zeroAcutators() {
 		}
 	}
 	BRIDGE_SendActuatorPkt(1, actuators);
-}
-
-
-void initializeTest() {
-
-	// terminal settings to get input
-	tcgetattr(0,&initial_settings);
-
-	new_settings = initial_settings;
-	new_settings.c_lflag &= ~ICANON;
-	new_settings.c_lflag &= ~ECHO;
-	new_settings.c_lflag &= ~ISIG;
-	new_settings.c_cc[VMIN] = 0;
-	new_settings.c_cc[VTIME] = 0;
-
-	tcsetattr(0, TCSANOW, &new_settings);
-
-	//s0-vtol
-	actuator_types[0] = ACT_L_THROTTLE;
-	actuator_types[1] = ACT_L_AILERON;
-	actuator_types[2] = ACT_L_FRONT_PIVOT;
-	actuator_types[3] = ACT_R_THROTTLE;
-	actuator_types[4] = ACT_R_AILERON;
-	actuator_types[5] = ACT_R_FRONT_PIVOT;
-	actuator_types[6] = ACT_ROTOR;
-	actuator_types[7] = ACT_L_ELEVON;
-	actuator_types[8] = ACT_R_ELEVON;
 }
 
 
@@ -218,14 +173,14 @@ void updateTest() {
 							strcpy(path, log_filename);
 						} else {
 							// restore terminal for line input
-							tcsetattr(0, TCSANOW, &initial_settings);
+							restoreTerminal();
 							printf("Enter log file path: ");
 							fflush(stdout);
 							if(fgets(path, sizeof(path), stdin)) {
 								char *nl = strchr(path, '\n');
 								if(nl) *nl = '\0';
 							}
-							tcsetattr(0, TCSANOW, &new_settings);
+							initTerminal();
 						}
 						if(strlen(path)) {
 							if(!runLogReplay(path)) {
@@ -300,10 +255,6 @@ void updateTest() {
 	if(send_actuators)
 		BRIDGE_SendActuatorPkt(1,actuators);
 
-}
-
-void exitTest() {
-	tcsetattr(0, TCSANOW, &initial_settings);
 }
 
 uint16_t commConstruct(uint8_t type, PacketAction_t action, void * data, uint16_t size, const void * parameter, bool uses_address, Packet * packet) { 

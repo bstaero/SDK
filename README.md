@@ -62,7 +62,11 @@ sdk/
 │   ├── bst_core/           # Utilities
 │   └── bst_can/            # CAN bridge
 ├── src/                    # Implementation
-└── examples/               # Example applications
+└── examples/
+    ├── common/             # Shared utility code and Makefile
+    ├── template_bst/       # Copy-ready BST protocol starting point
+    ├── template_can/       # Copy-ready CAN protocol starting point
+    └── <example>/          # Individual example applications
 ```
 
 ### Quick Start
@@ -174,13 +178,49 @@ output_files = convert_to_nc("flight.bin", out_dir="./output")
 
 Located in `examples/`:
 
-| Example | Purpose |
-|---------|---------|
-| `can_test` | CAN bus testing and visualization |
-| `gazebo` | Gazebo HITL simulation |
-| `payload` | Generic payload template |
-| `mhp` | Multi-hole probe meteorological |
-| `python_payload` | Python real-time visualization |
+### Creating a New Example
+
+Copy a template directory and start building:
+
+```bash
+# BST protocol example (serial/socket communication)
+cp -r examples/template_bst/ examples/my_example/
+cd examples/my_example/ && make
+
+# CAN protocol example (simulated CAN bus)
+cp -r examples/template_can/ examples/my_can_example/
+cd examples/my_can_example/ && make
+```
+
+### Shared Code
+
+All examples share common utility code from `examples/common/`:
+- `example_common.cpp/.h` - Time management, terminal I/O, CLI argument parsing, endianness detection
+- `Makefile.common` - Shared build rules with `EXAMPLE_TYPE` support (`bst`, `can`, `raw`)
+
+Each example Makefile is just a few lines:
+```makefile
+EXAMPLE_TYPE = bst
+include ../common/Makefile.common
+```
+
+### Available Examples
+
+| Example | Type | Purpose |
+|---------|------|---------|
+| `template_bst` | BST | Copy-ready BST protocol starting point |
+| `template_can` | CAN | Copy-ready CAN protocol starting point |
+| `payload` | BST | Generic payload integration |
+| `sphere` | BST | Sphere payload |
+| `s0` | BST | S0 sensor payload |
+| `ch4` | BST | CH4 methane sensor (includes file I/O) |
+| `smm` | BST | SMM serial sensor |
+| `gazebo` | BST | Gazebo HITL simulation (multirotor) |
+| `can_test` | CAN | CAN bus testing and visualization |
+| `deployment_tube_test` | CAN | Deployment tube testing |
+| `psns_test` | CAN | PSNS board testing |
+| `ldcr` | Raw | LDCR serial sensor |
+| `mhp` | Raw | Multi-hole probe meteorological |
 
 ### Example File Structure
 
@@ -189,10 +229,11 @@ All C++ examples follow this pattern:
 | File | Purpose |
 |------|---------|
 | `main.cpp` | Entry point, CLI parsing, comms setup |
-| `main.h` | Configuration, includes, timing |
-| `test.cpp` | Display formatting, file output |
-| `test.h` | Data structures |
-| `test_handler.cpp` | Incoming packet handlers |
+| `main.h` | Configuration, includes `example_common.h` |
+| `test.cpp` | User interaction, telemetry display, file output |
+| `test.h` | Test data structures |
+| `test_handler.cpp` | **Primary customization point**: incoming packet handlers |
+| `Makefile` | Sets `EXAMPLE_TYPE` and includes `Makefile.common` |
 
 ---
 

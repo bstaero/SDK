@@ -47,9 +47,7 @@ typedef struct _OldTelemetryPosition_t {
 extern volatile bool write_file;
 extern volatile bool simulation;
 
-void initializeTest(void);
 void updateTest(void);
-void exitTest(void);
 void printTestHelp(void);
 
 #endif

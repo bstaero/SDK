@@ -179,7 +179,7 @@ uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * pa
 
 	// validate this is a command
 	if( size != sizeof(Command_t) ) {
-		printf("receiveCommand: invlid data size - size=%u\n", size);
+		printf("receiveCommand: invalid data size - size=%u\n", size);
 		return false;
 	}
 

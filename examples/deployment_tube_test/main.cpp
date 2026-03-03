@@ -37,14 +37,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#ifdef __APPLE__
-#include <mach/mach_time.h> // system time
-#endif
 
 #ifdef VERBOSE
 #  include "debug.h"
@@ -60,11 +55,6 @@ SystemStatus_t system_status;
 SystemInitialize_t system_initialize;
 /*<-End Global Variables-->*/
 
-enum {COMM_SERIAL, COMM_SOCKET, COMM_UNKNOWN, COMM_INVALID};
-
-bool big_endian = false;
-bool running = true;
-
 uint8_t comm_type = COMM_UNKNOWN;
 
 void printHelp();
@@ -76,8 +66,7 @@ int main(int argc, char *argv[])
 	verbose = VERBOSE_ERROR;
 #endif
 
-	uint16_t temp = 0x0100;
-	big_endian = ((uint8_t *)&temp)[0];
+	detectEndianness();
 
 	char param[3][32];
 
@@ -156,7 +145,7 @@ int main(int argc, char *argv[])
 
 	setupSimulatedCAN(comm_interface);
 
-	initializeTest();
+	initTerminal();
 	printTestHelp();
 
 	while(comm_interface->isConnected() && running) {
@@ -175,19 +164,13 @@ int main(int argc, char *argv[])
 		close(out_fid);
 	}
 
-	exitTest();
+	restoreTerminal();
 	printf("Disconnected, exiting.\n\n");
 }
 
 void printHelp() {
-	printf("Usage: test [OPTIONS]\n");
-	printf("  Serial port paramerters:\n");
-	printf("    -d <serial device name> : default /dev/ttyUSB0\n");
-	printf("    -b <serial baud>        : default 9600\n");
-	printf("  Socket paramerters:\n");
-	printf("    -i <server ip number>   : default localhost\n");
-	printf("    -p <socket port number> : default 55552\n");
-	printf("  File paramerters:\n");
+	printBaseHelp();
+	printf("  File parameters:\n");
 	printf("    -f <input file> \n");
 	printf("\n");
 	printf("  -h        Print this help\n");
@@ -205,37 +188,3 @@ bool writeFile(uint8_t * data, uint16_t num) {
 	return write(out_fid, data, num);
 }
 
-double start_time = 0.0;
-
-void setupTime() {
-#ifdef __APPLE__
-	uint64_t now = mach_absolute_time();
-	float conversion  = 0.0;
-	mach_timebase_info_data_t info;
-	kern_return_t err = mach_timebase_info( &info );
-	if( err == 0  )
-		conversion = 1e-9 * (float) info.numer / (float) info.denom;
-	start_time = conversion * (float) now;
-#else
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-	start_time = (double)now.tv_sec + (double)now.tv_nsec / SEC_TO_NSEC;
-#endif
-}
-
-float getElapsedTime() {
-#ifdef __APPLE__
-	uint64_t now = mach_absolute_time();
-	float conversion  = 0.0;
-	mach_timebase_info_data_t info;
-	kern_return_t err = mach_timebase_info( &info );
-	if( err == 0  )
-		conversion = 1e-9 * (float) info.numer / (float) info.denom;
-	float current_time = conversion * (float) now;
-#else
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-	double current_time = (double)now.tv_sec + (double)now.tv_nsec / SEC_TO_NSEC;
-#endif
-	return current_time - start_time;
-}
