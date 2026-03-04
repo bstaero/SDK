@@ -210,7 +210,17 @@ int16_t BSTSocket::write(uint8_t * buf, uint16_t size) {
 	for (int i = 0; i < num_clients; i++) {
 		if (client_fds[i] == BST_INVALID_SOCKET) continue;
 		int n = writeTo(i, (const char *)buf, size);
-		if (n > 0) total = n;
+		if (n > 0) {
+			total = n;
+		} else if (n == 0) {
+			pmesg(VERBOSE_WARN, "BSTSocket::write: client %d disconnected\n", i);
+			removeClient(i);
+			i--;
+		} else if (errno != EAGAIN && errno != EWOULDBLOCK) {
+			pmesg(VERBOSE_WARN, "BSTSocket::write: removing client %d: %s\n", i, strerror(errno));
+			removeClient(i);
+			i--;
+		}
 	}
 	return (int16_t)total;
 }

@@ -114,10 +114,15 @@ int16_t BSTSerial::read(uint8_t * buf, uint16_t buf_size) {
 		}
 		return 0;
 	}
-	if (n > 0) {
-		rx_bytes += n;
-		bytes_in_total += n;
+	if (n == 0) {
+		/* EOF - device closed/disconnected */
+		pmesg(VERBOSE_WARN, "serial device EOF, will attempt reconnection\n");
+		connected = false;
+		status = STATUS_ERROR;
+		return 0;
 	}
+	rx_bytes += n;
+	bytes_in_total += n;
 	return (int16_t)n;
 }
 

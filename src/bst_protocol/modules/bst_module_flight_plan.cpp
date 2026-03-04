@@ -17,7 +17,7 @@
 #define WAYPOINT_RX_TIMEOUT   0.25 // [s] P900: fast OTA, but still radio latency
 #define MAX_WAYPOINT_REQUEST  20   // More retries for radio links
 #else
-#define WAYPOINT_RX_TIMEOUT   0.05 // [s] socket/fast link: 50ms is plenty
+#define WAYPOINT_RX_TIMEOUT   0.25 // [s] socket/fast link: must exceed tablet's 50ms send interval
 #define MAX_WAYPOINT_REQUEST  10
 #endif
 
@@ -590,28 +590,29 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 
 							case FINISH:
 								pmesg(VERBOSE_FP,"FLIGHT_PLAN : ACK - Got final FP MAP ACK, transmission success\n");
-								pmesg(VERBOSE_INFO, "Flight plan update completed\n");
 
 								switch( fp_send_state ) {
 									case WAITING_FOR_FINAL_MAP:
 									case FINAL_ACK:
+										pmesg(VERBOSE_INFO, "Flight plan update completed\n");
 										parent->write(type,PKT_ACTION_ACK,data,size,NULL);
+										receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
+										reset();
+										break;
+
+									case WAITING_FOR_FINAL_MAP_RX:
+										pmesg(VERBOSE_INFO, "Flight plan update completed\n");
+										receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
+										reset();
 										break;
 
 									case WAITING:
-									case SENT_FP_MAP:
-									case SENDING_WAYPOINTS:
-									case WAITING_FOR_WAYPOINTS:
-									case WAITING_FOR_FINAL_MAP_RX:
+										pmesg(VERBOSE_FP,"Ignoring duplicate FINISH ACK (already in WAITING state)\n");
+										break;
+
 									default:
 										break;
 								}
-
-								receiveReply_function(FLIGHT_PLAN,(uint8_t *)tx_temp_plan,sizeof(Waypoint_t) * num_waypoints,true,&rx_fp_map);
-
-								reset();
-
-								pmesg(VERBOSE_INFO, "%s fp_send_State=%u\n", name, fp_send_state);
 
 								break;
 						}

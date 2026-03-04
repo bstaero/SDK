@@ -60,7 +60,7 @@ bool FlightPlan::add(const Waypoint_t * const points, uint8_t num_waypts) {
 			if(points[i].num == i_wp) {
 				i_wpn = points[i].next;
 
-				if( !isValidInd(i_wpn) ) 
+				if( !isValidInd(i_wpn) )
 					i_wpn = INVALID_WAYPOINT;
 				else if( i_wpn == i_wp)
 					i_wpn = INVALID_WAYPOINT;
