@@ -306,7 +306,8 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 	}
 
 #ifdef IMPLEMENTATION_firmware
-	if((type&0xF0) != 0x60) // Don't include telemetry packets
+	// Log non-telemetry command responses (ACK/NACK/REQUEST) for protocol debugging.
+	if((type&0xF0) != 0x60 && action != PKT_ACTION_STATUS)
 		writeLogFile(type, (PacketAction_t)action, data, size, parameter);
 #endif
 

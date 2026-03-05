@@ -2,6 +2,9 @@
 *.a
 *.so
 *.pyc
+.*.swp
+.*.swo
+*.orig
 test/test
 test/replay_log_file
 mhp/c/test

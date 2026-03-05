@@ -638,16 +638,16 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 	float t0 = getElapsedTime();
 
 #if !defined BOARD_MHP && !defined SEPARATE_AIRDATA && !defined STANDALONE_BUILD
-	if(data->static_pressure > -FLT_MAX) {
+	if(isnan(data->static_pressure) || data->static_pressure > -FLT_MAX) {
 		updateStaticPressure(t0, data->static_pressure, data->air_temperature);
 	}
-	if(data->dynamic_pressure > -FLT_MAX) {
+	if(isnan(data->dynamic_pressure) || data->dynamic_pressure > -FLT_MAX) {
 		updateDynamicPressure(t0, data->dynamic_pressure, data->air_temperature);
 	}
-	if(data->air_temperature > -FLT_MAX) {
+	if(isnan(data->air_temperature) || data->air_temperature > -FLT_MAX) {
 		updateTemperature(t0, data->air_temperature);
 	}
-	if(data->humidity > -FLT_MAX) {
+	if(isnan(data->humidity) || data->humidity > -FLT_MAX) {
 		updateHumidity(t0, data->humidity);
 	}
 
