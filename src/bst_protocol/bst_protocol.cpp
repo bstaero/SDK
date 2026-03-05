@@ -94,13 +94,10 @@ uint16_t BSTProtocol::update() {
 		}
 	}
 
-	// Drain rx_queue: on high-bandwidth links (socket), process all queued packets per update;
-	// on radio links, process one at a time to avoid blocking the main loop
-#if !defined(LOW_BANDWIDTH) && !defined(SERIAL_COMMS)
-	while(rx_queue.size() > 0) {
-#else
-	if(rx_queue.size() > 0) {
-#endif
+	// Process up to 3 rx packets per update to avoid blocking the main loop.
+	// Even socket builds may sit behind a radio link or simulate real timing.
+	{ uint8_t rx_cnt = 0;
+	while(rx_queue.size() > 0 && ++rx_cnt <= 3) {
 		temp_packet = rx_queue.front();
 		last_address = temp_packet.getFromAddress();
 		rx_queue.pop();
@@ -161,22 +158,14 @@ uint16_t BSTProtocol::update() {
 			}
 		}
 	}
+	} // rx_cnt scope
 
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
 	if(getElapsedTime() - last_tx > RADIO_TIMEOUT) {
 #endif
-		// Drain tx_priority_queue: on high-bandwidth links, send all queued priority packets
-#if !defined(LOW_BANDWIDTH) && !defined(SERIAL_COMMS)
-		while(tx_priority_queue.size() > 0) {
-			temp_packet = tx_priority_queue.front();
-			if(CommunicationsProtocol::write(temp_packet.getPacket(), temp_packet.getSize()) == temp_packet.getSize()) {
-				tx_priority_queue.pop();
-			} else {
-				break;
-			}
-		}
-		if(tx_priority_queue.size() == 0) {
-#else
+		// Send one packet per update: priority queue first, then regular queue.
+		// Sending only one packet keeps the update() cost bounded so that
+		// the scheduler can service sensors, logging, and actuators on time.
 		if(tx_priority_queue.size() > 0) {
 			temp_packet = tx_priority_queue.front();
 			if(CommunicationsProtocol::write(temp_packet.getPacket(), temp_packet.getSize()) == temp_packet.getSize()) {
@@ -186,7 +175,6 @@ uint16_t BSTProtocol::update() {
 #endif
 			}
 		} else {
-#endif
 #if defined (NO_DUPLEX_COMMS)
 			if(last_cmd_rx >= 0 && getElapsedTime() - last_cmd_rx < CMD_TIMEOUT) {
 				return 0;
