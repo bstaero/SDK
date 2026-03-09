@@ -1080,16 +1080,34 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 
 	//----- packet specific code -----//
 	//
-#if defined _SP_RECEIVER || defined _SP_FUTABA
-	last_actuator_command = GetTime();
-#endif
-	
 	CAN_Actuator_t *data;
 	data = (CAN_Actuator_t *)buffer;
 
+	// Validate actuator values to catch CAN frame-loss corruption
+	// that passes the 16-bit Fletcher16 checksum.
+	// Valid actuator values are 0 (unused) or 800-2200 (servo range).
+	uint8_t pkt_valid = 1u;
+	{
+		uint8_t k;
+		for(k=0; k<CAN_NUM_ACTUATORS; k++) {
+			if(data->usec[k] != 0 && (data->usec[k] < 800 || data->usec[k] > 2200)) {
+				pkt_valid = 0u;
+				BRIDGE_pktDrops++;
+				pmesg(VERBOSE_ERROR, "ACTUATOR: corrupt pkt ch%d=%d, dropping\r\n", k, data->usec[k]);
+				break;
+			}
+		}
+	}
+
+	if(pkt_valid) {
+
+#if defined _SP_RECEIVER || defined _SP_FUTABA
+	last_actuator_command = GetTime();
+#endif
+
 #if defined _SP_ACTUATOR || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined _SP_MULTI_ACTUATOR
 #ifdef _SP_ACTUATOR
-	LED_Toggle(0);	
+	LED_Toggle(0);
 #if 1
 #ifdef _SP_ACTUATOR_HITEC
 	uint16_t usec_u = 0;
@@ -1117,7 +1135,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #ifdef _SP_ACTUATOR_HACKHD
 	if(data->usec[DIP_GetVal()] > 1500 && !camera_triggered) {
 		camera_triggered = 1u;
-		LED_On(0);	
+		LED_On(0);
 		LED_On(1);
 		Delay(500);
 		LED_Off(1);
@@ -1134,7 +1152,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #endif
 #ifdef _SP_MULTI_ACTUATOR
 	uint8_t i;
-	LED_Toggle(0);	
+	LED_Toggle(0);
 
 	for(i=0; i<CAN_NUM_ACTUATORS; i++) {
 		PWM_SetPulseWidth(i, data->usec[i]);
@@ -1174,6 +1192,8 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 	LED_Blink(0,100);
 #endif
 #endif
+
+	} // if(pkt_valid)
 
 	//----- packet specific code -----//
 
