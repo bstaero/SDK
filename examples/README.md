@@ -31,7 +31,6 @@ examples/
 ├── payload/             # Generic payload integration
 ├── smm/                 # Soil moisture radiometer
 ├── gazebo/              # Gazebo SITL simulation (multirotor)
-├── emass/               # EMASS ECS-DoT payload node interface
 │
 │   CAN Protocol Examples:
 ├── can_test/            # CAN bus testing and visualization

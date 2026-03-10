@@ -213,7 +213,6 @@ include ../common/Makefile.common
 | `payload` | BST | Generic payload integration |
 | `smm` | BST | SMM serial sensor |
 | `gazebo` | BST | Gazebo SITL simulation (multirotor) |
-| `emass` | BST | EMASS ECS-DoT payload node interface |
 | `can_test` | CAN | CAN bus testing and visualization |
 | `mhp` | Raw | Multi-hole probe meteorological |
 
@@ -251,10 +250,9 @@ make              # Build the EMASS payload binary (optional)
    ```
    Use the test binary to ready the vehicle for flight, take off, and fly.
 
-4. **Connect the EMASS payload** (terminal 4, optional) - for external actuator control:
+4. **Connect an external payload** (terminal 4, optional) - for external actuator control:
    ```bash
-   cd examples/emass
-   ./emass -i localhost -p 55551
+   ./my_payload -i localhost -p 55551
    ```
    Once the vehicle is airborne and in FLYING mode, the payload node can take over actuator control.
 
@@ -263,7 +261,7 @@ make              # Build the EMASS payload binary (optional)
 **Ports:**
 - `55554` - Internal AP comms (gcsDaemon)
 - `55555` - GCS client connection (test binary)
-- `55551` - Payload serial interface (EMASS / external controller)
+- `55551` - Payload serial interface (external controller)
 
 ### Example File Structure
 
