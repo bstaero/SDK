@@ -1,5 +1,8 @@
 #!/bin/bash
 
+WDIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$WDIR"
+
 mkdir -p ~/.black_swift
 cp models/e2/param ~/.black_swift/param_mr_0x41000002.bst
 
@@ -10,10 +13,14 @@ pkill -9 pro_core
 
 sleep 1
 
+# Start GCS daemon on port 55554 (internal AP comms)
+# GCS test client connects on 55555, payload serial on 55551
 bin/gcsDaemon -n 55554 -S &
+
+# Start SWIL autopilot
 bin/pro_core_swil_MULTIROTOR -i localhost -v6
 
 echo "Killing gcsDaemon ..."
-pkill -9 gcsDaemon 
+pkill -9 gcsDaemon
 echo "Killing autopilot SWIL ..."
 pkill -9 pro_core

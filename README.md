@@ -211,16 +211,59 @@ include ../common/Makefile.common
 | `template_bst` | BST | Copy-ready BST protocol starting point |
 | `template_can` | CAN | Copy-ready CAN protocol starting point |
 | `payload` | BST | Generic payload integration |
-| `sphere` | BST | Sphere payload |
-| `s0` | BST | S0 sensor payload |
-| `ch4` | BST | CH4 methane sensor (includes file I/O) |
 | `smm` | BST | SMM serial sensor |
-| `gazebo` | BST | Gazebo HITL simulation (multirotor) |
+| `gazebo` | BST | Gazebo SITL simulation (multirotor) |
+| `emass` | BST | EMASS ECS-DoT payload node interface |
 | `can_test` | CAN | CAN bus testing and visualization |
-| `deployment_tube_test` | CAN | Deployment tube testing |
-| `psns_test` | CAN | PSNS board testing |
-| `ldcr` | Raw | LDCR serial sensor |
 | `mhp` | Raw | Multi-hole probe meteorological |
+
+### Gazebo Simulation Workflow
+
+The `gazebo` example provides a complete software-in-the-loop (SITL) simulation environment for multirotor testing. It supports both Gazebo Classic (9-11) and Gazebo Jetty/Harmonic.
+
+**Setup:**
+```bash
+cd examples/gazebo
+make              # Build the GCS test binary
+cd ../emass
+make              # Build the EMASS payload binary (optional)
+```
+
+**Running a simulation:**
+
+1. **Start the autopilot** (terminal 1):
+   ```bash
+   cd examples/gazebo
+   ./run_autopilot
+   ```
+
+2. **Start Gazebo** (terminal 2):
+   ```bash
+   cd examples/gazebo
+   ./run_gazebo              # Default: multirotor
+   ./run_gazebo <world_name> # Other world (e.g., complex_multirotor)
+   ```
+
+3. **Connect the GCS test binary** (terminal 3) - used for flight control:
+   ```bash
+   cd examples/gazebo
+   ./test -i localhost -p 55555
+   ```
+   Use the test binary to ready the vehicle for flight, take off, and fly.
+
+4. **Connect the EMASS payload** (terminal 4, optional) - for external actuator control:
+   ```bash
+   cd examples/emass
+   ./emass -i localhost -p 55551
+   ```
+   Once the vehicle is airborne and in FLYING mode, the payload node can take over actuator control.
+
+5. **Landing** - use the test binary (terminal 3) to land and complete the flight.
+
+**Ports:**
+- `55554` - Internal AP comms (gcsDaemon)
+- `55555` - GCS client connection (test binary)
+- `55551` - Payload serial interface (EMASS / external controller)
 
 ### Example File Structure
 

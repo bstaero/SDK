@@ -1,5 +1,5 @@
 <sdf version='1.6'>
-  <model name='BST Quad'>
+  <model name='BST_Quad'>
     <link name='base_link'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <inertial>
@@ -68,12 +68,11 @@
             <resolution>0.01</resolution>
           </range>
         </ray>
-        <plugin name="laser" filename="libRayPlugin.so" />
+
         <always_on>1</always_on>
         <update_rate>50</update_rate>
         <visualize>true</visualize>
       </sensor>
-
     </link>
     <link name='/imu_link'>
       <pose frame=''>0 0 0 0 -0 0</pose>
@@ -368,15 +367,12 @@
         <use_parent_model_frame>1</use_parent_model_frame>
       </axis>
     </joint>
-		<plugin name='libmav_msgs_plugin' filename='libmav_msgs.so'>
-      <robotNamespace/>
-		</plugin>
-    <plugin name='rosbag' filename='librotors_gazebo_multirotor_base_plugin.so'>
+    <plugin name='bst_sim::GzMultirotorBasePlugin' filename='libgz_multirotor_base_plugin.so'>
       <robotNamespace/>
       <linkName>base_link</linkName>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <plugin name='front_right_motor_model' filename='librotors_gazebo_motor_model.so'>
+    <plugin name='bst_sim::GzMotorModel' filename='libgz_motor_model.so'>
       <robotNamespace/>
       <jointName>rotor_0_joint</jointName>
       <linkName>rotor_0</linkName>
@@ -393,7 +389,7 @@
       <motorSpeedPubTopic>/motor_speed/0</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <plugin name='front_left_motor_model' filename='librotors_gazebo_motor_model.so'>
+    <plugin name='bst_sim::GzMotorModel' filename='libgz_motor_model.so'>
       <robotNamespace/>
       <jointName>rotor_1_joint</jointName>
       <linkName>rotor_1</linkName>
@@ -410,7 +406,7 @@
       <motorSpeedPubTopic>/motor_speed/1</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <plugin name='back_left_motor_model' filename='librotors_gazebo_motor_model.so'>
+    <plugin name='bst_sim::GzMotorModel' filename='libgz_motor_model.so'>
       <robotNamespace/>
       <jointName>rotor_2_joint</jointName>
       <linkName>rotor_2</linkName>
@@ -427,7 +423,7 @@
       <motorSpeedPubTopic>/motor_speed/2</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <plugin name='back_right_motor_model' filename='librotors_gazebo_motor_model.so'>
+    <plugin name='bst_sim::GzMotorModel' filename='libgz_motor_model.so'>
       <robotNamespace/>
       <jointName>rotor_3_joint</jointName>
       <linkName>rotor_3</linkName>
@@ -444,7 +440,7 @@
       <motorSpeedPubTopic>/motor_speed/3</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <plugin name='bst_interface' filename='libgazebo_bst_interface.so'>
+    <plugin name='bst_sim::GzBSTInterface' filename='libgz_bst_interface.so'>
       <robotNamespace/>
       <imuSubTopic>/imu</imuSubTopic>
       <bst_addr>INADDR_ANY</bst_addr>
@@ -486,7 +482,7 @@
       </control_channels>
     </plugin>
     <static>0</static>
-    <plugin name='rotors_gazebo_imu_plugin' filename='librotors_gazebo_imu_plugin.so'>
+    <plugin name='bst_sim::GzImuPlugin' filename='libgz_imu_plugin.so'>
       <robotNamespace/>
       <linkName>/imu_link</linkName>
       <imuTopic>/imu</imuTopic>

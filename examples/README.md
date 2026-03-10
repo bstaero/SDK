@@ -29,16 +29,12 @@ examples/
 │
 │   BST Protocol Examples:
 ├── payload/             # Generic payload integration
-├── sphere/              # Sphere payload
-├── s0/                  # S0 sensor payload
-├── ch4/                 # CH4 methane sensor (file I/O)
-├── smm/                 # Soil moisture / LDCR radiometer
-├── gazebo/              # Gazebo HITL simulation (multirotor)
+├── smm/                 # Soil moisture radiometer
+├── gazebo/              # Gazebo SITL simulation (multirotor)
+├── emass/               # EMASS ECS-DoT payload node interface
 │
 │   CAN Protocol Examples:
 ├── can_test/            # CAN bus testing and visualization
-├── deployment_tube_test/# Deployment tube testing
-├── psns_test/           # PSNS board testing
 │
 │   Raw Serial Examples:
 └── mhp/                 # Multi-hole probe meteorological
