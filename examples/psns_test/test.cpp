@@ -19,10 +19,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <termios.h>
 
 #include "test.h"
 #include "main.h"
+#include "example_common.h"
 #include "structs.h"
 
 #include "flight_plan.h"
@@ -76,9 +76,6 @@ void updateAPEnable(void);
 // packet for transmision
 Packet              tx_packet;
 
-// for command line (terminal) input
-struct termios initial_settings, new_settings;
-
 void printTestHelp() {
 	printf("Keys:\n");
 	printf("  t   : Toggle telemetry display\n");
@@ -100,37 +97,6 @@ void printTestHelp() {
 	printf("\n");
 	printf("  p   : print this help\n");
 }
-
-bool inputAvailable()  
-{
-	// check for input on terminal
-	struct timeval tv;
-	fd_set fds;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	FD_ZERO(&fds);
-	FD_SET(STDIN_FILENO, &fds);
-	select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
-
-	return (FD_ISSET(0, &fds));
-}
-
-
-void initializeTest() {
-
-	// terminal settings to get input
-	tcgetattr(0,&initial_settings);
-
-	new_settings = initial_settings;
-	new_settings.c_lflag &= ~ICANON;
-	new_settings.c_lflag &= ~ECHO;
-	new_settings.c_lflag &= ~ISIG;
-	new_settings.c_cc[VMIN] = 0;
-	new_settings.c_cc[VTIME] = 0;
-
-	tcsetattr(0, TCSANOW, &new_settings);
-}
-
 
 void updateTest() {
 	char input; 
@@ -474,6 +440,3 @@ void simuatedShutdown(void) {
 	sending_flight_mode = 0;
 }
 
-void exitTest() {
-	tcsetattr(0, TCSANOW, &initial_settings);
-}

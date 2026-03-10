@@ -236,7 +236,7 @@ uint8_t receiveCommand(uint8_t type, void * data, uint16_t size, const void * pa
 
 	// validate this is a command
 	if( size != sizeof(Command_t) ) {
-		pmesg(VERBOSE_ERROR, "receiveCommand: invlid data size - size=%u\n", size);
+		pmesg(VERBOSE_ERROR, "receiveCommand: invalid data size - size=%u\n", size);
 		return false;
 	}
 

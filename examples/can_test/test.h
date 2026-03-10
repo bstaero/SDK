@@ -24,9 +24,8 @@
 extern volatile bool display_telemetry;
 extern volatile bool write_file;
 
-void initializeTest(void);
 void updateTest(void);
-void exitTest(void);
 void printTestHelp(void);
+void zeroAcutators(void);
 
 #endif

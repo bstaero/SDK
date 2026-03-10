@@ -1,0 +1,112 @@
+#*=+--+=#=+--            SwiftPilot Autopilot Software            --+=#=+--+=#*#
+#               Copyright (C) 2019 Black Swift Technologies LLC.               #
+#                             All Rights Reserved.                             #
+#                                                                              #
+#    This program is free software: you can redistribute it and/or modify      #
+#    it under the terms of the GNU General Public License version 2 as         #
+#    published by the Free Software Foundation.                                #
+#                                                                              #
+#    This program is distributed in the hope that it will be useful,           #
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of            #
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             #
+#    GNU General Public License for more details.                              #
+#                                                                              #
+#    You should have received a copy of the GNU General Public License         #
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.     #
+#                                                                              #
+#                                 Jack Elston                                  #
+#                          elstonj@blackswifttech.com                          #
+#                                                                              #
+#*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*#
+
+# Shared Makefile for SDK examples
+# Include from per-example Makefile after setting:
+#   EXAMPLE_TYPE = bst | can | raw
+#   EXTRA_OBJ    = (optional additional .o files)
+#   EXTRA_FLAGS  = (optional additional compiler flags)
+#   EXTRA_VPATH  = (optional additional source paths)
+#   EXTRA_INCLUDES = (optional additional include paths)
+#   VEHICLE_FLAG = (optional vehicle define, default VEHICLE_FIXEDWING)
+
+HOST_OS := $(shell uname -s)
+
+CC  ?= gcc
+CXX ?= g++
+
+# --- Paths (relative to per-example directory) ---
+SDK_ROOT   = ../..
+COMMON_DIR = ../common
+
+VPATH = $(COMMON_DIR) \
+        $(SDK_ROOT)/src \
+        $(SDK_ROOT)/src/bst_protocol \
+        $(SDK_ROOT)/src/bst_protocol/modules \
+        $(SDK_ROOT)/src/bst_core \
+        $(EXTRA_VPATH)
+
+INCLUDES = -I. \
+           -I$(COMMON_DIR) \
+           -I$(SDK_ROOT)/include \
+           -I$(SDK_ROOT)/include/bst_protocol \
+           -I$(SDK_ROOT)/include/bst_protocol/messages \
+           -I$(SDK_ROOT)/include/bst_protocol/modules \
+           -I$(SDK_ROOT)/include/bst_core \
+           -I$(SDK_ROOT)/lib \
+           $(EXTRA_INCLUDES)
+
+VEHICLE_FLAG ?= VEHICLE_FIXEDWING
+FLAGS = -g -DVERBOSE -D$(VEHICLE_FLAG) $(EXTRA_FLAGS)
+
+# Base objects (shared across all example types)
+OBJ = example_common.o comm_protocol.o comm_interface.o debug.o vector.o helper_functions.o bst_packet.o
+
+# BST protocol examples: add module and protocol objects
+ifeq ($(EXAMPLE_TYPE),bst)
+OBJ += bst_module_basic.o bst_module_flight_plan.o flight_plan.o
+OBJ += bst_protocol.o bst_module.o
+endif
+
+# CAN examples: add simulated CAN and board flags
+ifeq ($(EXAMPLE_TYPE),can)
+VPATH += $(SDK_ROOT)/src/bst_can
+INCLUDES += -I$(SDK_ROOT)/include/bst_can
+OBJ += bst_module_basic.o bst_module_flight_plan.o flight_plan.o
+OBJ += bst_protocol.o bst_module.o
+OBJ += simulated_can.o bridge.o
+FLAGS += -DBOARD_core -DBOARD_GNSS -DBOARD_GCS -DBOARD_DEPLOYMENT -DSDK -DIMPLEMENTATION_xplane -DIMPLEMENTATION_swil
+endif
+
+# Raw serial examples: minimal object set (no protocol modules)
+ifeq ($(EXAMPLE_TYPE),raw)
+# Only base objects needed
+endif
+
+# Per-example additional objects
+OBJ += $(EXTRA_OBJ)
+
+# Platform-specific
+ifneq ($(HOST_OS), Darwin)
+FLAGS += -lrt
+endif
+
+# --- Build rules ---
+%.o:%.cpp
+	$(CXX) $(FLAGS) -c -o $@ $^ $(INCLUDES)
+
+%.o: %.c
+	$(CXX) $(FLAGS) -c -o $@ $< $(INCLUDES)
+
+default: bstsdklibs test
+
+test: $(OBJ) main.o test.o test_handler.o
+	$(CXX) -o $@ $^ $(INCLUDES) $(FLAGS) -L$(SDK_ROOT)/lib -lbst_lib -lrt
+
+clean:
+	cd $(SDK_ROOT)/lib && $(MAKE) clean
+	rm -f *.o
+	rm -f test
+
+bstsdklibs: $(SDK_ROOT)/lib/libbst_lib.a
+
+$(SDK_ROOT)/lib/libbst_lib.a:
+	cd $(SDK_ROOT)/lib && $(MAKE)

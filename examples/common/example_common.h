@@ -1,0 +1,46 @@
+/*=+--+=#=+--         SwiftCore Flight Management Software        --+=#=+--+=#*\
+|               Copyright (C) 2015 Black Swift Technologies LLC.               |
+|                             All Rights Reserved.                             |
+
+     NOTICE:  All information contained herein is, and remains the property
+     of Black Swift Technologies.
+
+     The intellectual and technical concepts contained herein are
+     proprietary to Black Swift Technologies LLC and may be covered by U.S.
+     and foreign patents, patents in process, and are protected by trade
+     secret or copyright law.
+
+     Dissemination of this information or reproduction of this material is
+     strictly forbidden unless prior written permission is obtained from
+     Black Swift Technologies LLC.
+|                                                                              |
+|                                                                              |
+\*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*/
+#ifndef _EXAMPLE_COMMON_H_
+#define _EXAMPLE_COMMON_H_
+
+#include <inttypes.h>
+#include <stdbool.h>
+
+enum CommType_t {COMM_SERIAL, COMM_SOCKET, COMM_FILE, COMM_UNKNOWN, COMM_INVALID};
+
+extern bool big_endian;
+extern bool running;
+extern double start_time;
+
+void setupTime();
+void detectEndianness();
+bool inputAvailable();
+void initTerminal();
+void restoreTerminal();
+void printBaseHelp();
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+float getElapsedTime();
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -20,10 +20,8 @@
 #define _MAIN_H_
 
 #include "bst_protocol.h"
+#include "example_common.h"
 #define NUM_COMM_INTERFACES 1
-
-extern bool big_endian;
-extern bool running;
 
 extern CommunicationsProtocol * comm_handler;
 
@@ -32,15 +30,5 @@ bool writeBytes(uint8_t * data, uint16_t num);
 bool writeFile(uint8_t * data, uint16_t num);
 
 void printHelp();
-
-void setupTime();
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-float getElapsedTime();
-#ifdef __cplusplus
-}
-#endif
 
 #endif

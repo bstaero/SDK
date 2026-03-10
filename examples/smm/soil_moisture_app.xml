@@ -1,0 +1,98 @@
+<App>
+  <Name>Soil Moisture App</Name>
+  <PayloadDataList>
+  <!-- Soil Moisture Command -->
+   <Channel>
+      <Number>0</Number>
+      <Action>COMMAND</Action>
+      <Fields>
+         <Field>
+            <name>Sensor Command</name>
+            <unit>OTHER</unit>
+            <type>UINT8</type>
+            <size>1</size>
+                        <note>      Commands:
+                        0=Off
+                        1=Calibrate-Cal Target
+                        2=Calibrate-Water
+                        3=Calibrate-Cold Space
+                        4=On/Recording</note>
+         </Field>
+      </Fields>
+   </Channel>
+
+   <!-- Soil Moisture Telemetry -->  
+   <Channel>
+      <Number>1</Number>
+      <Action>STATUS</Action>
+      <Fields>
+         <Field>
+            <name>Sensor Status</name>
+            <unit>OTHER</unit>
+            <type>UINT8</type>
+            <size>1</size>
+						<note>      Sensor status:  
+                        0=Off
+                        1=Calibrate-Cal Target
+                        2=Calibrate-Water
+                        3=Calibrate-Cold Space
+                        4=On/Recording</note>
+         </Field>
+         <Field>
+            <name>Time</name>
+            <unit>SECONDS</unit>
+            <type>FLOAT</type>
+            <size>1</size>
+         </Field> 
+         <Field>
+            <name>Latitude</name>
+            <unit>DEGREES</unit>
+            <type>DOUBLE</type>
+            <size>1</size>
+         </Field> 
+         <Field>
+            <name>Longitude</name>
+            <unit>DEGREES</unit>
+            <type>DOUBLE</type>
+            <size>1</size>
+         </Field>     
+         <Field>
+            <name>Altitude</name>
+            <unit>METERS</unit>
+            <type>FLOAT</type>
+            <size>1</size>
+         </Field>
+         <Field>
+            <name>Height</name>
+            <unit>METERS</unit>
+            <type>FLOAT</type>
+            <size>1</size>
+         </Field>
+         <Field>
+            <name>NDVI</name>
+            <unit>OTHER</unit>
+            <type>FLOAT</type>
+            <size>1</size>
+         </Field>
+         <Field>
+            <name>Ground Temperature</name>
+            <unit>DEGREES</unit>
+            <type>FLOAT</type>
+            <size>1</size>
+         </Field>
+         <Field>
+            <name>Brightness Temperature</name>
+            <unit>OTHER</unit>
+            <type>FLOAT</type>
+            <size>1</size>
+         </Field>
+      </Fields>
+   </Channel> 
+   
+
+  </PayloadDataList>
+    <PayloadSerial>
+        <baudRate>115200</baudRate>
+        <serialInterface>INTERFACE_BST_PROTOCOL</serialInterface>
+	</PayloadSerial>
+</App>

@@ -1,0 +1,165 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+    <world name="default">
+        <gui fullscreen="0">
+            <plugin filename="MinimalScene" name="3D View">
+                <gz-gui>
+                    <title>3D View</title>
+                    <property type="bool" key="showTitleBar">false</property>
+                    <property type="string" key="state">docked</property>
+                </gz-gui>
+                <engine>ogre2</engine>
+                <scene>scene</scene>
+                <ambient_light>0.4 0.4 0.4</ambient_light>
+                <background_color>0.8 0.8 0.8</background_color>
+            </plugin>
+            <plugin filename="GzSceneManager" name="Scene Manager">
+                <gz-gui>
+                    <property type="bool" key="showTitleBar">false</property>
+                    <property type="string" key="state">docked</property>
+                </gz-gui>
+                <scene>scene</scene>
+            </plugin>
+            <plugin filename="InteractiveViewControl" name="Interactive view control">
+                <gz-gui>
+                    <property type="bool" key="showTitleBar">false</property>
+                    <property type="string" key="state">docked</property>
+                </gz-gui>
+            </plugin>
+            <plugin filename="KeyPublisher" name="Key publisher">
+                <gz-gui>
+                    <property type="bool" key="showTitleBar">false</property>
+                    <property type="string" key="state">docked</property>
+                </gz-gui>
+            </plugin>
+            <plugin filename="WorldControl" name="World control">
+                <gz-gui>
+                    <title>World control</title>
+                    <property type="bool" key="showTitleBar">false</property>
+                    <property type="string" key="state">floating</property>
+                    <property type="double" key="height">72</property>
+                    <property type="double" key="width">121</property>
+                    <property type="double" key="z">1</property>
+                    <property type="string" key="cardBackground">#777777</property>
+                </gz-gui>
+                <play_pause>true</play_pause>
+                <step>true</step>
+            </plugin>
+            <plugin filename="WorldStats" name="World stats">
+                <gz-gui>
+                    <title>World stats</title>
+                    <property type="bool" key="showTitleBar">false</property>
+                    <property type="string" key="state">floating</property>
+                    <property type="double" key="height">110</property>
+                    <property type="double" key="width">290</property>
+                    <property type="double" key="z">1</property>
+                    <property type="string" key="cardBackground">#777777</property>
+                </gz-gui>
+                <sim_time>true</sim_time>
+                <real_time>true</real_time>
+                <real_time_factor>true</real_time_factor>
+                <iterations>true</iterations>
+            </plugin>
+        </gui>
+
+        <!-- A global light source -->
+        <light type="directional" name="sun">
+            <cast_shadows>true</cast_shadows>
+            <pose>0 0 10 0 0 0</pose>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <attenuation>
+                <range>1000</range>
+                <constant>0.9</constant>
+                <linear>0.01</linear>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <direction>-0.5 0.1 -0.9</direction>
+        </light>
+
+        <!-- A ground plane -->
+        <model name="ground_plane">
+            <static>true</static>
+            <link name="link">
+                <collision name="collision">
+                    <geometry>
+                        <plane>
+                            <normal>0 0 1</normal>
+                            <size>500 500</size>
+                        </plane>
+                    </geometry>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <plane>
+                            <normal>0 0 1</normal>
+                            <size>500 500</size>
+                        </plane>
+                    </geometry>
+                    <material>
+                        <ambient>0.8 0.8 0.8 1</ambient>
+                        <diffuse>0.8 0.8 0.8 1</diffuse>
+                        <specular>0.8 0.8 0.8 1</specular>
+                    </material>
+                </visual>
+            </link>
+        </model>
+
+        <include>
+            <uri>model://e2</uri>
+            <pose>0 0 0.2 0 0 0</pose>
+        </include>
+
+        <scene>
+            <shadows>false</shadows>
+            <grid>false</grid>
+        </scene>
+
+        <wind>
+            <linear_velocity>0 5 0</linear_velocity>
+        </wind>
+
+        <physics name="default_physics" type="dart">
+            <max_step_size>0.002</max_step_size>
+            <real_time_factor>1</real_time_factor>
+            <real_time_update_rate>500</real_time_update_rate>
+        </physics>
+
+        <gravity>0 0 -9.8066</gravity>
+        <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+
+        <plugin filename="libgz_wind_plugin.so" name="bst_sim::GzWindPlugin">
+            <horizontal>
+                <magnitude>
+                    <time_for_rise>10</time_for_rise>
+                    <sin>
+                        <amplitude_percent>0.05</amplitude_percent>
+                        <period>60</period>
+                    </sin>
+                    <noise type="gaussian">
+                        <mean>0</mean>
+                        <stddev>0.0002</stddev>
+                    </noise>
+                </magnitude>
+                <direction>
+                    <time_for_rise>30</time_for_rise>
+                    <sin>
+                        <amplitude>5</amplitude>
+                        <period>20</period>
+                    </sin>
+                    <noise type="gaussian">
+                        <mean>0</mean>
+                        <stddev>0.03</stddev>
+                    </noise>
+                </direction>
+            </horizontal>
+            <vertical>
+                <noise type="gaussian">
+                    <mean>0</mean>
+                    <stddev>0.03</stddev>
+                </noise>
+            </vertical>
+        </plugin>
+
+    </world>
+</sdf>

@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <termios.h>
 
 #define VEHICLE_MULTIROTOR
 
@@ -27,6 +26,7 @@
 #include "test_handler.h"
 
 #include "main.h"
+#include "example_common.h"
 
 /*<---Global Variables---->*/
 volatile bool display_telemetry = false;
@@ -36,9 +36,6 @@ volatile bool waiting_on_orientation = false;
 volatile bool waiting_on_mag = false;
 volatile bool waiting_on_i_mag = false;
 volatile bool write_file = false;
-
-// for command line (terminal) input
-struct termios initial_settings, new_settings;
 /*<-End Global Variables-->*/
 
 /*<---Local Functions----->*/
@@ -75,35 +72,6 @@ void printTestHelp() {
 	printf("  p   : Print this help\n");
 }
 
-bool inputAvailable()  
-{
-	// check for input on terminal
-	struct timeval tv;
-	fd_set fds;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	FD_ZERO(&fds);
-	FD_SET(STDIN_FILENO, &fds);
-	select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
-
-	return (FD_ISSET(0, &fds));
-}
-
-
-void initializeTest() {
-
-	// terminal settings to get input
-	tcgetattr(0,&initial_settings);
-
-	new_settings = initial_settings;
-	new_settings.c_lflag &= ~ICANON;
-	new_settings.c_lflag &= ~ECHO;
-	new_settings.c_lflag &= ~ISIG;
-	new_settings.c_cc[VMIN] = 0;
-	new_settings.c_cc[VTIME] = 0;
-
-	tcsetattr(0, TCSANOW, &new_settings);
-}
 
 void updateTest() {
 	static bool first_run = true;
@@ -386,9 +354,4 @@ void updateMagCurrentCal() {
 
 	end_time = 0.0;
 	waiting_on_i_mag = false;
-}
-
-
-void exitTest() {
-	tcsetattr(0, TCSANOW, &initial_settings);
 }

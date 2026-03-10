@@ -1,8 +1,39 @@
 #!/bin/bash
 
-WDIR=`pwd`
+WDIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$WDIR"
 
-export GAZEBO_PLUGIN_PATH=${WDIR}/plugins:${GAZEBO_PLUGIN_PATH}:/usr/lib/gazebo-10/plugins:/lib/gazebo-11/plugins:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins
-export GAZEBO_MODEL_PATH=${WDIR}/models:${GAZEBO_MODEL_PATH}
+WORLD_NAME="${1:-multirotor}"
 
-gazebo --verbose worlds/multirotor.world
+# Detect Gazebo version: prefer Gazebo Jetty (gz sim) over Classic
+if command -v gz &>/dev/null && gz sim --versions &>/dev/null 2>&1; then
+    # Gazebo Sim (Harmonic/Jetty)
+    export GZ_SIM_SYSTEM_PLUGIN_PATH=${WDIR}/plugins:${GZ_SIM_SYSTEM_PLUGIN_PATH}
+    export GZ_SIM_RESOURCE_PATH=${WDIR}/models:${GZ_SIM_RESOURCE_PATH}
+
+    if [[ -f "worlds_gz/${WORLD_NAME}.sdf" ]]; then
+        gz sim --verbose -r worlds_gz/${WORLD_NAME}.sdf
+    else
+        echo "Error: worlds_gz/${WORLD_NAME}.sdf not found"
+        echo "Available worlds:"
+        ls worlds_gz/*.sdf 2>/dev/null | sed 's|worlds_gz/||; s|\.sdf||'
+        exit 1
+    fi
+else
+    # Gazebo Classic (9-11)
+    if [[ -f /usr/share/gazebo/setup.sh ]]; then
+        . /usr/share/gazebo/setup.sh
+    fi
+
+    export GAZEBO_PLUGIN_PATH=${WDIR}/plugins:${GAZEBO_PLUGIN_PATH}:/usr/lib/gazebo-10/plugins:/lib/gazebo-11/plugins:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins
+    export GAZEBO_MODEL_PATH=${WDIR}/models:${GAZEBO_MODEL_PATH}
+
+    if [[ -f "worlds/${WORLD_NAME}.world" ]]; then
+        gazebo --verbose worlds/${WORLD_NAME}.world
+    else
+        echo "Error: worlds/${WORLD_NAME}.world not found"
+        echo "Available worlds:"
+        ls worlds/*.world 2>/dev/null | sed 's|worlds/||; s|\.world||'
+        exit 1
+    fi
+fi

@@ -19,24 +19,14 @@
 #ifndef _MAIN_H_
 #define _MAIN_H_
 
+#include "example_common.h"
 #include "bst_protocol.h"
+
 #define NUM_COMM_INTERFACES 1
 
-extern bool big_endian;
-extern bool running;
-
 extern CommunicationsProtocol * comm_handler;
+extern CommunicationsInterface * comm_interface;
 
 void printHelp();
-
-void setupTime();
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-float getElapsedTime();
-#ifdef __cplusplus
-}
-#endif
 
 #endif

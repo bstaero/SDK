@@ -2,16 +2,16 @@
 |               Copyright (C) 2015 Black Swift Technologies LLC.               |
 |                             All Rights Reserved.                             |
 
-     NOTICE:  All information contained herein is, and remains the property 
+     NOTICE:  All information contained herein is, and remains the property
      of Black Swift Technologies.
 
-     The intellectual and technical concepts contained herein are 
-     proprietary to Black Swift Technologies LLC and may be covered by U.S. 
-     and foreign patents, patents in process, and are protected by trade 
+     The intellectual and technical concepts contained herein are
+     proprietary to Black Swift Technologies LLC and may be covered by U.S.
+     and foreign patents, patents in process, and are protected by trade
      secret or copyright law.
 
-     Dissemination of this information or reproduction of this material is 
-     strictly forbidden unless prior written permission is obtained from 
+     Dissemination of this information or reproduction of this material is
+     strictly forbidden unless prior written permission is obtained from
      Black Swift Technologies LLC.
 |                                                                              |
 |                                                                              |
@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <termios.h>
 
 #include "test.h"
 #include "test_handler.h"
@@ -46,9 +45,6 @@ extern TelemetryControl_t     telemetry_control;
 extern UserPayload_t          rx_payload;
 UserPayload_t                 tx_payload;
 
-// for command line (terminal) input
-struct termios initial_settings, new_settings;
-
 void printTestHelp() {
 	printf("Keys:\n");
 	printf("  t   : Toggle Telemetry Display\n");
@@ -59,39 +55,8 @@ void printTestHelp() {
 	printf("  p   : print this help\n");
 }
 
-bool inputAvailable()  
-{
-	// check for input on terminal
-	struct timeval tv;
-	fd_set fds;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	FD_ZERO(&fds);
-	FD_SET(STDIN_FILENO, &fds);
-	select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
-
-	return (FD_ISSET(0, &fds));
-}
-
-
-void initializeTest() {
-
-	// terminal settings to get input
-	tcgetattr(0,&initial_settings);
-
-	new_settings = initial_settings;
-	new_settings.c_lflag &= ~ICANON;
-	new_settings.c_lflag &= ~ECHO;
-	new_settings.c_lflag &= ~ISIG;
-	new_settings.c_cc[VMIN] = 0;
-	new_settings.c_cc[VTIME] = 0;
-
-	tcsetattr(0, TCSANOW, &new_settings);
-}
-
-
 void updateTest() {
-	char input; 
+	char input;
 
 	Command_t command;
 
@@ -127,7 +92,7 @@ void updateTest() {
 					printTestHelp();
 					break;
 
-				case 3: // <CTRL-C> 
+				case 3: // <CTRL-C>
 					// allow flowthrough
 				case 'q':
 					printf("Keyboard caught exit signal ...\n");
@@ -173,10 +138,6 @@ void updateTest() {
 
 		new_data = false;
 	}
-}
-
-void exitTest() {
-	tcsetattr(0, TCSANOW, &initial_settings);
 }
 
 bool sendPayloadData(uint8_t * data, uint8_t size) {
