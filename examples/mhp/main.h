@@ -21,9 +21,7 @@
 
 #include "bst_packet.h"
 #include "debug.h"
-
-extern bool big_endian;
-extern bool running;
+#include "example_common.h"
 
 bool readByte(uint8_t * data);
 bool writeBytes(uint8_t * data, uint16_t num);
@@ -31,15 +29,5 @@ bool writeBytes(uint8_t * data, uint16_t num);
 bool writeFile(uint8_t * data, uint16_t num);
 
 void printHelp();
-
-void setupTime();
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-float getElapsedTime();
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -19,6 +19,7 @@
 #include "main.h"
 #include "test.h"
 #include "test_handler.h"
+#include "log_replay.h"
 
 /* BST */
 #include "bst_module_basic.h"
@@ -28,23 +29,19 @@
 
 #include "simulated_can.h"
 
-/* NetUAS */
-#include "netuas_serial.h"
-#include "netuas_socket.h"
+/* BST */
+#include "bst_serial.h"
+#include "bst_socket.h"
 
 /* STD LIBS */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#ifdef __APPLE__
-#include <mach/mach_time.h> // system time
-#endif
+#include <getopt.h>
 
 #ifdef VERBOSE
 #  include "debug.h"
@@ -64,14 +61,26 @@ extern "C"  {
 }
 
 extern bool auto_test;
+
+char log_filename[256] = {0};
 /*<-End Global Variables-->*/
 
-enum {COMM_SERIAL, COMM_SOCKET, COMM_UNKNOWN, COMM_INVALID};
-
-bool big_endian = false;
-bool running = true;
-
-void printHelp();
+// parse "hh:mm:ss" or "mm:ss" or bare seconds into float seconds
+static float parseTimeStr(const char * str) {
+	int h = 0, m = 0;
+	float s = 0.0f;
+	if(sscanf(str, "%d:%d:%f", &h, &m, &s) == 3) {
+		return h * 3600.0f + m * 60.0f + s;
+	}
+	h = 0;
+	if(sscanf(str, "%d:%f", &m, &s) == 2) {
+		return m * 60.0f + s;
+	}
+	if(sscanf(str, "%f", &s) == 1) {
+		return s;
+	}
+	return -1.0f;
+}
 
 int main(int argc, char *argv[])
 {
@@ -80,8 +89,7 @@ int main(int argc, char *argv[])
 	//verbose = VERBOSE_ERROR;
 #endif
 
-	uint16_t temp = 0x0100;
-	big_endian = ((uint8_t *)&temp)[0];
+	detectEndianness();
 
 	uint8_t comm_type = COMM_UNKNOWN;
 
@@ -91,8 +99,18 @@ int main(int argc, char *argv[])
 
 	bzero(outfile,132);
 
-	char c;
-	while ((c = getopt(argc, argv, "ab:d:i:o:p:t:x:h")) != -1) {
+	float dd_duration = -1.0f;
+
+	static struct option long_options[] = {
+		{"ss", required_argument, 0, 0x100},
+		{"tt", required_argument, 0, 0x101},
+		{"dd", required_argument, 0, 0x102},
+		{0, 0, 0, 0}
+	};
+
+	int c;
+	int option_index = 0;
+	while ((c = getopt_long(argc, argv, "ab:d:f:i:o:p:t:x:h", long_options, &option_index)) != -1) {
 		switch(c) {
 			case 'a':
 				auto_test = true;
@@ -104,6 +122,9 @@ int main(int argc, char *argv[])
 			case 'd':
 				strcpy(&param[0][0],optarg);
 				comm_type != COMM_SOCKET ? comm_type = COMM_SERIAL : comm_type = COMM_INVALID;
+				break;
+			case 'f':
+				strncpy(log_filename, optarg, sizeof(log_filename)-1);
 				break;
 			case 'i':
 				strcpy(&param[0][0],optarg);
@@ -118,10 +139,25 @@ int main(int argc, char *argv[])
 			case 'o':
 				strcpy(outfile,optarg);
 				break;
+			case 0x100: // --ss
+				replay_start_s = parseTimeStr(optarg);
+				break;
+			case 0x101: // --tt
+				replay_stop_s = parseTimeStr(optarg);
+				break;
+			case 0x102: // --dd
+				dd_duration = parseTimeStr(optarg);
+				break;
 			default:
 				printHelp();
 				break;
 		}
+	}
+
+	// --dd converts to --tt (stop = start + duration)
+	if(dd_duration >= 0.0f && replay_stop_s < 0.0f) {
+		float ss = (replay_start_s >= 0.0f) ? replay_start_s : 0.0f;
+		replay_stop_s = ss + dd_duration;
 	}
 
 	// set default
@@ -144,9 +180,9 @@ int main(int argc, char *argv[])
 
 	// set interface
 	if(comm_type == COMM_SERIAL) {
-		comm_handler->setInterface(new NetuasSerial);
+		comm_handler->setInterface(new BSTSerial);
 	} else if(comm_type == COMM_SOCKET) {
-		comm_handler->setInterface(new NetuasSocket);
+		comm_handler->setInterface(new BSTSocket);
 	}
 
 	comm_interface = comm_handler->getInterface();
@@ -165,18 +201,21 @@ int main(int argc, char *argv[])
 
 	setupSimulatedCAN(comm_interface);
 
-	initializeTest();
+	initTerminal();
 	printTestHelp();
 
 	while(comm_interface->isConnected() && running) {
+		// Perform user functions first for responsive keyboard handling
+		updateTest();
+
 		// Update communications
 		simulatedCANRead(1);
 
-		// Perform user functions
-		updateTest();
-
 		usleep(1000);
 	}
+
+	// connection lost or user quit – zero actuators before closing
+	zeroAcutators();
 
 	comm_handler->getInterface()->close();
 
@@ -184,20 +223,17 @@ int main(int argc, char *argv[])
 		close(out_fid);
 	}
 
-	exitTest();
+	restoreTerminal();
 	printf("Disconnected, exiting.\n\n");
 }
 
 void printHelp() {
-	printf("Usage: test [OPTIONS]\n");
-	printf("  Serial port paramerters:\n");
-	printf("    -d <serial device name> : default /dev/ttyUSB0\n");
-	printf("    -b <serial baud>        : default 9600\n");
-	printf("  Socket paramerters:\n");
-	printf("    -i <server ip number>   : default localhost\n");
-	printf("    -p <socket port number> : default 55552\n");
-	printf("  File paramerters:\n");
-	printf("    -f <input file> \n");
+	printBaseHelp();
+	printf("  File parameters:\n");
+	printf("    -f <log file>           : BST binary log for actuator replay\n");
+	printf("    --ss hh:mm:ss           : replay start time (relative to log start)\n");
+	printf("    --tt hh:mm:ss           : replay stop time (relative to log start)\n");
+	printf("    --dd hh:mm:ss           : replay duration (from start time)\n");
 	printf("\n");
 	printf("  -h        Print this help\n");
 	exit(0);
@@ -205,39 +241,4 @@ void printHelp() {
 
 bool writeFile(uint8_t * data, uint16_t num) {
 	return write(out_fid, data, num);
-}
-
-double start_time = 0.0;
-
-void setupTime() {
-#ifdef __APPLE__
-	uint64_t now = mach_absolute_time();
-	float conversion  = 0.0;
-	mach_timebase_info_data_t info;
-	kern_return_t err = mach_timebase_info( &info );
-	if( err == 0  )
-		conversion = 1e-9 * (float) info.numer / (float) info.denom;
-	start_time = conversion * (float) now;
-#else
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-	start_time = (double)now.tv_sec + (double)now.tv_nsec / SEC_TO_NSEC;
-#endif
-}
-
-float getElapsedTime() {
-#ifdef __APPLE__
-	uint64_t now = mach_absolute_time();
-	float conversion  = 0.0;
-	mach_timebase_info_data_t info;
-	kern_return_t err = mach_timebase_info( &info );
-	if( err == 0  )
-		conversion = 1e-9 * (float) info.numer / (float) info.denom;
-	float current_time = conversion * (float) now;
-#else
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-	double current_time = (double)now.tv_sec + (double)now.tv_nsec / SEC_TO_NSEC;
-#endif
-	return current_time - start_time;
 }

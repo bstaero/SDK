@@ -1,21 +1,19 @@
-/*=+--+=#=+--            SwiftPilot Autopilot Software            --+=#=+--+=#*\
+/*=+--+=#=+--         SwiftCore Flight Management Software        --+=#=+--+=#*\
 |               Copyright (C) 2012 Black Swift Technologies LLC.               |
 |                             All Rights Reserved.                             |
 
-     This program is free software: you can redistribute it and/or modify
-     it under the terms of the GNU General Public License version 2 as
-     published by the Free Software Foundation.
+     NOTICE:  All information contained herein is, and remains the property
+     of Black Swift Technologies.
 
-     This program is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     GNU General Public License for more details.
+     The intellectual and technical concepts contained herein are
+     proprietary to Black Swift Technologies LLC and may be covered by U.S.
+     and foreign patents, patents in process, and are protected by trade
+     secret or copyright law.
 
-     You should have received a copy of the GNU General Public License
-     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-                                  Jack Elston                                   
-|                          elstonj@blackswifttech.com                          |
+     Dissemination of this information or reproduction of this material is
+     strictly forbidden unless prior written permission is obtained from
+     Black Swift Technologies LLC.
+|                                                                              |
 |                                                                              |
 \*=+--+=#=+--                 --+=#=+--+=#=+--                    --+=#=+--+=#*/
 
@@ -25,25 +23,23 @@
 #include <string.h>
 #include "bridge.h"
 
-#include "canpackets.h"
-
-#ifdef __cplusplus
-using namespace bst::comms::canpackets;
-#endif
-
 uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size);
 
-#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32L431xx
+#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx
   #include "helper_functions.h"
-  #include "simulated_can.h"
+  #if ! defined STM32L431xx && ! defined STM32L496xx
+    #include "simulated_can.h"
+  #endif
 #endif
 
 #include "debug.h"
 
-#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32H743xx || defined STM32L431xx
-  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx && ! defined STM32L431xx
+#if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32H743xx || defined STM32L431xx || defined STM32L496xx
+  #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx && ! defined STM32L431xx && ! defined STM32L496xx
     #include "can.h"
     #include "led.h" // DEBUG
+    #include "pwm.h"
+    #include "clock.h"
   #else
     #if defined STM32F405xx || defined STM32L432xx
 uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
@@ -52,7 +48,8 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
     #endif
   #endif
 
-  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32L431xx
+  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
+    #include <math.h>
     uint8_t checkFletcher16(uint8_t * data, uint8_t size);
     void setFletcher16 (uint8_t * data, uint8_t size);
   #endif
@@ -83,6 +80,8 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
     #include "dip.h"
   #endif
 #endif
+
+  //#include "main.h"
 
 #if defined IMPLEMENTATION_swil || defined IMPLEMENTATION_xplane
 extern uint8_t p_new_gps_data;
@@ -284,6 +283,9 @@ void handleDeployTubeCmd(float ts, uint8_t id, float value);
 void handleArmRemoteID(float ts, uint8_t arm_status);
 void handleArmRemoteIDErrorMsg(float ts, char error[50]);
 
+void handleControlCmd(float ts, uint8_t id, float value);
+
+void handleCANDebugMsg(float ts, char * byte, uint8_t size);
 
 
 /** @addtogroup Low_Level
@@ -418,12 +420,16 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size);
 
+void BRIDGE_HandleControlCmd(uint8_t *byte,uint8_t size);
+
 void BRIDGE_HandleRIDPacket(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleGCSLocation(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleArmRemoteID(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleArmRemoteIDErrorMsg(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleOperatorID(uint8_t * byte, uint8_t size);
 void BRIDGE_HandleSerialNumber(uint8_t * byte, uint8_t size);
+
+void BRIDGE_HandleDebug(uint8_t * byte, uint8_t size);
 
 /**
  * @}
@@ -497,12 +503,15 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_TRIGGER:    BRIDGE_HandleTriggerPkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE:    BRIDGE_HandleDeplyTubePkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE_CMD:    BRIDGE_HandleDeplyTubeCmdPkt(data,size); break;
+		case CAN_PKT_COMMAND:    BRIDGE_HandleControlCmd(data,size); break;
 
 		case CAN_PKT_REMOTE_ID:  BRIDGE_HandleRIDPacket(data, size); break;
 		case CAN_PKT_GCS_LOCATION: BRIDGE_HandleGCSLocation(data, size); break;
 		case CAN_PKT_ARM_RID:		 BRIDGE_HandleArmRemoteID(data, size); break;
 		case CAN_PKT_REMOTE_ID_ERROR_MSG:	BRIDGE_HandleArmRemoteIDErrorMsg(data, size); break;
 		case CAN_PKT_SERIAL_ID:	 BRIDGE_HandleSerialNumber(data, size); break;
+
+		case CAN_PKT_DEBUG:	     BRIDGE_HandleDebug(data, size); break;
 
 		default: break;
 	}
@@ -610,7 +619,7 @@ void BRIDGE_HandlePressurePkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_RID
+#if defined BOARD_core || defined BOARD_RID || defined STANDALONE_BUILD
 	static uint8_t pkt_size = sizeof(CAN_AirData_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleAirDataPkt";
@@ -628,17 +637,17 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 
 	float t0 = getElapsedTime();
 
-#if !defined BOARD_MHP
-	if(data->static_pressure > -FLT_MAX) {
+#if !defined BOARD_MHP && !defined SEPARATE_AIRDATA && !defined STANDALONE_BUILD
+	if(isnan(data->static_pressure) || data->static_pressure > -FLT_MAX) {
 		updateStaticPressure(t0, data->static_pressure, data->air_temperature);
 	}
-	if(data->dynamic_pressure > -FLT_MAX) {
+	if(isnan(data->dynamic_pressure) || data->dynamic_pressure > -FLT_MAX) {
 		updateDynamicPressure(t0, data->dynamic_pressure, data->air_temperature);
 	}
-	if(data->air_temperature > -FLT_MAX) {
+	if(isnan(data->air_temperature) || data->air_temperature > -FLT_MAX) {
 		updateTemperature(t0, data->air_temperature);
 	}
-	if(data->humidity > -FLT_MAX) {
+	if(isnan(data->humidity) || data->humidity > -FLT_MAX) {
 		updateHumidity(t0, data->humidity);
 	}
 
@@ -649,6 +658,7 @@ void BRIDGE_HandleAirDataPkt(uint8_t *byte, uint8_t size)
 			data->air_temperature,
 			data->humidity);
 #endif
+
 
 	pmesg(VERBOSE_CAN, "AIR DATA: %+.5f [Pa], %+.5f [Pa], %+.2f [deg C] %.1f [%]\n\r", 
 			data->static_pressure, data->dynamic_pressure, data->air_temperature, data->humidity);
@@ -1059,7 +1069,7 @@ static camera_triggered = 0u;
 #endif
 void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 {
-#if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK || defined _SP_MULTI_ACTUATOR
+#if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK || defined _SP_MULTI_ACTUATOR || defined BOARD_PSNS
 	static uint8_t pkt_size = sizeof(CAN_Actuator_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleActuatorPkt";
@@ -1069,13 +1079,35 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 	BRIDGE_BUFFER_PREAMBLE
 
 	//----- packet specific code -----//
-	
+	//
 	CAN_Actuator_t *data;
 	data = (CAN_Actuator_t *)buffer;
 
+	// Validate actuator values to catch CAN frame-loss corruption
+	// that passes the 16-bit Fletcher16 checksum.
+	// Valid actuator values are 0 (unused) or 800-2200 (servo range).
+	uint8_t pkt_valid = 1u;
+	{
+		uint8_t k;
+		for(k=0; k<CAN_NUM_ACTUATORS; k++) {
+			if(data->usec[k] != 0 && (data->usec[k] < 800 || data->usec[k] > 2200)) {
+				pkt_valid = 0u;
+				BRIDGE_pktDrops++;
+				pmesg(VERBOSE_ERROR, "ACTUATOR: corrupt pkt ch%d=%d, dropping\r\n", k, data->usec[k]);
+				break;
+			}
+		}
+	}
+
+	if(pkt_valid) {
+
+#if defined _SP_RECEIVER || defined _SP_FUTABA
+	last_actuator_command = GetTime();
+#endif
+
 #if defined _SP_ACTUATOR || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined _SP_MULTI_ACTUATOR
 #ifdef _SP_ACTUATOR
-	LED_Toggle(0);	
+	LED_Toggle(0);
 #if 1
 #ifdef _SP_ACTUATOR_HITEC
 	uint16_t usec_u = 0;
@@ -1103,7 +1135,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #ifdef _SP_ACTUATOR_HACKHD
 	if(data->usec[DIP_GetVal()] > 1500 && !camera_triggered) {
 		camera_triggered = 1u;
-		LED_On(0);	
+		LED_On(0);
 		LED_On(1);
 		Delay(500);
 		LED_Off(1);
@@ -1120,7 +1152,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #endif
 #ifdef _SP_MULTI_ACTUATOR
 	uint8_t i;
-	LED_Toggle(0);	
+	LED_Toggle(0);
 
 	for(i=0; i<CAN_NUM_ACTUATORS; i++) {
 		PWM_SetPulseWidth(i, data->usec[i]);
@@ -1161,14 +1193,13 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #endif
 #endif
 
+	} // if(pkt_valid)
+
 	//----- packet specific code -----//
 
 	BRIDGE_BUFFER_CONCLUSION
 
 //#endif
-#if defined _SP_RECEIVER || defined _SP_FUTABA
-	last_actuator_command = GetTimeU();
-#endif
 #endif
 }
 
@@ -1293,8 +1324,8 @@ void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 	
 	updateGPSUTCValues(t0, data->week, data->hours, data->minutes, data->seconds);
 
-	pmesg(VERBOSE_CAN, "GNSS: %02d:%02d:%02.1f\n\r",
-			data->hours, data->minutes, data->seconds);
+	pmesg(VERBOSE_CAN, "GNSS: %02d | %02d:%02d:%02.1f\n\r",
+			data->week, data->hours, data->minutes, data->seconds);
 
 	//----- packet specific code -----//
 
@@ -1409,7 +1440,7 @@ void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte, uint8_t size)
 	
 	updateGPSHealthValues(t0, data->pdop, data->satellites, data->fix_type);
 
-	pmesg(VERBOSE_CAN, "GNSS: %+.1f %d\n\r", data->pdop, data->satellites);
+	pmesg(VERBOSE_CAN, "GNSS: %d | %+.1f %d\n\r", data->fix_type, data->pdop, data->satellites);
 
 	//----- packet specific code -----//
 
@@ -1532,7 +1563,7 @@ void BRIDGE_HandleGNSSSVINPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleSupplyPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core
+#if defined BOARD_core || defined STANDALONE_BUILD
 	static uint8_t pkt_size = sizeof(CAN_Supply_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleSupplyPkt";
@@ -1808,11 +1839,12 @@ void BRIDGE_HandleADSBPkt(uint8_t *byte, uint8_t size)
  * @retval None
  */
 void BRIDGE_HandleCalibratePkt(uint8_t *byte,uint8_t size) {
-#if defined BOARD_MHP
+#if defined BOARD_MHP || defined BOARD_PSNS || defined BOARD_core
 	static uint8_t pkt_size = sizeof(CAN_CalibrateSensor_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleCalibratePkt";
 #endif
+
 	static uint8_t buffer[sizeof(CAN_CalibrateSensor_t)];
 
 	BRIDGE_BUFFER_PREAMBLE
@@ -1973,7 +2005,7 @@ void BRIDGE_HandleTriggerPkt(uint8_t *byte, uint8_t size)
 
 void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 {
-#if defined BOARD_core
+#if defined BOARD_core || defined BOARD_PSNS
 #if defined(VEHICLE_FIXEDWING)
 	static uint8_t pkt_size = sizeof(CAN_DeploymentTube_t);
 #ifdef DEBUG
@@ -2030,7 +2062,7 @@ void BRIDGE_HandleDeplyTubePkt(uint8_t *byte,uint8_t size)
 
 void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size)
 {
-#if defined BOARD_DEPLOYMENT
+#if defined BOARD_DEPLOYMENT || defined BOARD_PSNS
 	static uint8_t pkt_size = sizeof(CAN_DeploymentTubeCommand_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleDeplyTubePkt";
@@ -2051,6 +2083,38 @@ void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size)
 #ifdef VERBOSE
 	// DEBUG - sanity check
 	pmesg(VERBOSE_CAN, "DEPLOY TUBE CMD: %0.02f s, id %u value %0.1f\n", 
+			t0, data->id, data->value);
+#endif
+
+	//----- packet specific code -----//
+
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+void BRIDGE_HandleControlCmd(uint8_t *byte,uint8_t size)
+{
+#if defined BOARD_core || defined BOARD_PSNS
+	static uint8_t pkt_size = sizeof(CAN_Command_t);
+#ifdef DEBUG
+	//static char * function_name = "BRIDGE_HandleControlCmd";
+#endif
+	static uint8_t buffer[sizeof(CAN_Command_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+
+	//----- packet specific code -----//
+
+	CAN_Command_t *data = (CAN_Command_t *)buffer;
+
+	float t0 = getElapsedTime();
+	handleControlCmd(t0,
+			data->id,
+			data->value);
+
+#ifdef VERBOSE
+	// DEBUG - sanity check
+	pmesg(VERBOSE_CAN, "CMD: %0.02f s, id %u value %0.1f\n", 
 			t0, data->id, data->value);
 #endif
 
@@ -2193,6 +2257,19 @@ void BRIDGE_HandleArmRemoteIDErrorMsg(uint8_t * byte, uint8_t size)
 #endif
 
 	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+void BRIDGE_HandleDebug(uint8_t * byte, uint8_t size)
+{
+#if defined CAN_DEBUG_MSG
+
+	float t0 = getElapsedTime();
+	handleCANDebugMsg(t0,(char *)byte,size);
+
+#ifdef VERBOSE
+	pmesg(VERBOSE_CAN, "DEBUG MSG: %s\n", byte);
+#endif
 #endif
 }
 
@@ -2813,6 +2890,21 @@ uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
 	return (uint8_t)(CAN_Write(p, CAN_PKT_ADSB, &data, sizeof(CAN_ADSB_t)) == sizeof(CAN_ADSB_t));
 }
 
+uint8_t BRIDGE_SendCalibratePkt(uint8_t p,
+		CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state) {
+
+	CAN_CalibrateSensor_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.sensor = sensor;
+	data.state = state;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_CalibrateSensor_t));
+
+	return (uint8_t)(CAN_Write(p, CAN_PKT_CALIBRATE, &data, sizeof(CAN_CalibrateSensor_t)) == sizeof(CAN_CalibrateSensor_t));
+}
+
 uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
 		uint16_t id,
 		uint8_t channel) {
@@ -2862,6 +2954,21 @@ uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_DeploymentTubeCommand_t));
 
 	return (uint8_t)(CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE_CMD, &data, sizeof(CAN_DeploymentTubeCommand_t)) == sizeof(CAN_DeploymentTubeCommand_t));
+}
+
+uint8_t BRIDGE_SendCommandPkt(uint8_t p,
+		uint8_t id,
+		float value) {
+
+	CAN_Command_t data;
+
+	// fill packet
+	data.startByte = BRIDGE_START_BYTE;
+	data.id = id;
+	data.value = value;
+	setFletcher16((uint8_t *)(&data), sizeof(CAN_Command_t));
+
+	return (uint8_t)(CAN_Write(p, CAN_PKT_COMMAND, &data, sizeof(CAN_Command_t)) == sizeof(CAN_Command_t));
 }
 
 uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
@@ -2937,6 +3044,12 @@ uint8_t BRIDGE_SendSerialNumber(uint8_t p,
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_SerialNumber_t));
 
 	return (uint8_t)(CAN_Write(p, CAN_PKT_SERIAL_ID, &data, sizeof(CAN_SerialNumber_t)) == sizeof(CAN_SerialNumber_t));
+}
+
+uint8_t BRIDGE_SendDebug(uint8_t p,
+		char * message,
+		uint8_t size) {
+	return (uint8_t)(CAN_Write(p, CAN_PKT_DEBUG, message, size) == size);
 }
 
 

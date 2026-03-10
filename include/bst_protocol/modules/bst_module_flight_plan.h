@@ -70,9 +70,8 @@ class BSTModuleFlightPlan : public BSTCommunicationsModule {
 		uint8_t num_fpmap_term_tx;
 		uint8_t last_requested_waypoint;
 		uint8_t last_requested_waypoint_count;
-		uint8_t last_ack_waypoint;
-		uint8_t num_times_sent;
-		float last_flight_plan_sent;
+		float last_map_tx_time;
+		float last_validation_time;
 		float last_waypoint_sent;
 		bool all_waypoints_received;
 		bool requesting_missing_points;

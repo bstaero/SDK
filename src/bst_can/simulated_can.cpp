@@ -82,6 +82,12 @@ uint8_t simulatedCANRead(uint8_t p) {
 
 					memcpy(&id,(void *)(data_ptr + ptr),4); ptr += 4;
 					memcpy(&size,(void *)(data_ptr + ptr),1); ptr += 1;
+
+					if(id == CAN_PKT_DEBUG) {
+						char * end = (char *)(data_ptr + ptr + size);
+						end[0] = 0;
+					}
+
 					BRIDGE_Arbiter(id,(void *)(data_ptr + ptr), size); ptr += size;
 
 					rx_packet[p-1].clear();

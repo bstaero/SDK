@@ -183,6 +183,9 @@ void updateADSB(float system_time,
 		uint16_t flags,
 		uint16_t squawk) {}
 
+void updateCalibration(CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state) {}
+
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel) {}
 
@@ -209,6 +212,15 @@ void handleArmRemoteIDErrorMsg(float, char*) {}
 void handleDeployTubeCmd(float system_time,
 		uint8_t id,
 		float value) {}
+
+void handleControlCmd(float ts, uint8_t id, float value) {}
+
+void handleCANDebugMsg(float ts, char * byte, uint8_t size) {
+	char out[32];
+	snprintf(out,size+1,"%s",byte);
+	printf("%s",out);
+	fflush(stdout);
+}
 
 void printData() {
 }

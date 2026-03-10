@@ -74,11 +74,13 @@ typedef enum {
 	CAN_PKT_CALIBRATE=160,
 	CAN_PKT_BOARD_ORIENTATION=161,
 	CAN_PKT_GNSS_ORIENTATION=162,
+	CAN_PKT_GNSS_RELPOSNED=163,
 
 	/* STATE */
 
 	/* CONTROL */
 	CAN_PKT_DEPLOYMENT_TUBE_CMD=129,
+	CAN_PKT_COMMAND=130,
 
 	/* ACTUATORS */
 	CAN_PKT_ACTUATOR=2047,
@@ -113,6 +115,7 @@ typedef enum {
 	CAN_PKT_TRIGGER=83,
 
 	/* ERRORS */
+	CAN_PKT_DEBUG=1792,
 }  __attribute__ ((packed)) CAN_PacketTypes_t;
 
 /*--------[ Control ]--------*/
@@ -128,6 +131,24 @@ typedef enum {
 	DEPLOY_TUBE_SHUTDOWN,
 	DEPLOY_TUBE_ERROR,
 }  __attribute__ ((packed)) CAN_DeploymentTubeState_t;
+
+typedef struct _CAN_Command_t {
+	uint8_t startByte;
+
+	uint8_t id;
+	float value;
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_Command_t() {
+		startByte = 0;
+		id = 255;
+		value = 0.0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_Command_t;
 
 typedef struct _CAN_DeploymentTubeCommand_t {
 	uint8_t startByte;
@@ -764,6 +785,7 @@ typedef struct _CAN_CalibrateSensor_t {
 typedef enum {
 	CMD_HEARTBEAT,
 	CMD_SET_STATE,
+	CMD_POWER_DOWN,
 }  __attribute__ ((packed)) CAN_DeploymentTubeCommandID_t;
 
 typedef enum {

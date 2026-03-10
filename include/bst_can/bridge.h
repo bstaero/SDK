@@ -21,6 +21,13 @@
 #ifndef __BRIDGE_H
 #define __BRIDGE_H
 
+#include "canpackets.h"
+
+#ifdef __cplusplus
+using namespace bst::comms::canpackets;
+#endif
+
+
 #ifndef ARCH_stm32f4 
   #include <inttypes.h>
 #endif
@@ -162,6 +169,10 @@ uint8_t BRIDGE_SendADSBPkt(uint8_t p, float ts,
 		uint16_t flags,
 		uint16_t squawk);
 
+uint8_t BRIDGE_SendCalibratePkt(uint8_t p,
+		CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state);
+
 uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
 		uint16_t id,
 		uint8_t channel);
@@ -173,6 +184,10 @@ uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
 		uint8_t error);
 
 uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
+		uint8_t id,
+		float value);
+
+uint8_t BRIDGE_SendCommandPkt(uint8_t p,
 		uint8_t id,
 		float value);
 
@@ -195,6 +210,10 @@ uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
 
 uint8_t BRIDGE_SendArmRemoteIDErrorMsg(uint8_t p,
 		char error[50]);
+
+uint8_t BRIDGE_SendDebug(uint8_t p,
+		char * message,
+		uint8_t size);
 
 uint32_t BRIDGE_GetPktDrop(void);
 /**

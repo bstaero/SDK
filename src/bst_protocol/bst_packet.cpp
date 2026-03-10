@@ -302,7 +302,10 @@ bool Packet::isValid(uint8_t data) { // Fletcher 16
 
 				// check for valid size
 				if(this->getSize() > BST_MAX_PACKET_SIZE) {
-
+#ifdef COMM_DEBUG
+					pmesg(VERBOSE_WARN, "Packet::isValid - size %u exceeds max %u (type=0x%02X addr=%u)\n",
+							this->getSize(), BST_MAX_PACKET_SIZE, packet[PKT_TYPE], uses_address);
+#endif
 					resetPacketBuffer();
 					return false;
 				}
@@ -312,11 +315,21 @@ bool Packet::isValid(uint8_t data) { // Fletcher 16
 
 					// check for valid value
 					if(checkFletcher16(packet,this->getSize())) {
+#ifdef COMM_DEBUG
+						pmesg(VERBOSE_INFO, "Packet::isValid - OK type=0x%02X action=%u size=%u addr=%u\n",
+								packet[PKT_TYPE], packet[PKT_ACTION], this->getDataSize(), uses_address);
+#endif
 						// reset buffer as we used all bytes
 						ptr = 0;
 						return true;
 					}
 
+#ifdef COMM_DEBUG
+					pmesg(VERBOSE_WARN, "Packet::isValid - checksum FAIL type=0x%02X action=%u "
+							"dataSize=%u pktSize=%u ptr=%u addr=%u\n",
+							packet[PKT_TYPE], packet[PKT_ACTION],
+							this->getDataSize(), this->getSize(), ptr, uses_address);
+#endif
 					// reset buffer looking for good bytes
 					resetPacketBuffer();
 				}

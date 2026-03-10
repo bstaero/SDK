@@ -66,16 +66,19 @@ packet_mapping = {
     PacketTypes.SENSORS_GPS.value: GPS,
     PacketTypes.SENSORS_GYROSCOPE.value: ThreeAxisSensor,
     PacketTypes.SENSORS_GYRO_CALIBRATION.value: ThreeAxisSensorCalibration,
+    PacketTypes.SENSORS_HUMIDITY.value: SingleValueSensor,
     PacketTypes.SENSORS_IMU.value: IMU,
     PacketTypes.SENSORS_MAGNETOMETER.value: ThreeAxisSensor,
     PacketTypes.SENSORS_MAG_CALIBRATION.value: ThreeAxisSensorCalibration,
     PacketTypes.SENSORS_MAG_CURRENT_CAL.value: ThreeAxisFirstOrderCorrection,
     PacketTypes.SENSORS_MHP.value: MHP,
-    PacketTypes.SENSORS_MHP.value: MHP9HSensors,
-    PacketTypes.SENSORS_MHP.value: MHP9HTiming,
-    PacketTypes.SENSORS_MHP.value: MHPSensors,
-    PacketTypes.SENSORS_MHP.value: MHPSensorsGNSS,
-    PacketTypes.SENSORS_MHP.value: MHPTiming,
+    PacketTypes.SENSORS_MHP_9H_SENSORS.value: MHP9HSensors,
+    PacketTypes.SENSORS_MHP_9H_TIMING.value: MHP9HTiming,
+    PacketTypes.SENSORS_MHP_GNSS.value: MHPSensorsGNSS,
+    PacketTypes.SENSORS_MHP_SENSORS.value: MHPSensors,
+    PacketTypes.SENSORS_MHP_TIMING.value: MHPTiming,
+    PacketTypes.SENSORS_PROXIMITY.value: ProximitySensor,
+    PacketTypes.SENSORS_RTK_HEADING.value: SingleValueSensor,
     PacketTypes.SENSORS_STATIC_PRESSURE.value: Pressure,
     PacketTypes.STATE_ESTIMATOR_PARAM.value: EstimatorParameters,
     PacketTypes.STATE_STATE.value: State,
@@ -91,6 +94,7 @@ packet_mapping = {
     PacketTypes.TELEMETRY_SYSTEM.value: TelemetrySystem,
 
     # Payload Packets
+
     PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_1.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_2.value: UserPayload,
@@ -133,6 +137,7 @@ mr_mapping = {
 
 vt_mapping = {
     PacketTypes.ACTUATORS_MIXING_PARAMS.value: vtol.SurfaceMixing,
+    PacketTypes.ACTUATORS_ROTOR_PARAMS.value: vtol.RotorParameters,
     PacketTypes.CONTROL_FILTER_PARAMS.value: vtol.FilterParameters,
     PacketTypes.CONTROL_FLIGHT_PARAMS.value: vtol.FlightControlParameters,
     PacketTypes.MISSION_PARAMETERS.value: vtol.MissionParameters,
@@ -191,8 +196,11 @@ def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
             return None, sys_time
 
     try:
-        if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
-            pkt_map[pkt.TYPE].buffer = [None] * 64
+        try:
+            if pkt.TYPE >= PacketTypes.PAYLOAD_DATA_CHANNEL_0.value:
+                pkt_map[pkt.TYPE].buffer = [None] * 64
+        except AttributeError:
+            pass
 
         if pkt_map[pkt.TYPE] == int:
             packet_data = int.from_bytes(bytearray(pkt.DATA))

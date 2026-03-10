@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <termios.h>
 
 #include "test.h"
 #include "main.h"
@@ -29,10 +28,12 @@
 #include "flight_plan.h"
 
 #include "bridge.h"
+#include "log_replay.h"
 
 
 // variables
 volatile bool display_telemetry = false;
+volatile bool send_actuators = false;
 volatile bool write_file = false;
 
 bool show_gps = false;
@@ -70,6 +71,9 @@ Packet pkt_buf[PKT_BUF_SIZE];
 uint8_t pkt_buf_start = 0;
 uint8_t pkt_buf_end = 0;
 
+static uint8_t actuator_types[16];
+static uint16_t actuators[16];
+
 extern CommunicationsInterface * comm_interface;
 
 // functional definitions
@@ -77,47 +81,30 @@ extern CommunicationsInterface * comm_interface;
 // packet for transmision
 Packet              tx_packet;
 
-// for command line (terminal) input
-struct termios initial_settings, new_settings;
+extern char log_filename[];
 
 void printTestHelp() {
 	printf("Keys:\n");
 	printf("  t        : Toggle telemetry display\n");
 	printf("\n");
 	printf("  T        : take a picture\n");
-	printf("  1 to A   : test channel n\n");
+	printf("  0 to A   : test channel n\n");
+	printf("  f        : replay actuators from log file\n");
 	printf("\n");
 	printf("  p        : print this help\n");
 }
 
-bool inputAvailable()  
-{
-	// check for input on terminal
-	struct timeval tv;
-	fd_set fds;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	FD_ZERO(&fds);
-	FD_SET(STDIN_FILENO, &fds);
-	select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
-
-	return (FD_ISSET(0, &fds));
-}
-
-
-void initializeTest() {
-
-	// terminal settings to get input
-	tcgetattr(0,&initial_settings);
-
-	new_settings = initial_settings;
-	new_settings.c_lflag &= ~ICANON;
-	new_settings.c_lflag &= ~ECHO;
-	new_settings.c_lflag &= ~ISIG;
-	new_settings.c_cc[VMIN] = 0;
-	new_settings.c_cc[VTIME] = 0;
-
-	tcsetattr(0, TCSANOW, &new_settings);
+void zeroAcutators() {
+	for(uint8_t i=0; i<16; i++) {
+		if( (actuator_types[i] == ACT_L_THROTTLE) ||
+				(actuator_types[i] == ACT_R_THROTTLE) ||
+				(actuator_types[i] == ACT_ROTOR) ) {
+			actuators[i] = 1000;
+		} else {
+			actuators[i] = 1500;
+		}
+	}
+	BRIDGE_SendActuatorPkt(1, actuators);
 }
 
 
@@ -125,8 +112,8 @@ void updateTest() {
 	char input; 
 	static char auto_char = '0'; 
 	static uint8_t is_triggering = 0;
+	static uint8_t is_triggering_ch = 0;
 	static float trigger_time = 0;
-	static uint16_t actuators[16];
 
 	if( inputAvailable() || auto_test ) {
 		if(auto_test) {
@@ -145,8 +132,10 @@ void updateTest() {
 					break;
 
 				case 'T':
+					if(!send_actuators) send_actuators = true;
 					if(!is_triggering) {
-						is_triggering = 15;
+						is_triggering = 1;
+						is_triggering_ch = 15;
 						trigger_time = getElapsedTime();
 					}
 					break;
@@ -158,6 +147,7 @@ void updateTest() {
 				case 'E':
 				case 'F':
 					input = input-'A'+1+'9';
+				case '0':
 				case '1':
 				case '2':
 				case '3':
@@ -167,10 +157,37 @@ void updateTest() {
 				case '7':
 				case '8':
 				case '9':
+					if(!send_actuators) send_actuators = true;
 					if(!is_triggering) {
 						printf("Triggerging channel %u\n",input - '0');
-						is_triggering = input - '0';
+						is_triggering = 1;
+						is_triggering_ch = input - '0';
 						trigger_time = getElapsedTime();
+					}
+					break;
+
+				case 'f':
+					{
+						char path[256];
+						if(strlen(log_filename)) {
+							strcpy(path, log_filename);
+						} else {
+							// restore terminal for line input
+							restoreTerminal();
+							printf("Enter log file path: ");
+							fflush(stdout);
+							if(fgets(path, sizeof(path), stdin)) {
+								char *nl = strchr(path, '\n');
+								if(nl) *nl = '\0';
+							}
+							initTerminal();
+						}
+						if(strlen(path)) {
+							if(!runLogReplay(path)) {
+								return;
+							}
+							printTestHelp();
+						}
 					}
 					break;
 
@@ -178,10 +195,11 @@ void updateTest() {
 					printTestHelp();
 					break;
 
-				case 3: // <CTRL-C> 
+				case 3: // <CTRL-C>
 					// allow flowthrough
 				case 'q':
 					printf("Keyboard caught exit signal ...\n");
+					zeroAcutators();
 					running = false;
 					break;
 
@@ -195,19 +213,26 @@ void updateTest() {
 	}
 
 	for(uint8_t i=0; i<16; i++) {
-		if(is_triggering && (is_triggering-1) == i) {
-			if(i < 6)
-				actuators[i] = 1800;
-			else
-				actuators[i] = 1500;
+		if( (actuator_types[i] == ACT_L_THROTTLE) ||
+				(actuator_types[i] == ACT_R_THROTTLE) ||
+				(actuator_types[i] == ACT_ROTOR) ) {
+			if(is_triggering && (is_triggering_ch) == i) {
+				actuators[i] = 1100;
+			} else {
+				actuators[i] = 1000;
+			}
 		} else {
-			if(i < 6)
-				actuators[i] = 1000;
-			else
-				actuators[i] = 1000;
+			if(is_triggering && (is_triggering_ch) == i) {
+					actuators[i] = 1700;
+			} else {
+					actuators[i] = 1500;
+			}
 		}
 	}
-	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) is_triggering = 0;
+	if(getElapsedTime() - trigger_time > TRIGGER_LENGTH) {
+		is_triggering = 0;
+		is_triggering_ch = 15;
+	}
 
 
 	if(print_timing) {
@@ -224,15 +249,12 @@ void updateTest() {
 	if(display_telemetry) {
 		for(uint8_t i=0; i<16; i++)
 			printf("%04u ",actuators[i]);
-		printf(" [%u] \n", is_triggering);
+		printf(" [%u] \n", is_triggering_ch);
 	}
 
-	BRIDGE_SendActuatorPkt(1,actuators);
+	if(send_actuators)
+		BRIDGE_SendActuatorPkt(1,actuators);
 
-}
-
-void exitTest() {
-	tcsetattr(0, TCSANOW, &initial_settings);
 }
 
 uint16_t commConstruct(uint8_t type, PacketAction_t action, void * data, uint16_t size, const void * parameter, bool uses_address, Packet * packet) { 

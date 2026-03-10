@@ -3734,10 +3734,10 @@ class TelemetryPosition:
 		self.system_time = struct.unpack_from('<I',buf,offset)[0]/ 1000
 		offset = offset + struct.calcsize('<I')
 
-		self.latitude = struct.unpack_from('<q',buf,offset)[0]
+		self.latitude = struct.unpack_from('<q',buf,offset)[0]/ 10000000000000000
 		offset = offset + struct.calcsize('<q')
 
-		self.longitude = struct.unpack_from('<q',buf,offset)[0]
+		self.longitude = struct.unpack_from('<q',buf,offset)[0]/ 10000000000000000
 		offset = offset + struct.calcsize('<q')
 
 		self.altitude = struct.unpack_from('<i',buf,offset)[0]/ 1000

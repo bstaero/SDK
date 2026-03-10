@@ -1,3 +1,4 @@
+import argparse
 import sys
 import os.path
 
@@ -16,7 +17,7 @@ sys.path.insert(0, root_dir)
 
 def convert_to_nc(
     filename: str,
-    has_addr: bool=False,
+    has_addr: bool=True,
     quick_mode: bool=False,
     out_dir: str='.',
 ) -> list[str]:
@@ -95,7 +96,7 @@ def convert(filename: str, parsed_log: dict, ac_name: str, out_dir: str) -> str:
 
 def add_enum_to_nc(field, pkt_grp, pkts):
     nc_type = 'ubyte'
-    group_var = pkt_grp.createVariable(field, nc_type, ('packets',))
+    group_var = pkt_grp.createVariable(field, nc_type, ('packets',), zlib=True)
     group_var[:] = [read_var(pkt, field).value for pkt in pkts]
 
 
@@ -103,15 +104,26 @@ def add_list_to_nc(field, field_val, pkt_grp, pkts):
     l_dim = f'{field}_length'
     pkt_grp.createDimension(l_dim, len(field_val))
     nc_type = type_conv[type(field_val[0])]
-    group_var = pkt_grp.createVariable(field, nc_type, ('packets', l_dim))
+    group_var = pkt_grp.createVariable(field, nc_type, ('packets', l_dim), zlib=True)
     group_var[:] = [read_var(pkt, field) for pkt in pkts]
 
 
 def add_primitive_to_nc(field, field_type, pkt_grp, pkts):
     nc_type = type_conv[field_type]
-    group_var = pkt_grp.createVariable(field, nc_type, ('packets',))
+    group_var = pkt_grp.createVariable(field, nc_type, ('packets',), zlib=True)
     group_var[:] = [read_var(pkt, field) for pkt in pkts]
 
 
 if __name__ == "__main__":
-    convert_to_nc(sys.argv[1])
+    parser = argparse.ArgumentParser(
+                    prog='Log to NC',
+                    description='Binary log to netCDF converter')
+    parser.add_argument('filename')
+    parser.add_argument('-q', '--quick',
+                    action='store_true',
+                    help='Enables "quick mode" conversion')
+    parser.add_argument('-a', '--addr',
+                    action='store_true',
+                    help='Enables addressing in parsing (GCS logs only)')
+    args = parser.parse_args()
+    convert_to_nc(args.filename, quick_mode=args.quick, has_addr=args.addr)

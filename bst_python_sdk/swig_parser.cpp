@@ -9,7 +9,10 @@ std::unordered_set<int> quick_mode_packets = {
     1,   // SENSORS_GPS
     16,  // STATE_STATE
     33,  // CONTROL_COMMAND
+    80,  // POWER_ON
     81,  // SYSTEM_INITIALIZE
+    97,  // TELEMETRY_POSITION
+    101, // TELEMETRY_SYSTEM
 };
 
 std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode) {
@@ -82,9 +85,10 @@ std::vector<Packet> parse(const char* file_path, bool has_addr, bool quick_mode)
 
             if (check_fletcher_16(packet_data, buf_len)) {
                 packets.push_back(packet);
-            } else {
-                std::cerr << "Malformed packet: invalid checksum" << std::endl;
             }
+            //else {
+                //std::cerr << "Malformed packet: invalid checksum" << std::endl;
+            //}
         } else {
             i++;
         }

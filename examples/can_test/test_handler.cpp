@@ -194,6 +194,7 @@ void handleDeployTubeCmd(float system_time,
 		uint8_t id,
 		float value) {}
 
+void handleControlCmd(float ts, uint8_t id, float value) {}
 
 void updateGPSSVIN(
 		uint32_t time_elapsed,
@@ -216,6 +217,9 @@ void updateADSB(float system_time,
 		uint8_t tslc,
 		uint16_t flags,
 		uint16_t squawk) {}
+
+void updateCalibration(CAN_SensorType_t sensor,
+		CAN_CalibrationState_t state) {}
 
 void updatePayloadTrigger(float system_time,
 		uint16_t id, uint8_t channel) {}
