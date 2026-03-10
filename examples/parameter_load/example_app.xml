@@ -1,0 +1,44 @@
+<App>
+  <Name>Example App</Name>
+  <PayloadSerial>
+    <baudRate>115200</baudRate>
+    <serialInterface>INTERFACE_PAYLOAD_PASSTHRU</serialInterface>
+  </PayloadSerial>
+  <Payloads>
+    <payload>
+      <channel>0</channel>
+      <channelName>Sony A5100 - 20mm</channelName>
+      <deltaT>0.0</deltaT>
+      <payloadInterface>INTERFACE_UNKNOWN</payloadInterface>
+      <payloadSignal>RISING_EDGE_TRIGGER</payloadSignal>
+      <payloadState>PAYLOAD_STATE_AUTO</payloadState>
+      <payloadType>PAYLOAD_TYPE_CAMERA</payloadType>
+      <powerDown>1740.0</powerDown>
+      <powerUp>5.0</powerUp>
+      <pulse>0.1</pulse>
+    </payload>
+    <payload>
+      <channel>2</channel>
+      <channelName>Heated Pitot</channelName>
+      <deltaT>0.0</deltaT>
+      <payloadInterface>INTERFACE_UNKNOWN</payloadInterface>
+      <payloadSignal>RISING_EDGE_TRIGGER</payloadSignal>
+      <payloadState>PAYLOAD_STATE_OFF</payloadState>
+      <payloadType>PAYLOAD_TYPE_POWER</payloadType>
+      <powerDown>1740.0</powerDown>
+      <powerUp>5.0</powerUp>
+      <pulse>0.1</pulse>
+    </payload>
+  </Payloads>
+  <Actuators>
+    <actuator>
+      <calibration>
+        <center>1000</center>
+        <max>2000</max>
+        <min>1000</min>
+      </calibration>
+      <channel>6</channel>
+      <function>ACT_PAYLOAD_1</function>
+    </actuator>
+  </Actuators>
+</App>
