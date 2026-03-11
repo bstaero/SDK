@@ -175,10 +175,10 @@ void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 
 		case TELEMETRY_POSITION:
 			if(show_telemetry) {
-				printf("[%.2f] TELEMETRY_POSITION\n", getElapsedTime() );
-				printf("\tLatitude:\t%0.02f\n",telemetry_position.latitude);
-				printf("\tLongitude:\t%0.02f\n",telemetry_position.longitude);
-				printf("\tAltitude:\t%0.02f\n",telemetry_position.altitude);
+				printf("[%.2f] TELEMETRY_POSITION\n", (double)getElapsedTime() );
+				printf("\tLatitude:\t%0.02f\n",(double)telemetry_position.latitude / 1e16);
+				printf("\tLongitude:\t%0.02f\n",(double)telemetry_position.longitude / 1e16);
+				printf("\tAltitude:\t%0.02f\n",(double)telemetry_position.altitude / 1e3);
 			}
 			memcpy(&telemetry_position,data,sizeof(TelemetryPosition_t));
 			break;
