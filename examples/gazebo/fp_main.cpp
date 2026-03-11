@@ -144,10 +144,7 @@ size_t steps = 0;
 	flight_plan_module.registerReceiveReply(receiveReply);
 	flight_plan_module.registerPublish(publish);
 
-	// Set flight plan timeout based on link type
-	if(comm_type == COMM_SERIAL) {
-		flight_plan_module.setWaypointTimeout(2.0);  // serial needs longer timeout
-	}
+	//flight_plan_module.setWaypointTimeout(0.1);
 
 	((BSTProtocol *)comm_handler)->registerModule(&basic_module);
 	((BSTProtocol *)comm_handler)->registerModule(&flight_plan_module);
