@@ -17,6 +17,10 @@ ifeq ($(LOW_BANDWIDTH),1)
 FLAGS += -DLOW_BANDWIDTH
 endif
 
+ifeq ($(SERIAL_COMMS),1)
+FLAGS += -DSERIAL_COMMS
+endif
+
 INCLUDES+=-I. \
 			    -I../include/bst_can \
 			    -I../include/bst_core \
