@@ -157,6 +157,12 @@ ACTUATOR_USEC_MAX = 2500
 VALID_BAUD_RATES = [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200,
                     230400, 460800, 921600]
 
+# SwiftTab XML uses some enum names that differ from the comm protocol.
+# Map them to the canonical names used by the Python SDK enums.
+ENUM_ALIASES = {
+    'INTERFACE_BST_SERIAL': 'INTERFACE_BST_PROTOCOL',
+}
+
 # ---------------------------------------------------------------------------
 # XML Parsing
 # ---------------------------------------------------------------------------
@@ -198,18 +204,41 @@ class AppConfig:
 
 
 def parse_app_xml(xml_path):
-    """Parse an app XML file into an AppConfig object."""
+    """Parse an app XML file into an AppConfig object.
+
+    Supports two XML formats:
+      - SwiftTab <param> format: <param>/<vehicle>/...
+      - Legacy <App> format: <App>/...
+    """
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
-    if root.tag != 'App':
-        raise ValueError(f"Expected root element <App>, got <{root.tag}>")
-
     app = AppConfig()
-    app.name = _text(root, 'Name', 'Unnamed')
+
+    if root.tag == 'param':
+        # SwiftTab format: data lives under <vehicle>
+        vehicle = root.find('vehicle')
+        if vehicle is None:
+            raise ValueError("<param> XML missing <vehicle> element")
+
+        airframe = vehicle.find('airframe')
+        app.name = _text(airframe, 'name', 'Unnamed') if airframe is not None else 'Unnamed'
+
+        payloads_elem = vehicle.find('payloads')
+        actuators_elem = vehicle.find('actuators')
+        serial_elem = vehicle.find('payload_serial')
+
+    elif root.tag == 'App':
+        app.name = _text(root, 'Name', 'Unnamed')
+
+        payloads_elem = root.find('Payloads')
+        actuators_elem = root.find('Actuators')
+        serial_elem = root.find('PayloadSerial')
+
+    else:
+        raise ValueError(f"Expected root element <param> or <App>, got <{root.tag}>")
 
     # Parse Payloads
-    payloads_elem = root.find('Payloads')
     if payloads_elem is not None:
         for p in payloads_elem.findall('payload'):
             app.payloads.append(PayloadConfig(
@@ -222,11 +251,10 @@ def parse_app_xml(xml_path):
                 payload_type=_text(p, 'payloadType', 'PAYLOAD_TYPE_UNUSED'),
                 payload_signal=_text(p, 'payloadSignal', 'UNKNOWN_TYPE'),
                 payload_state=_text(p, 'payloadState', 'PAYLOAD_STATE_UNKNOWN'),
-                payload_interface=_text(p, 'payloadInterface', 'INTERFACE_UNKNOWN'),
+                payload_interface=_normalize_enum(_text(p, 'payloadInterface', 'INTERFACE_UNKNOWN')),
             ))
 
     # Parse Actuators
-    actuators_elem = root.find('Actuators')
     if actuators_elem is not None:
         for a in actuators_elem.findall('actuator'):
             cal = a.find('calibration')
@@ -237,24 +265,31 @@ def parse_app_xml(xml_path):
                 cal_min = _int(cal, 'min', 1500)
                 cal_center = _int(cal, 'center', 1500)
                 cal_max = _int(cal, 'max', 1500)
+            # Auto-swap reversed min/max (reversed = reversed servo direction)
+            if cal_min > cal_max:
+                cal_min, cal_max = cal_max, cal_min
+
             app.actuators.append(ActuatorConfig(
                 channel=_int(a, 'channel', 0),
-                function=_text(a, 'function', 'ACT_UNUSED'),
+                function=_normalize_enum(_text(a, 'function', 'ACT_UNUSED')),
                 cal_min=cal_min,
                 cal_center=cal_center,
                 cal_max=cal_max,
             ))
 
     # Parse PayloadSerial
-    serial_elem = root.find('PayloadSerial')
     if serial_elem is not None:
         app.serial = SerialConfig(
             baud_rate=_int(serial_elem, 'baudRate', 0),
-            serial_interface=_text(serial_elem, 'serialInterface', 'INTERFACE_UNKNOWN'),
+            serial_interface=_normalize_enum(_text(serial_elem, 'serialInterface', 'INTERFACE_UNKNOWN')),
         )
 
     return app
 
+
+def _normalize_enum(name):
+    """Map SwiftTab enum aliases to canonical SDK enum names."""
+    return ENUM_ALIASES.get(name, name)
 
 def _text(elem, tag, default=""):
     child = elem.find(tag)
@@ -466,6 +501,7 @@ class AutopilotConnection:
         self.verbose = verbose
         self.sock = None
         self.received_params = {}
+        self.firmware_comms_rev = None
 
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -534,6 +570,10 @@ class AutopilotConnection:
                     if parsed is not None:
                         results.append((pkt_type, parsed))
                         self.received_params[pkt_type] = parsed
+                        # Capture firmware comms_rev from SystemInitialize
+                        if (hasattr(parsed, 'comms_rev') and
+                                self.firmware_comms_rev is None):
+                            self.firmware_comms_rev = parsed.comms_rev
                 except Exception as e:
                     if self.verbose:
                         print(f"  Parse error for pkt {pkt_type}: {e}")
@@ -576,6 +616,40 @@ def _action_name(action):
 # ---------------------------------------------------------------------------
 # Parameter Upload Logic
 # ---------------------------------------------------------------------------
+
+def detect_firmware_version(conn, selected_version, available_versions):
+    """Request SystemInitialize to detect the firmware's comm protocol version.
+    Returns the firmware comms_rev if detected, or None."""
+    print("\nDetecting firmware comm protocol version...")
+    conn.request_parameter(PacketTypes.SYSTEM_INITIALIZE.value)
+    time.sleep(0.2)
+    conn.recv_packets(timeout=2.0,
+                      expected_type=PacketTypes.SYSTEM_INITIALIZE.value)
+
+    fw_rev = conn.firmware_comms_rev
+    if fw_rev is not None:
+        print(f"  Firmware comms_rev: {fw_rev}")
+        if fw_rev != selected_version:
+            print(f"\n  *** VERSION MISMATCH ***")
+            print(f"  Script is using comm version {selected_version}, "
+                  f"but firmware reports comms_rev {fw_rev}.")
+            if fw_rev in available_versions:
+                print(f"  Use --comm-version {fw_rev} to match the firmware.")
+            else:
+                print(f"  WARNING: Firmware version {fw_rev} is not available "
+                      f"in the SDK.")
+                closest = min(available_versions,
+                              key=lambda v: abs(v - fw_rev))
+                print(f"  Closest available version: {closest}")
+            print(f"  Telemetry packets will fail to parse with the wrong "
+                  f"version.")
+            print(f"  Parameter upload/verify may still work if the "
+                  f"parameter packet formats haven't changed.\n")
+    else:
+        print("  WARNING: Could not detect firmware comm version "
+              "(no SystemInitialize response).")
+    return fw_rev
+
 
 def request_current_params(conn, app):
     """Request all relevant current parameters from the autopilot."""
@@ -827,7 +901,11 @@ def app_has_serial_in_xml(xml_path):
     """Quick check if XML has a PayloadSerial section."""
     try:
         tree = ET.parse(xml_path)
-        return tree.getroot().find('PayloadSerial') is not None
+        root = tree.getroot()
+        if root.tag == 'param':
+            vehicle = root.find('vehicle')
+            return vehicle is not None and vehicle.find('payload_serial') is not None
+        return root.find('PayloadSerial') is not None
     except Exception:
         return False
 
@@ -912,6 +990,9 @@ def main():
         sys.exit(1)
 
     try:
+        # Step 3.5: Detect firmware version and warn on mismatch
+        detect_firmware_version(conn, args.comm_version, available)
+
         # Step 4: Request current parameters
         request_current_params(conn, app)
 
