@@ -82,6 +82,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	// handle bare IP address as positional argument
+	if(optind < argc) {
+		strcpy(&param[0][0],argv[optind]);
+		comm_type != COMM_SERIAL ? comm_type = COMM_SOCKET : comm_type = COMM_INVALID;
+		strcpy(&param[2][0],"TCP:CLIENT");
+	}
+
 	if(comm_type == COMM_UNKNOWN) {
 		comm_type = COMM_SOCKET;
 		strcpy(&param[0][0],"localhost");
@@ -129,7 +136,7 @@ int main(int argc, char *argv[])
 	initTerminal();
 	printTestHelp();
 
-	while(comm_interface->isConnected() && running) {
+	while(running) {
 		comm_handler->update();
 		updateTest();
 		usleep(1000);

@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	initTerminal();
 	printTestHelp();
 
-	while(comm_interface->isConnected() && running) {
+	while(running) {
 		comm_handler->update();
 		updateTest();
 		usleep(1000);

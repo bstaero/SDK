@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 	initTerminal();
 
 	if(comm_type == COMM_SERIAL || comm_type == COMM_SOCKET) {
-		while(comm_interface->isConnected() && running) {
+		while(running) {
 			// Update communications
 			updateCommunications();
 

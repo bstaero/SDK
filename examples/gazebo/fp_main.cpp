@@ -153,7 +153,7 @@ size_t steps = 0;
 	
 	initializeTest();		
 	 
-	while(comm_interface->isConnected() && running ) 
+	while(running) 
 	{			
 		// Update communications
 		comm_handler->update(); 
