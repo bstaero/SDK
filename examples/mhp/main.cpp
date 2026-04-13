@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 		case COMM_SOCKET:
 			comm_type = COMM_SOCKET;
 			if(!param[0][0]) strcpy(&param[0][0],"localhost");
-			if(!param[1][0]) strcpy(&param[1][0],"55555");
+			if(!param[1][0]) strcpy(&param[1][0],"55551");
 			if(!param[2][0]) strcpy(&param[2][0],"TCP:CLIENT");
 			break;
 		case COMM_FILE:

@@ -111,5 +111,5 @@ void printBaseHelp() {
 	printf("    -b <serial baud>        : default 9600\n");
 	printf("  Socket parameters:\n");
 	printf("    -i <server ip number>   : default localhost\n");
-	printf("    -p <socket port number> : default 55552\n");
+	printf("    -p <socket port number> : default 55555\n");
 }

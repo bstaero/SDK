@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 	if(comm_type == COMM_UNKNOWN) {
 		comm_type = COMM_SOCKET;
 		strcpy(&param[0][0],"localhost");
-		strcpy(&param[1][0],"55555");
+		strcpy(&param[1][0],"55551");
 		strcpy(&param[2][0],"TCP:CLIENT");
 	}
 

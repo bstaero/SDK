@@ -186,7 +186,8 @@ void BSTModuleFlightPlan::validateReceivedPlan()
 		// make sure mode is ADD
 		rx_fp_map.mode = ADD;
 
-		if(receiveCommand_function(FLIGHT_PLAN,(uint8_t *)rx_temp_plan,MAX_WAYPOINTS*sizeof(Waypoint_t),&rx_fp_map))
+		if(receiveCommand_function == NULL ||
+		   receiveCommand_function(FLIGHT_PLAN,(uint8_t *)rx_temp_plan,MAX_WAYPOINTS*sizeof(Waypoint_t),&rx_fp_map))
 		{
 			pmesg(VERBOSE_INFO, "Navigation accepted plan, sending ACK\n");
 			parent->write(FLIGHT_PLAN_MAP,PKT_ACTION_ACK,(uint8_t *)&rx_fp_map,sizeof(FlightPlanMap_t),NULL);
@@ -515,7 +516,8 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 								break;
 
 							case DELETE:
-								if(receiveCommand_function(FLIGHT_PLAN,NULL,0,&rx_fp_map))
+								if(receiveCommand_function == NULL ||
+								   receiveCommand_function(FLIGHT_PLAN,NULL,0,&rx_fp_map))
 									parent->write(type,PKT_ACTION_ACK,data,size,NULL);
 								else
 									parent->write(type,PKT_ACTION_NACK,data,size,NULL);
