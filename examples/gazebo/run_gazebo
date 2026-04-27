@@ -3,7 +3,19 @@
 WDIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$WDIR"
 
-WORLD_NAME="${1:-multirotor}"
+HEADLESS=0
+WORLD_NAME=""
+for arg in "$@"; do
+    case "$arg" in
+        --headless|-H)
+            HEADLESS=1
+            ;;
+        *)
+            WORLD_NAME="$arg"
+            ;;
+    esac
+done
+WORLD_NAME="${WORLD_NAME:-multirotor}"
 
 # Detect Gazebo version: prefer Gazebo Jetty (gz sim) over Classic
 if command -v gz &>/dev/null && gz sim --versions &>/dev/null 2>&1; then
@@ -11,8 +23,13 @@ if command -v gz &>/dev/null && gz sim --versions &>/dev/null 2>&1; then
     export GZ_SIM_SYSTEM_PLUGIN_PATH=${WDIR}/plugins:${GZ_SIM_SYSTEM_PLUGIN_PATH}
     export GZ_SIM_RESOURCE_PATH=${WDIR}/models:${GZ_SIM_RESOURCE_PATH}
 
+    GZ_ARGS="--verbose -r"
+    if [[ $HEADLESS -eq 1 ]]; then
+        GZ_ARGS="$GZ_ARGS -s --headless-rendering"
+    fi
+
     if [[ -f "worlds_gz/${WORLD_NAME}.sdf" ]]; then
-        gz sim --verbose -r worlds_gz/${WORLD_NAME}.sdf
+        gz sim $GZ_ARGS worlds_gz/${WORLD_NAME}.sdf
     else
         echo "Error: worlds_gz/${WORLD_NAME}.sdf not found"
         echo "Available worlds:"
