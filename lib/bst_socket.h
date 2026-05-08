@@ -83,6 +83,7 @@ class BSTSocket : public BSTInterface {
 
 		/* Status queries */
 		bool isClosed() const;
+		bool isConnected();
 		bool isConnected() const;
 		int  getNumClients() const;
 		SocketMode getMode() const;
@@ -106,6 +107,7 @@ class BSTSocket : public BSTInterface {
 		int  client_fds[BST_MAX_CLIENTS];
 		struct sockaddr_in client_addrs[BST_MAX_CLIENTS];
 		int  num_clients;
+		int  next_read_client;
 
 		struct sockaddr_in server_addr;
 		struct sockaddr_in last_udp_sender;

@@ -26,7 +26,11 @@
 
 #include <queue>
 
+#ifdef IMPLEMENTATION_swil
+#define PACKET_BUFFER_SIZE 128
+#else
 #define PACKET_BUFFER_SIZE 32
+#endif
 
 class BSTCommunicationsModule; // FIXME -- shouldn't need forward declaration if written correctly
 
@@ -45,6 +49,7 @@ class BSTProtocol : public CommunicationsProtocol {
 		uint8_t write(uint8_t type, uint8_t action, void * data, uint16_t size, const void * parameter);
 
 		void setAddressing(bool on_off);
+		void setDefaultToAddress(uint32_t addr);
 
 		uint32_t getLastAddress(void);
 
@@ -67,6 +72,7 @@ class BSTProtocol : public CommunicationsProtocol {
 
 		bool uses_address;
 
+		uint32_t default_to_address;
 		uint32_t last_address;
 
 		uint8_t last_request;

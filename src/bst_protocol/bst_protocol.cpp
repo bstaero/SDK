@@ -17,6 +17,7 @@ extern "C" {
 BSTProtocol::BSTProtocol() : CommunicationsProtocol() {
 	pmesg(VERBOSE_ALLOC, "BSTProtocol::BSTProtocol()\n");
 	uses_address = true;
+	default_to_address = ALL_NODES;
 
 	for(uint8_t i=0u; i<COMM_PROTOCOL_MAX_MODULES; i++)
 		modules[i] = NULL;
@@ -153,6 +154,18 @@ uint16_t BSTProtocol::update() {
 		}
 #endif
 
+		// filter packets not addressed to this node (matches exact address,
+		// ALL_UAVS, ALL_NODES, and ONE_HOP via Packet::isToID mask logic)
+		if(uses_address && !temp_packet.isToID(system_initialize.serial_num)) {
+			continue;
+		}
+
+		// track last non-telemetry request for response addressing
+		if((temp_packet.getType() & 0xF0) != 0x60 &&
+				temp_packet.getAction() != PKT_ACTION_STATUS) {
+			last_request = temp_packet.getType();
+		}
+
 		for(uint8_t i =0; i< num_modules; i++) { if(modules[i] && modules[i]->handles(temp_packet.getType())) {
 				modules[i]->parse(temp_packet.getType(), temp_packet.getAction(), (uint8_t *)temp_packet.getDataPtr(), temp_packet.getDataSize());
 			}
@@ -163,9 +176,15 @@ uint16_t BSTProtocol::update() {
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
 	if(getElapsedTime() - last_tx > RADIO_TIMEOUT) {
 #endif
-		// Send one packet per update: priority queue first, then regular queue.
-		// Sending only one packet keeps the update() cost bounded so that
-		// the scheduler can service sensors, logging, and actuators on time.
+		// Drain TX queues: priority first, then regular.
+		// For radio/serial (LOW_BANDWIDTH), send one packet per update to stay bounded.
+		// For socket builds (SWIL), drain up to 8 to handle TCP initialization bursts.
+#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
+		uint8_t max_tx = 1;
+#else
+		uint8_t max_tx = 8;
+#endif
+		for(uint8_t tx_i = 0; tx_i < max_tx; tx_i++) {
 		if(tx_priority_queue.size() > 0) {
 			temp_packet = tx_priority_queue.front();
 			if(CommunicationsProtocol::write(temp_packet.getPacket(), temp_packet.getSize()) == temp_packet.getSize()) {
@@ -173,7 +192,7 @@ uint16_t BSTProtocol::update() {
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
 				last_tx = getElapsedTime();
 #endif
-			}
+			} else break;
 		} else {
 #if defined (NO_DUPLEX_COMMS)
 			if(last_cmd_rx >= 0 && getElapsedTime() - last_cmd_rx < CMD_TIMEOUT) {
@@ -205,9 +224,10 @@ uint16_t BSTProtocol::update() {
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
 					last_tx = getElapsedTime();
 #endif
-				}
-			}
+				} else break;
+			} else break;
 		}
+		} // for tx_i
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
 	}
 #endif
@@ -257,9 +277,14 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 	if(uses_address) {
 		tx_packet.setAddressing(true);
 		tx_packet.setFromAddress(system_initialize.serial_num);
-		//tx_packet.setFromAddress(ALL_NODES);
-		tx_packet.setToAddress(ALL_NODES); // FIXME - should find real address
-		//tx_packet.setToAddress(ALL_UAVS); // FIXME - should find real address
+
+		// responses to a request go back to the requester's address;
+		// unsolicited telemetry uses the default broadcast address
+		if(temp_request != INVALID_PACKET && last_address != NO_ID) {
+			tx_packet.setToAddress(last_address);
+		} else {
+			tx_packet.setToAddress(default_to_address);
+		}
 	} else {
 		tx_packet.setAddressing(false);
 	}
@@ -282,7 +307,7 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 				tx_priority_queue.push(tx_packet);
 			} else {
 				if(tx_queue.size() > PACKET_BUFFER_SIZE) {
-					pmesg(VERBOSE_ERROR,"Transmit Command Buffer Overflow!\n");
+					pmesg(VERBOSE_ERROR,"Transmit Buffer Overflow! type=%u qsize=%u\n", tx_packet.getType(), (unsigned)tx_queue.size());
 					return 0;
 				}
 
@@ -319,6 +344,10 @@ void BSTProtocol::setAddressing(bool on_off) {
 
 	rx_packet.setAddressing(on_off);
 	tx_packet.setAddressing(on_off);
+}
+
+void BSTProtocol::setDefaultToAddress(uint32_t addr) {
+	default_to_address = addr;
 }
 
 uint32_t BSTProtocol::getLastAddress() {

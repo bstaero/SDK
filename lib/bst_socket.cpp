@@ -46,6 +46,7 @@ BSTSocket::BSTSocket() : BSTInterface() {
 	socket_mode  = CLIENT;
 	server_fd    = BST_INVALID_SOCKET;
 	num_clients  = 0;
+	next_read_client = 0;
 	closed       = true;
 	bytes_in_total  = 0;
 	bytes_out_total = 0;
@@ -149,22 +150,33 @@ int16_t BSTSocket::read(uint8_t * buf, uint16_t buf_size) {
 		return (int16_t)n;
 	}
 
-	/* TCP server: accept pending connections, then read from clients */
+	/* TCP server: accept pending connections, then read from all clients */
 	acceptPendingClients();
 
-	for (int i = 0; i < num_clients; i++) {
+	if (num_clients == 0) return 0;
+	if (next_read_client >= num_clients) next_read_client = 0;
+
+	for (int count = 0; count < num_clients; count++) {
+		int i = (next_read_client + count) % num_clients;
 		if (client_fds[i] == BST_INVALID_SOCKET) continue;
 		int n = readFrom(i, (char *)buf, buf_size);
-		if (n > 0) return (int16_t)n;
+		if (n > 0) {
+			next_read_client = (i + 1) % num_clients;
+			return (int16_t)n;
+		}
 		if (n == 0) {
 			/* Client disconnected */
 			pmesg(VERBOSE_WARN, "BSTSocket::read: client %d disconnected\n", i);
 			removeClient(i);
-			i--;
+			if (i < next_read_client) next_read_client--;
+			if (next_read_client >= num_clients) next_read_client = 0;
+			count--;
 		} else if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
 			pmesg(VERBOSE_WARN, "BSTSocket::read: removing client %d: %s\n", i, strerror(errno));
 			removeClient(i);
-			i--;
+			if (i < next_read_client) next_read_client--;
+			if (next_read_client >= num_clients) next_read_client = 0;
+			count--;
 		}
 	}
 	return 0;
@@ -467,6 +479,7 @@ bool BSTSocket::setNonBlocking() {
 /* ---- Status queries ---- */
 
 bool BSTSocket::isClosed() const { return closed; }
+bool BSTSocket::isConnected() { return connected; }
 bool BSTSocket::isConnected() const { return connected; }
 int  BSTSocket::getNumClients() const { return num_clients; }
 BSTSocket::SocketMode BSTSocket::getMode() const { return socket_mode; }

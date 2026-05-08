@@ -139,6 +139,40 @@ typedef struct _K30_t {
 #endif
 } __attribute__ ((packed)) K30_t;
 
+typedef struct _Licor850Data_t {
+	float celltemp;
+	float cellpres;
+	float co2;
+	float co2abs;
+	float h2o;
+	float h2oabs;
+	float h2odewpoint;
+	float flowrate;
+	uint8_t pump_on;
+	uint8_t zeroed;
+	float span_set[2];
+
+#ifdef __cplusplus
+	_Licor850Data_t() {
+		uint8_t _i;
+
+		celltemp = 0.0;
+		cellpres = 0.0;
+		co2 = 0.0;
+		co2abs = 0.0;
+		h2o = 0.0;
+		h2oabs = 0.0;
+		h2odewpoint = 0.0;
+		flowrate = 0.0;
+		pump_on = 0;
+		zeroed = 0;
+
+		for (_i = 0; _i < 2; ++_i)
+			span_set[_i] = 0.0;
+	}
+#endif
+} __attribute__ ((packed)) Licor850Data_t;
+
 typedef struct _MiniGAS_t {
 	float system_time;
 	float gas01_mv;

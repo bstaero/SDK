@@ -474,6 +474,16 @@ void BSTModuleFlightPlan::parse(uint8_t type, uint8_t action, uint8_t * data, ui
 				switch(action) {
 					case PKT_ACTION_COMMAND:
 
+						// If we're waiting for waypoints and receive a duplicate
+						// command with the same map, the GCS's ACK was lost and it
+						// retransmitted. Re-ACK instead of resetting.
+						if( fp_send_state == WAITING_FOR_WAYPOINTS &&
+								memcmp(rx_fp_map.map, ((FlightPlanMap_t*)data)->map, sizeof(rx_fp_map.map)) == 0 ) {
+							pmesg(VERBOSE_FP,"duplicate FLIGHT_PLAN_MAP during WAITING_FOR_WAYPOINTS, re-ACK\n");
+							parent->write(type,PKT_ACTION_ACK,data,size,NULL);
+							break;
+						}
+
 						// If we're in the termination handshake and receive
 						// a duplicate command with the same map, just re-ACK
 						// instead of resetting (common on slow radio links).

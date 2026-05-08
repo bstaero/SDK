@@ -115,10 +115,15 @@ int16_t BSTSerial::read(uint8_t * buf, uint16_t buf_size) {
 		return 0;
 	}
 	if (n == 0) {
-		/* EOF - device closed/disconnected */
-		pmesg(VERBOSE_WARN, "serial device EOF, will attempt reconnection\n");
-		connected = false;
-		status = STATUS_ERROR;
+		/* With O_NONBLOCK and VMIN=0/VTIME=0, read() returning 0
+		 * just means no data available - not a disconnect.
+		 * Only treat as disconnect if we can confirm via ioctl. */
+		int modem_bits = 0;
+		if (ioctl(this->fd, TIOCMGET, &modem_bits) < 0) {
+			pmesg(VERBOSE_WARN, "serial device disconnected (ioctl failed)\n");
+			connected = false;
+			status = STATUS_ERROR;
+		}
 		return 0;
 	}
 	rx_bytes += n;
