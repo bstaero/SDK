@@ -35,6 +35,10 @@ cd $SCRIPT_DIR/examples/payload
 make clean
 make
 
+cd $SCRIPT_DIR/examples/payload_monitor
+make clean
+make
+
 cd $SCRIPT_DIR/examples/s0
 make clean
 make
