@@ -500,7 +500,7 @@ class RotorParameters:
 		buf.extend(struct.pack('<f', self.t_y))
 		buf.extend(struct.pack('<f', self.t_z))
 
-		buf.put(RotorDir.encode(self.dir));
+		buf.extend(struct.pack('<B', int(getattr(self.dir, 'value', self.dir))));
 
 		buf.extend(struct.pack('<f', self.rpm_to_thrust))
 		buf.extend(struct.pack('<f', self.thrust_to_moment))
@@ -993,7 +993,7 @@ class VehicleParameters:
 		buf.extend(struct.pack('<f', self.battery_cap))
 		buf.extend(struct.pack('<B', self.battery_num_cells))
 
-		buf.put(BatteryChemistry.encode(self.batt_chem));
+		buf.extend(struct.pack('<B', int(getattr(self.batt_chem, 'value', self.batt_chem))));
 
 		buf.extend(struct.pack('<B', self.num_rotors))
 		buf.extend(struct.pack('<f', self.mass))
@@ -1094,9 +1094,9 @@ class MissionParameters:
 		buf.extend(self.altitude.serialize())
 		buf.extend(self.comm.serialize())
 
-		buf.put(LaunchType.encode(self.launch_type));
+		buf.extend(struct.pack('<B', int(getattr(self.launch_type, 'value', self.launch_type))));
 
-		buf.put(LandType.encode(self.land_type));
+		buf.extend(struct.pack('<B', int(getattr(self.land_type, 'value', self.land_type))));
 
 		buf.extend(struct.pack('<f', self.max_range))
 		buf.extend(struct.pack('<f', self.safe_height))

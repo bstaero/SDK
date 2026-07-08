@@ -449,7 +449,7 @@ class RotorParameters:
 		buf.extend(struct.pack('<f', self.t_y))
 		buf.extend(struct.pack('<f', self.t_z))
 
-		buf.put(RotorDir.encode(self.dir));
+		buf.extend(struct.pack('<B', int(getattr(self.dir, 'value', self.dir))));
 
 		buf.extend(struct.pack('<f', self.rpm_to_thrust))
 		buf.extend(struct.pack('<f', self.thrust_to_moment))
@@ -811,7 +811,7 @@ class VehicleParameters:
 		buf.extend(struct.pack('<f', self.battery_cap))
 		buf.extend(struct.pack('<B', self.battery_num_cells))
 
-		buf.put(BatteryChemistry.encode(self.batt_chem));
+		buf.extend(struct.pack('<B', int(getattr(self.batt_chem, 'value', self.batt_chem))));
 
 		buf.extend(struct.pack('<B', self.num_rotors))
 		buf.extend(struct.pack('<f', self.mass))

@@ -227,7 +227,7 @@ class GCSSurveyIn:
 		buf.extend(struct.pack('<f', self.accuracy))
 		buf.extend(struct.pack('<f', self.accuracy_minimum))
 
-		buf.put(GCSRTKFlags.encode(self.flags));
+		buf.extend(struct.pack('<B', int(getattr(self.flags, 'value', self.flags))));
 		return bytearray(buf)
 
 #---------[ Status ]---------#

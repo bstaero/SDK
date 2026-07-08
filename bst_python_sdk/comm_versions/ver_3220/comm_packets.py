@@ -164,7 +164,7 @@ class ActuatorCalibration:
 
 		buf.extend(struct.pack('<B', self.channel))
 
-		buf.put(ActuatorFunction.encode(self.type));
+		buf.extend(struct.pack('<B', int(getattr(self.type, 'value', self.type))));
 
 		buf.extend(struct.pack('<H', self.max_usec))
 		buf.extend(struct.pack('<H', self.mid_usec))
@@ -891,7 +891,7 @@ class DubinsPath:
 		buf.extend(struct.pack('<d', self.origin_lat))
 		buf.extend(struct.pack('<d', self.origin_lon))
 
-		buf.put(DubinsPathType.encode(self.path_type));
+		buf.extend(struct.pack('<B', int(getattr(self.path_type, 'value', self.path_type))));
 		return bytearray(buf)
 
 class FlightPlanMap:
@@ -934,7 +934,7 @@ class FlightPlanMap:
 	def serialize(self):
 		buf = []
 
-		buf.put(FPMapMode.encode(self.mode));
+		buf.extend(struct.pack('<B', int(getattr(self.mode, 'value', self.mode))));
 
 		for val in self.map:
 		    buf.extend(struct.pack('<B', val))
@@ -2124,7 +2124,7 @@ class ADSB:
 		buf.extend(struct.pack('<d', self.latitude))
 		buf.extend(struct.pack('<d', self.longitude))
 
-		buf.put(ADSB_Altitude.encode(self.altitude_type));
+		buf.extend(struct.pack('<B', int(getattr(self.altitude_type, 'value', self.altitude_type))));
 
 		buf.extend(struct.pack('<f', self.altitude))
 		buf.extend(struct.pack('<f', self.heading))
@@ -2134,7 +2134,7 @@ class ADSB:
 		for val in self.callsign:
 		    buf.extend(struct.pack('<B', val))
 
-		buf.put(ADSB_Emitter.encode(self.emitter_type));
+		buf.extend(struct.pack('<B', int(getattr(self.emitter_type, 'value', self.emitter_type))));
 
 		buf.extend(struct.pack('<B', self.tslc))
 		buf.extend(struct.pack('<H', self.flags))
@@ -2176,9 +2176,9 @@ class CalibrateSensor:
 	def serialize(self):
 		buf = []
 
-		buf.put(SensorType.encode(self.sensor));
+		buf.extend(struct.pack('<B', int(getattr(self.sensor, 'value', self.sensor))));
 
-		buf.put(CalibrationState.encode(self.state));
+		buf.extend(struct.pack('<B', int(getattr(self.state, 'value', self.state))));
 		return bytearray(buf)
 
 class GPS:
@@ -2286,7 +2286,7 @@ class GPS:
 		buf.extend(struct.pack('<f', self.pdop))
 		buf.extend(struct.pack('<f', self.last_fix))
 
-		buf.put(GPSFixType.encode(self.fix_type));
+		buf.extend(struct.pack('<B', int(getattr(self.fix_type, 'value', self.fix_type))));
 
 		buf.extend(self.velocity.serialize())
 		return bytearray(buf)
@@ -2409,7 +2409,7 @@ class ThreeAxisFirstOrderCorrection:
 	def serialize(self):
 		buf = []
 
-		buf.put(SensorType.encode(self.sensor));
+		buf.extend(struct.pack('<B', int(getattr(self.sensor, 'value', self.sensor))));
 
 		for val in self.x:
 		    buf.extend(struct.pack('<f', val))
@@ -2923,9 +2923,9 @@ class SystemInitialize:
 	def serialize(self):
 		buf = []
 
-		buf.put(VehicleType.encode(self.vehicle_type));
+		buf.extend(struct.pack('<B', int(getattr(self.vehicle_type, 'value', self.vehicle_type))));
 
-		buf.put(HardwareModel.encode(self.model));
+		buf.extend(struct.pack('<B', int(getattr(self.model, 'value', self.model))));
 
 		buf.extend(struct.pack('<H', self.sw_rev))
 		buf.extend(struct.pack('<H', self.hw_rev))
@@ -3317,13 +3317,13 @@ class HandsetCalibration:
 
 		buf.extend(struct.pack('<B', self.channel))
 
-		buf.put(HandsetFunction.encode(self.function_min));
+		buf.extend(struct.pack('<B', int(getattr(self.function_min, 'value', self.function_min))));
 
-		buf.put(HandsetFunction.encode(self.function_mid));
+		buf.extend(struct.pack('<B', int(getattr(self.function_mid, 'value', self.function_mid))));
 
-		buf.put(HandsetFunction.encode(self.function_max));
+		buf.extend(struct.pack('<B', int(getattr(self.function_max, 'value', self.function_max))));
 
-		buf.put(HandsetType.encode(self.type));
+		buf.extend(struct.pack('<B', int(getattr(self.type, 'value', self.type))));
 
 		buf.extend(struct.pack('<H', self.usec))
 		return bytearray(buf)
@@ -3640,11 +3640,11 @@ class TelemetryControl:
 		buf.extend(struct.pack('<B', self.waypoint))
 		buf.extend(struct.pack('<B', self.look_at_point))
 
-		buf.put(LateralControlMode.encode(self.lat_mode));
+		buf.extend(struct.pack('<B', int(getattr(self.lat_mode, 'value', self.lat_mode))));
 
-		buf.put(AltitudeControlMode.encode(self.alt_mode));
+		buf.extend(struct.pack('<B', int(getattr(self.alt_mode, 'value', self.alt_mode))));
 
-		buf.put(NavigationControllerMode.encode(self.nav_mode));
+		buf.extend(struct.pack('<B', int(getattr(self.nav_mode, 'value', self.nav_mode))));
 
 		buf.extend(struct.pack('<B', self.landing_status))
 
@@ -4086,7 +4086,7 @@ class TelemetrySystem:
 		buf.extend(struct.pack('<B', self.satellites))
 		buf.extend(struct.pack('<H', self.pdop))
 
-		buf.put(GPSFixType.encode(self.fix_type));
+		buf.extend(struct.pack('<B', int(getattr(self.fix_type, 'value', self.fix_type))));
 
 		buf.extend(struct.pack('<b', self.rssi))
 		buf.extend(struct.pack('<B', self.lost_comm))
@@ -4094,7 +4094,7 @@ class TelemetrySystem:
 		buf.extend(struct.pack('<B', self.engine_on))
 		buf.extend(struct.pack('<I', self.error_code))
 
-		buf.put(AutopilotMode.encode(self.autopilot_mode));
+		buf.extend(struct.pack('<B', int(getattr(self.autopilot_mode, 'value', self.autopilot_mode))));
 
-		buf.put(FlightMode.encode(self.flight_mode));
+		buf.extend(struct.pack('<B', int(getattr(self.flight_mode, 'value', self.flight_mode))));
 		return bytearray(buf)
