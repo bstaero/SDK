@@ -104,6 +104,14 @@ packet_mapping = {
     PacketTypes.PAYLOAD_DATA_CHANNEL_6.value: UserPayload,
     PacketTypes.PAYLOAD_DATA_CHANNEL_7.value: UserPayload,
     PacketTypes.PAYLOAD_CAMERA_TAG.value: CameraTag,
+    PacketTypes.PAYLOAD_DATA_CHANNEL_0.value: UserPayload,
+    PacketTypes.PAYLOAD_DATA_CHANNEL_1.value: UserPayload,
+    PacketTypes.PAYLOAD_DATA_CHANNEL_2.value: UserPayload,
+    PacketTypes.PAYLOAD_DATA_CHANNEL_3.value: UserPayload,
+    PacketTypes.PAYLOAD_DATA_CHANNEL_4.value: UserPayload,
+    PacketTypes.PAYLOAD_DATA_CHANNEL_5.value: UserPayload,
+    PacketTypes.PAYLOAD_DATA_CHANNEL_6.value: UserPayload,
+    PacketTypes.PAYLOAD_DATA_CHANNEL_7.value: UserPayload,
     PacketTypes.PAYLOAD_LDCR.value: LDCR,
     PacketTypes.PAYLOAD_NDVI.value: NDVI,
     PacketTypes.PAYLOAD_PARAMS.value: PayloadParam,
@@ -112,7 +120,6 @@ packet_mapping = {
     PacketTypes.PAYLOAD_STATUS.value: PayloadStatus,
     PacketTypes.PAYLOAD_TRIGGER.value: PayloadTrigger,
     PacketTypes.TELEMETRY_PAYLOAD.value: TelemetryPayload,
-    PayloadID.PAYLOAD_LICOR.value: Licor850Data,
 }
 
 fw_mapping = {
@@ -193,7 +200,7 @@ def standard_handler(pkt, sys_time=0, vehicle_type=VehicleType.VEHICLE_UNKNOWN):
                 return None, sys_time
         else:
             if pkt.TYPE != PacketTypes.TELEMETRY_HEARTBEAT.value:
-                print(f'3220 Parsing not set up for packet {pkt.TYPE}...')
+                print(f'Parsing not set up for packet {pkt.TYPE}...')
             return None, sys_time
 
     try:

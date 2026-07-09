@@ -176,7 +176,7 @@ class HDOBConfig:
 		return bytearray(buf)
 
 class GCSSurveyIn:
-	PACKET_TYPES = ['TELEMETRY_GCS']
+	PACKET_TYPES = ['TELEMETRY_GCS_SVIN']
 	SIZE = 17
 
 	def __init__ (self, time_elapsed = 0, time_minimum = 0, accuracy = 0.0,

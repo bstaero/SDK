@@ -1123,7 +1123,7 @@ class PayloadTrigger:
 		return bytearray(buf)
 
 class UserPayload:
-	PACKET_TYPES = ['USER_PAYLOAD']
+	PACKET_TYPES = ['PAYLOAD_DATA_CHANNEL_0', 'PAYLOAD_DATA_CHANNEL_1', 'PAYLOAD_DATA_CHANNEL_2', 'PAYLOAD_DATA_CHANNEL_3', 'PAYLOAD_DATA_CHANNEL_4', 'PAYLOAD_DATA_CHANNEL_5', 'PAYLOAD_DATA_CHANNEL_6', 'PAYLOAD_DATA_CHANNEL_7']
 	SIZE = 66
 
 	def __init__ (self, system_id = 0, size = 0, buffer = [None] * 64):
