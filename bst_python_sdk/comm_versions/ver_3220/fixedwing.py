@@ -739,7 +739,7 @@ class VehicleParameters:
 		buf.extend(struct.pack('<f', self.battery_cap))
 		buf.extend(struct.pack('<B', self.battery_num_cells))
 
-		buf.put(BatteryChemistry.encode(self.batt_chem));
+		buf.extend(struct.pack('<B', int(getattr(self.batt_chem, 'value', self.batt_chem))));
 
 		for val in self.unused:
 		    buf.extend(struct.pack('<B', val))
@@ -835,9 +835,9 @@ class MissionParameters:
 		buf.extend(self.altitude.serialize())
 		buf.extend(self.comm.serialize())
 
-		buf.put(LaunchType.encode(self.launch_type));
+		buf.extend(struct.pack('<B', int(getattr(self.launch_type, 'value', self.launch_type))));
 
-		buf.put(LandType.encode(self.land_type));
+		buf.extend(struct.pack('<B', int(getattr(self.land_type, 'value', self.land_type))));
 
 		buf.extend(struct.pack('<f', self.max_range))
 		buf.extend(struct.pack('<f', self.safe_height))

@@ -1767,9 +1767,9 @@ class CAN_CalibrateSensor:
 
 		buf.extend(struct.pack('<B', self.startByte))
 
-		buf.put(CAN_SensorType.encode(self.sensor));
+		buf.extend(struct.pack('<B', int(getattr(self.sensor, 'value', self.sensor))));
 
-		buf.put(CAN_CalibrationState.encode(self.state));
+		buf.extend(struct.pack('<B', int(getattr(self.state, 'value', self.state))));
 
 		buf.extend(struct.pack('<H', self.chk))
 		return bytearray(buf)
@@ -2344,13 +2344,13 @@ class CAN_DeploymentTube:
 
 		buf.extend(struct.pack('<B', self.startByte))
 
-		buf.put(CAN_DeploymentTubeState.encode(self.state));
+		buf.extend(struct.pack('<B', int(getattr(self.state, 'value', self.state))));
 
-		buf.put(CAN_DeploymentTubeDoorStatus.encode(self.parachute_door));
+		buf.extend(struct.pack('<B', int(getattr(self.parachute_door, 'value', self.parachute_door))));
 
 		buf.extend(struct.pack('<B', self.batt_voltage))
 
-		buf.put(CAN_DeploymentTubeErrors.encode(self.error));
+		buf.extend(struct.pack('<B', int(getattr(self.error, 'value', self.error))));
 
 		buf.extend(struct.pack('<H', self.chk))
 		return bytearray(buf)

@@ -176,7 +176,7 @@ class HDOBConfig:
 		return bytearray(buf)
 
 class GCSSurveyIn:
-	PACKET_TYPES = ['TELEMETRY_GCS']
+	PACKET_TYPES = ['TELEMETRY_GCS_SVIN']
 	SIZE = 17
 
 	def __init__ (self, time_elapsed = 0, time_minimum = 0, accuracy = 0.0,
@@ -227,7 +227,7 @@ class GCSSurveyIn:
 		buf.extend(struct.pack('<f', self.accuracy))
 		buf.extend(struct.pack('<f', self.accuracy_minimum))
 
-		buf.put(GCSRTKFlags.encode(self.flags));
+		buf.extend(struct.pack('<B', int(getattr(self.flags, 'value', self.flags))));
 		return bytearray(buf)
 
 #---------[ Status ]---------#

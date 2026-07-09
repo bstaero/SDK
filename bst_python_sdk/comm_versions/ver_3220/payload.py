@@ -558,7 +558,7 @@ class LDCR:
 		buf.extend(struct.pack('<B', self.hw_revision))
 		buf.extend(struct.pack('<I', self.sw_revision))
 
-		buf.put(LDCRPlatformType.encode(self.platform_type));
+		buf.extend(struct.pack('<B', int(getattr(self.platform_type, 'value', self.platform_type))));
 
 		buf.extend(struct.pack('<H', self.platform_serial))
 		buf.extend(struct.pack('<I', self.system_time))
@@ -832,7 +832,7 @@ class TelemetryPayload:
 
 		buf.extend(struct.pack('<I', self.system_time))
 
-		buf.put(PayloadControl.encode(self.node_status));
+		buf.extend(struct.pack('<B', int(getattr(self.node_status, 'value', self.node_status))));
 
 		buf.extend(struct.pack('<H', self.num_triggers))
 		buf.extend(struct.pack('<B', self.percent_complete))
@@ -1002,11 +1002,11 @@ class PayloadParam:
 		buf.extend(struct.pack('<f', self.powerUp))
 		buf.extend(struct.pack('<f', self.powerDown))
 
-		buf.put(PayloadType.encode(self.payloadType));
+		buf.extend(struct.pack('<B', int(getattr(self.payloadType, 'value', self.payloadType))));
 
-		buf.put(PayloadSignal.encode(self.payloadSignal));
+		buf.extend(struct.pack('<B', int(getattr(self.payloadSignal, 'value', self.payloadSignal))));
 
-		buf.put(PayloadState.encode(self.payloadState));
+		buf.extend(struct.pack('<B', int(getattr(self.payloadState, 'value', self.payloadState))));
 		return bytearray(buf)
 
 class PayloadSerial:
@@ -1045,7 +1045,7 @@ class PayloadSerial:
 
 		buf.extend(struct.pack('<I', self.baudRate))
 
-		buf.put(PayloadInterface.encode(self.payloadInterface));
+		buf.extend(struct.pack('<B', int(getattr(self.payloadInterface, 'value', self.payloadInterface))));
 		return bytearray(buf)
 
 class PayloadTrigger:
@@ -1123,7 +1123,7 @@ class PayloadTrigger:
 		return bytearray(buf)
 
 class UserPayload:
-	PACKET_TYPES = ['USER_PAYLOAD']
+	PACKET_TYPES = ['PAYLOAD_DATA_CHANNEL_0', 'PAYLOAD_DATA_CHANNEL_1', 'PAYLOAD_DATA_CHANNEL_2', 'PAYLOAD_DATA_CHANNEL_3', 'PAYLOAD_DATA_CHANNEL_4', 'PAYLOAD_DATA_CHANNEL_5', 'PAYLOAD_DATA_CHANNEL_6', 'PAYLOAD_DATA_CHANNEL_7']
 	SIZE = 66
 
 	def __init__ (self, system_id = 0, size = 0, buffer = [None] * 64):
@@ -1286,10 +1286,10 @@ class PayloadStatus:
 	def serialize(self):
 		buf = []
 
-		buf.put(PayloadID.encode(self.identifier));
+		buf.extend(struct.pack('<B', int(getattr(self.identifier, 'value', self.identifier))));
 
 		buf.extend(struct.pack('<B', self.power_on))
 		buf.extend(struct.pack('<B', self.initialized))
 
-		buf.put(PayloadControl.encode(self.state));
+		buf.extend(struct.pack('<B', int(getattr(self.state, 'value', self.state))));
 		return bytearray(buf)
