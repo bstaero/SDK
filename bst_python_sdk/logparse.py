@@ -50,6 +50,47 @@ log_suffix: str = '_log_1'
 
 s0_user_payload = S0UserPayload();
 
+# Address for the single implicit aircraft when the log has no addressing
+NO_ADDR: int = 0
+
+# Comms rev at which the Telemetry* packets began reporting system_time in
+# seconds; before it every packet reported milliseconds, and even after it the
+# remaining types (State, GPS, MHP, Pressure, sensors) still do. Mixing the two
+# makes the same instant read as 105.287 from one packet and 105058 from the
+# next, so every comparison across types has to go through seconds first.
+SYSTEM_TIME_SECONDS_REV: int = 3180
+# Packets that decode a system_time of their own, so their unit is known. Every
+# other type is stamped by the handler with its running clock and inherits
+# whatever unit last fed it, which is why they cannot be compared against these.
+CLOCK_PACKETS: frozenset = frozenset((
+    'TELEMETRY_CONTROL', 'TELEMETRY_ORIENTATION', 'TELEMETRY_POSITION',
+    'TELEMETRY_PRESSURE', 'TELEMETRY_SYSTEM',
+))
+# The S0 payload carries a float seconds timestamp at every rev
+ALWAYS_SECONDS_PACKETS: frozenset = frozenset(('PAYLOAD_S0_SENSORS',))
+
+
+class SourceState:
+    """Decode state for one packet source (an aircraft, or the ground station).
+
+    A GCS log can hold several aircraft at once, each powering up and rolling its
+    system time independently. Tracking this per FROM address keeps them apart;
+    a single shared state attributed every packet to the last SYSTEM_INITIALIZE
+    seen and read each switch between airframes as a new log.
+    """
+
+    def __init__(self, has_addr=True):
+        self.current_ac = unknown_ac
+        if has_addr:
+            self.current_ac = f'{unknown_ac}{log_suffix}'
+        self.vehicle_type = VehicleType.VEHICLE_UNKNOWN
+        self.sys_current_time = 0
+        self.sys_previous_time = 0
+        self.prev_pkt_time = 0
+        self.prev_clock_seconds = 0
+        self.sys_init_times = {}
+
+
 class Parser:
     def __init__(self, has_addr=True, quick_mode=False, verbose=False, xml_payload_path=''):
         self.has_addr = has_addr
@@ -58,22 +99,19 @@ class Parser:
 
         self.parsed_logs = {}
         self.failed_pkts = {}
-        self.sys_init_times = {}
-        self.ac_vehicle_type = VehicleType.VEHICLE_UNKNOWN
-        self.ac_sys_current_time = 0
-        self.ac_sys_previous_time = 0
         self.gcs_sys_time = 0
-        self.prev_pkt_time = 0
 
         self.prev_type = 0
 
         self.comms_rev = 0
 
-        self.current_ac = unknown_ac
-        if has_addr:
-            self.current_ac = f'{unknown_ac}{log_suffix}'
+        # FROM address -> SourceState, created as addresses appear
+        self.ac_states = {}
+        self.gcs_state = SourceState(has_addr)
+        # Most recent aircraft vehicle type, used to decode GCS-relayed packets
+        self.ac_vehicle_type = VehicleType.VEHICLE_UNKNOWN
 
-        self.results = {gcs_name: {}, self.current_ac:{}}
+        self.results = {gcs_name: {}}
 
         if len(xml_payload_path) > 0:
             xml = XMLUserPayloads(xml_payload_path)
@@ -98,23 +136,60 @@ class Parser:
         globals()['VehicleType'] = comm_packets.VehicleType
         globals()['PacketTypes'] = comm_packets.PacketTypes
 
+    def system_time_scale(self, pkt):
+        """Multiplier turning this packet's system_time into seconds.
+
+        None when the packet does not carry a clock of its own, so its stamp
+        cannot be trusted to say whether time went backwards.
+        """
+        try:
+            name = PacketTypes(pkt.TYPE).name
+        except ValueError:
+            return None
+        if name in ALWAYS_SECONDS_PACKETS:
+            return 1.0
+        if name in CLOCK_PACKETS:
+            return 1.0 if self.comms_rev >= SYSTEM_TIME_SECONDS_REV else 0.001
+        return None
+
+    def is_from_aircraft(self, pkt) -> bool:
+        """True when a packet came from an aircraft rather than the ground station."""
+        return (pkt.FROM & 0xFF000000) == 0x41000000 or not self.has_addr
+
+    def source_state(self, pkt) -> SourceState:
+        """Return the state for whichever source sent pkt, creating it if new."""
+        if not self.is_from_aircraft(pkt):
+            return self.gcs_state
+        addr = pkt.FROM if self.has_addr else NO_ADDR
+        if addr not in self.ac_states:
+            state = SourceState(self.has_addr)
+            if self.has_addr:
+                # Tag the placeholder with the address so packets arriving before
+                # this aircraft is named don't pile in with another unnamed one
+                state.current_ac = f'{unknown_ac}_{addr:08X}{log_suffix}'
+            self.ac_states[addr] = state
+        return self.ac_states[addr]
+
     def parse_log(self, filename: str) -> dict:
         bst_packets = swig_parser.parse(filename, self.has_addr, self.quick_mode)
 
         for pkt in bst_packets:
-            if (pkt.FROM & 0xFF000000) == 0x41000000 or not self.has_addr:
-                # AC packet
-                if self.ac_sys_current_time > self.ac_sys_previous_time:
-                    self.ac_sys_previous_time = self.ac_sys_current_time
-                parsed_data, self.ac_sys_current_time = standard_handler(
+            if self.is_from_aircraft(pkt):
+                # AC packet - decoded against its own aircraft's clock
+                state = self.source_state(pkt)
+                if state.sys_current_time > state.sys_previous_time:
+                    state.sys_previous_time = state.sys_current_time
+                parsed_data, state.sys_current_time = standard_handler(
                     pkt,
-                    self.ac_sys_current_time,
-                    self.ac_vehicle_type)
-                self.ac_sys_current_time = max(
-                    self.ac_sys_current_time,
-                    self.ac_sys_previous_time)
+                    state.sys_current_time,
+                    state.vehicle_type)
+                state.sys_current_time = max(
+                    state.sys_current_time,
+                    state.sys_previous_time)
             else:
                 # GCS packet - TODO: ignore tablet request packets for now
+                # Decoded against the aircraft's vehicle type: the ground station
+                # relays that aircraft's packets, and some layouts differ by type
                 if pkt.ACTION != 1:
                     parsed_data, self.gcs_sys_time = standard_handler(
                         pkt,
@@ -130,7 +205,8 @@ class Parser:
 
     def add_packet(self, pkt, pkt_data):
         # TODO: Need to refactor this and/or move parsing to swig code
-        from_aircraft = (pkt.FROM & 0xFF000000) == 0x41000000
+        from_aircraft = self.is_from_aircraft(pkt)
+        state = self.source_state(pkt)
 
         is_sys_init = pkt.TYPE == PacketTypes.SYSTEM_INITIALIZE.value
         is_telem_sys = pkt.TYPE == PacketTypes.TELEMETRY_SYSTEM.value
@@ -147,9 +223,14 @@ class Parser:
 
         has_sys_time = hasattr(pkt_data, 'system_time')
 
+        prev_seconds = state.prev_clock_seconds
+        to_seconds = self.system_time_scale(pkt)
+
         if has_sys_time and pkt_data.system_time != 0:
-            self.prev_pkt_time = pkt_data.system_time
-            #print(f'adding system time {self.prev_pkt_time} from {pkt.TYPE}')
+            state.prev_pkt_time = pkt_data.system_time
+            if to_seconds is not None:
+                state.prev_clock_seconds = pkt_data.system_time * to_seconds
+            #print(f'adding system time {state.prev_pkt_time} from {pkt.TYPE}')
 
         if is_pyld_data and self.comms_rev < 3200:
             payload_num = pkt.TYPE - PacketTypes.PAYLOAD_DATA_CHANNEL_0.value
@@ -157,8 +238,7 @@ class Parser:
                 payload_class = self.payload_classes[payload_num]
                 payload_class.parse(bytes(pkt_data.buffer))
                 if payload_class.system_time != 0:
-                    self.prev_pkt_time = payload_class.system_time
-                    #print(f'adding system time {self.prev_pkt_time} from {pkt.TYPE}')
+                    state.prev_pkt_time = payload_class.system_time
                 pkt_data = copy.deepcopy(payload_class)
             except BufferError as ErrorMessage:
                 print(ErrorMessage)
@@ -166,19 +246,39 @@ class Parser:
                 pass
 
         if not has_sys_time and is_telem_ctrl or is_telem_sys or is_telem_pos or is_telem_orient or is_telem_pres:
-            pkt_data.system_time = self.prev_pkt_time
+            pkt_data.system_time = state.prev_pkt_time
 
-        is_new_sys_time = has_sys_time and pkt_data.system_time < self.ac_sys_previous_time and (self.ac_sys_previous_time - pkt_data.system_time > 100)
+        # A power cycle restarts the clock, so it drops by more than 100 s.
+        # Not applied while a source is still under a placeholder name: until an
+        # aircraft identifies itself the broadcast address can be carrying
+        # several of them at once, and their interleaved clocks read as a restart
+        # on nearly every packet, shredding the log into one-fix fragments.
+        is_new_sys_time = (has_sys_time and to_seconds is not None
+                           and not state.current_ac.startswith(unknown_ac)
+                           and pkt_data.system_time != 0
+                           and prev_seconds - pkt_data.system_time * to_seconds > 100)
 
         if is_sys_init:
             sys_init_pkt: SystemInitialize = pkt_data
             if sys_init_pkt.comms_rev != self.comms_rev:
+                # Everything decoded before the rev was known used whatever
+                # classes were loaded last - the previous log's, when several are
+                # converted in one process. Those objects carry the wrong wire
+                # format, and leaving them in a group alongside correctly decoded
+                # ones makes the field lists disagree and fails the conversion of
+                # the whole log. They are garbage regardless, so drop them.
+                stale = self.comms_rev == 0 and any(self.results.values())
                 self.reimport_comms(sys_init_pkt.comms_rev)
+                if stale:
+                    self.results = {gcs_name: {}}
+                    for st in self.ac_states.values():
+                        st.current_ac = unknown_ac if not self.has_addr else st.current_ac
 
-        if from_aircraft or not self.has_addr:
+        if from_aircraft:
             if is_sys_init:
                 sys_init_pkt: SystemInitialize = pkt_data
-                self.ac_vehicle_type = VehicleType(sys_init_pkt.vehicle_type.value)
+                state.vehicle_type = VehicleType(sys_init_pkt.vehicle_type.value)
+                self.ac_vehicle_type = state.vehicle_type
 
                 # Extract name and trim trailing 0s in name byte array
                 name_arr = sys_init_pkt.name
@@ -186,40 +286,31 @@ class Parser:
                     del name_arr[len(name_arr)-1]
 
                 ac_name = "".join(map(chr, sys_init_pkt.name))
-                if self.current_ac.startswith(unknown_ac):
-                    # First aircraft log
-                    new_ac = self.current_ac.replace(unknown_ac, ac_name)
-                    self.results = {
-                        gcs_name: self.results[gcs_name],
-                        new_ac: self.results[self.current_ac]
-                    }
-                    self.current_ac = new_ac
-                elif not self.current_ac.startswith(ac_name):
-                    # New aircraft log
-                    self.current_ac = f'{ac_name}_log_1'
-                    try:
-                        if len(self.results[self.current_ac]) > 0:
-                            self.current_ac = self.increment_log_name(self.current_ac)
-                    except:
-                        pass
+                if state.current_ac.startswith(unknown_ac):
+                    # First SYSTEM_INITIALIZE here - rename the placeholder in
+                    # place, keeping what it collected and leaving others alone
+                    new_ac = self.free_log_name(ac_name)
+                    if state.current_ac in self.results:
+                        self.results[new_ac] = self.results.pop(state.current_ac)
+                    state.current_ac = new_ac
+                elif not state.current_ac.startswith(ac_name):
+                    # This address is now reporting a different airframe
+                    state.current_ac = self.free_log_name(ac_name)
 
-                prev_sys_init_time = 0
-                has_prev_sys_init = self.current_ac in self.sys_init_times
-                if has_prev_sys_init:
-                    prev_sys_init_time = self.sys_init_times[self.current_ac]
+                prev_sys_init_time = state.sys_init_times.get(state.current_ac, 0)
 
                 if sys_init_pkt.system_time < prev_sys_init_time:
                     # print(f"new sys init time - type: {pkt.TYPE} prev: {sys_init_pkt.system_time} this: {prev_sys_init_time}")
-                    self.current_ac = self.increment_log_name(self.current_ac)
+                    state.current_ac = self.increment_log_name(state.current_ac)
 
-                self.sys_init_times[self.current_ac] = sys_init_pkt.system_time
+                state.sys_init_times[state.current_ac] = sys_init_pkt.system_time
             elif is_new_sys_time:
                 # Same aircraft, new log data
-                self.current_ac = self.increment_log_name(self.current_ac)
-                self.ac_sys_current_time = pkt_data.system_time
-                self.ac_sys_previous_time = pkt_data.system_time
+                state.current_ac = self.increment_log_name(state.current_ac)
+                state.sys_current_time = pkt_data.system_time
+                state.sys_previous_time = pkt_data.system_time
 
-            entry_name = self.current_ac
+            entry_name = state.current_ac
         else:
             entry_name = gcs_name
 
@@ -233,6 +324,20 @@ class Parser:
             self.results[entry_name][pkt_type.name] = [pkt_data]
 
         self.prev_type = pkt.TYPE
+
+    def free_log_name(self, ac_name: str) -> str:
+        """Return the first {ac_name}_log_N no source has claimed yet.
+
+        Two addresses can report the same name (a board swapped between
+        airframes), and results is keyed by name alone. An unaddressed log has
+        only one aircraft, so it keeps the bare name and never splits.
+        """
+        if not self.has_addr:
+            return ac_name
+        name = f'{ac_name}{log_suffix}'
+        while self.results.get(name):
+            name = self.increment_log_name(name)
+        return name
 
     def increment_log_name(self, name: str) -> str:
         try:
