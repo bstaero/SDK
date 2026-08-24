@@ -122,6 +122,7 @@ class BSTSocket : public BSTInterface {
 		bool makeClientSocket();
 		bool setNonBlockingFD(int sock_fd);
 		bool setBlockingFD(int sock_fd);
+		void enableKeepAlive(int sock_fd);
 		void closeAllClients();
 		void acceptPendingClients();
 };

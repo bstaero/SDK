@@ -845,6 +845,46 @@ typedef struct _CAN_GNSS_LLA_t {
 #endif
 } __attribute__ ((packed)) CAN_GNSS_LLA_t;
 
+typedef struct _CAN_GNSS_RELPOSNED_t {
+	uint8_t startByte;
+
+	uint16_t refStationId;  // id of the reference station
+	uint32_t iTOW;  // [ms] - GPS time of week
+	float relative_north;  // [m] - relative position north
+	float relative_east;  // [m] - relative position east
+	float relative_down;  // [m] - relative position down
+	float relative_length;  // [m] - relative distance base to rover
+	float relative_heading;  // [deg] - heading from base to rover
+	uint32_t accN;  // accuracy of the north component
+	uint32_t accE;  // accuracy of the east component
+	uint32_t accD;  // accuracy of the down component
+	uint32_t accLength;  // accuracy of the length
+	uint32_t accHeading;  // accuracy of the heading
+	uint32_t flags;  // see u-blox RELPOSNED flags
+
+	uint16_t chk;
+
+#ifdef __cplusplus
+	_CAN_GNSS_RELPOSNED_t() {
+		startByte = 0;
+		refStationId = 0;
+		iTOW = 0;
+		relative_north = 0.0;
+		relative_east = 0.0;
+		relative_down = 0.0;
+		relative_length = 0.0;
+		relative_heading = 0.0;
+		accN = 0;
+		accE = 0;
+		accD = 0;
+		accLength = 0;
+		accHeading = 0;
+		flags = 0;
+		chk = 0;
+	}
+#endif
+} __attribute__ ((packed)) CAN_GNSS_RELPOSNED_t;
+
 typedef struct _CAN_GNSS_RTCM_t {
 	uint8_t startByte;
 

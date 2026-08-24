@@ -318,6 +318,8 @@ int BSTSocket::connectClient() {
 	int flag = 1;
 	setsockopt(new_fd, IPPROTO_TCP, TCP_NODELAY, (void *)&flag, sizeof(flag));
 
+	enableKeepAlive(new_fd);
+
 	/* Find a slot */
 	int idx = num_clients;
 	client_fds[idx]   = new_fd;
@@ -584,6 +586,10 @@ bool BSTSocket::makeClientSocket() {
 	if (sock_type == BST_TCP) {
 		int flag = 1;
 		setsockopt(this->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&flag, sizeof(flag));
+	} else {
+		// allow UDP clients to target broadcast addresses (e.g. IWG to x.x.x.255)
+		int bc = 1;
+		setsockopt(this->fd, SOL_SOCKET, SO_BROADCAST, (void *)&bc, sizeof(bc));
 	}
 
 	memset(&server_addr, 0, sizeof(server_addr));
@@ -619,6 +625,29 @@ bool BSTSocket::setBlockingFD(int sock_fd) {
 	return fcntl(sock_fd, F_SETFL, flags & ~O_NONBLOCK) >= 0;
 }
 
+/* Enable TCP keepalive so half-open clients (tablet dropped without a clean
+ * FIN -- wifi loss, force-kill) are detected and reaped instead of silently
+ * occupying a client slot forever. Without this a reconnecting tablet can fill
+ * BST_MAX_CLIENTS with dead connections and never get accepted again until the
+ * daemon restarts. */
+void BSTSocket::enableKeepAlive(int sock_fd) {
+	if (sock_fd < 0) return;
+
+	int on = 1;
+	setsockopt(sock_fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
+
+#if defined(TCP_KEEPIDLE) && defined(TCP_KEEPINTVL) && defined(TCP_KEEPCNT)
+	/* Start probing after 5s idle, probe every 5s, drop after 3 failures
+	 * (~20s to detect a vanished peer). Linux-specific knobs. */
+	int idle  = 5;
+	int intvl = 5;
+	int cnt   = 3;
+	setsockopt(sock_fd, IPPROTO_TCP, TCP_KEEPIDLE,  (void *)&idle,  sizeof(idle));
+	setsockopt(sock_fd, IPPROTO_TCP, TCP_KEEPINTVL, (void *)&intvl, sizeof(intvl));
+	setsockopt(sock_fd, IPPROTO_TCP, TCP_KEEPCNT,   (void *)&cnt,   sizeof(cnt));
+#endif
+}
+
 void BSTSocket::acceptPendingClients() {
 	if (socket_mode != SERVER) return;
 	if (server_fd == BST_INVALID_SOCKET) return;
@@ -635,6 +664,8 @@ void BSTSocket::acceptPendingClients() {
 
 		int flag = 1;
 		setsockopt(new_fd, IPPROTO_TCP, TCP_NODELAY, (void *)&flag, sizeof(flag));
+
+		enableKeepAlive(new_fd);
 
 		client_fds[num_clients]   = new_fd;
 		client_addrs[num_clients] = addr;

@@ -14,6 +14,25 @@ extern "C" {
   float getElapsedTime(); // defined elsewhere
 }
 
+// P400 NB Transparent mode timeout tuning (S128=0, S103=3 → 4800 bps OTA):
+// At 4800 bps, a 50-byte packet takes ~83ms over the air, 100 bytes ~167ms.
+// S113=5 radio-level retransmissions each add a full packet time.
+// S136=1 (RX priority) means radio is effectively half-duplex.
+// Values must account for: packet TX time + turnaround + possible retransmissions.
+#if defined(RADIO_P400)
+#define CMD_TIMEOUT_FP     5.0   // Flight plan operations (s) — FP packets are large
+#define CMD_TIMEOUT_STD    2.0   // Normal commands (s) — allows ~3 retransmissions at 4800 bps
+#define RADIO_TIMEOUT_FP   0.35  // TX spacing during FP exchange (s) — 167ms TX + turnaround
+#define RADIO_TIMEOUT_STD  0.20  // TX spacing during normal commands (s) — 83ms TX + margin
+#define RADIO_TIMEOUT_INIT 0.25  // Default TX spacing (s)
+#else
+#define CMD_TIMEOUT_FP     3.0
+#define CMD_TIMEOUT_STD    1.0
+#define RADIO_TIMEOUT_FP   0.25
+#define RADIO_TIMEOUT_STD  0.02
+#define RADIO_TIMEOUT_INIT 0.25
+#endif
+
 BSTProtocol::BSTProtocol() : CommunicationsProtocol() {
 	pmesg(VERBOSE_ALLOC, "BSTProtocol::BSTProtocol()\n");
 	uses_address = true;
@@ -24,6 +43,14 @@ BSTProtocol::BSTProtocol() : CommunicationsProtocol() {
 	num_modules = 0;
 
 	last_tx = getElapsedTime();
+
+#if defined(NO_DUPLEX_COMMS)
+	last_cmd_rx = -1.0;
+	cmd_timeout = CMD_TIMEOUT_FP;
+#endif
+#if defined(LOW_BANDWIDTH) || defined(SERIAL_COMMS)
+	radio_timeout = RADIO_TIMEOUT_INIT;
+#endif
 
 	last_request = INVALID_PACKET;
 }
@@ -58,33 +85,9 @@ void BSTProtocol::parseData(uint8_t byte) {
 	}
 }
 
-// P400 NB Transparent mode timeout tuning (S128=0, S103=3 → 4800 bps OTA):
-// At 4800 bps, a 50-byte packet takes ~83ms over the air, 100 bytes ~167ms.
-// S113=5 radio-level retransmissions each add a full packet time.
-// S136=1 (RX priority) means radio is effectively half-duplex.
-// Values must account for: packet TX time + turnaround + possible retransmissions.
-#if defined(RADIO_P400)
-#define CMD_TIMEOUT_FP     5.0   // Flight plan operations (s) — FP packets are large
-#define CMD_TIMEOUT_STD    2.0   // Normal commands (s) — allows ~3 retransmissions at 4800 bps
-#define RADIO_TIMEOUT_FP   0.35  // TX spacing during FP exchange (s) — 167ms TX + turnaround
-#define RADIO_TIMEOUT_STD  0.20  // TX spacing during normal commands (s) — 83ms TX + margin
-#define RADIO_TIMEOUT_INIT 0.25  // Default TX spacing (s)
-#else
-#define CMD_TIMEOUT_FP     3.0
-#define CMD_TIMEOUT_STD    1.0
-#define RADIO_TIMEOUT_FP   0.25
-#define RADIO_TIMEOUT_STD  0.02
-#define RADIO_TIMEOUT_INIT 0.25
-#endif
-
-#if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-static float RADIO_TIMEOUT = RADIO_TIMEOUT_INIT;
-#endif
-
-#if defined (NO_DUPLEX_COMMS)
-static float CMD_TIMEOUT = CMD_TIMEOUT_FP;
-static float last_cmd_rx = -1.0;
-#endif
+/* last_cmd_rx, cmd_timeout, radio_timeout are now per-instance member
+ * variables in BSTProtocol so that the arbiter and radio handlers each
+ * track their own TX-gating state independently. */
 
 uint16_t BSTProtocol::update() {
 	uint16_t n = CommunicationsProtocol::update();
@@ -110,7 +113,7 @@ uint16_t BSTProtocol::update() {
 
 			if(temp_packet.getType() >= PAYLOAD_DATA_CHANNEL_0 && temp_packet.getType() <= PAYLOAD_DATA_CHANNEL_7) {
 				if(temp_packet.getAction() != PKT_ACTION_STATUS) {
-					last_cmd_rx = getElapsedTime();
+					this->last_cmd_rx = getElapsedTime();
 					last_request = temp_packet.getType();
 #if defined (NO_DUPLEX_COMMS)
 					if(temp_packet.getType() == FLIGHT_PLAN ||
@@ -118,20 +121,20 @@ uint16_t BSTProtocol::update() {
 						 temp_packet.getType() == LAST_MAPPING_WAYPOINT ||
 						 temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
 						 temp_packet.getType() == SYSTEM_INITIALIZE) {
-						CMD_TIMEOUT = CMD_TIMEOUT_FP;
+						this->cmd_timeout = CMD_TIMEOUT_FP;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-						RADIO_TIMEOUT = RADIO_TIMEOUT_FP;
+						this->radio_timeout = RADIO_TIMEOUT_FP;
 #endif
 					} else {
-						CMD_TIMEOUT = CMD_TIMEOUT_STD;
+						this->cmd_timeout = CMD_TIMEOUT_STD;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-						RADIO_TIMEOUT = RADIO_TIMEOUT_STD;
+						this->radio_timeout = RADIO_TIMEOUT_STD;
 #endif
 					}
 #endif
 				}
 			} else {
-				last_cmd_rx = getElapsedTime();
+				this->last_cmd_rx = getElapsedTime();
 				last_request = temp_packet.getType();
 #if defined (NO_DUPLEX_COMMS)
 				if(temp_packet.getType() == FLIGHT_PLAN ||
@@ -139,14 +142,14 @@ uint16_t BSTProtocol::update() {
 						temp_packet.getType() == LAST_MAPPING_WAYPOINT ||
 						temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
 						temp_packet.getType() == SYSTEM_INITIALIZE) {
-					CMD_TIMEOUT = CMD_TIMEOUT_FP;
+					this->cmd_timeout = CMD_TIMEOUT_FP;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-					RADIO_TIMEOUT = RADIO_TIMEOUT_FP;
+					this->radio_timeout = RADIO_TIMEOUT_FP;
 #endif
 				} else {
-					CMD_TIMEOUT = CMD_TIMEOUT_STD;
+					this->cmd_timeout = CMD_TIMEOUT_STD;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-					RADIO_TIMEOUT = RADIO_TIMEOUT_STD;
+					this->radio_timeout = RADIO_TIMEOUT_STD;
 #endif
 				}
 #endif
@@ -174,7 +177,7 @@ uint16_t BSTProtocol::update() {
 	} // rx_cnt scope
 
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-	if(getElapsedTime() - last_tx > RADIO_TIMEOUT) {
+	if(getElapsedTime() - last_tx > this->radio_timeout) {
 #endif
 		// Drain TX queues: priority first, then regular.
 		// For radio/serial (LOW_BANDWIDTH), send one packet per update to stay bounded.
@@ -195,7 +198,7 @@ uint16_t BSTProtocol::update() {
 			} else break;
 		} else {
 #if defined (NO_DUPLEX_COMMS)
-			if(last_cmd_rx >= 0 && getElapsedTime() - last_cmd_rx < CMD_TIMEOUT) {
+			if(this->last_cmd_rx >= 0 && getElapsedTime() - this->last_cmd_rx < this->cmd_timeout) {
 				return 0;
 			}
 #endif
@@ -209,15 +212,15 @@ uint16_t BSTProtocol::update() {
 							temp_packet.getType() == LAST_MAPPING_WAYPOINT ||
 							temp_packet.getType() == FLIGHT_PLAN_WAYPOINT ||
 							temp_packet.getType() == SYSTEM_INITIALIZE) {
-						//last_cmd_rx = getElapsedTime();
-						CMD_TIMEOUT = CMD_TIMEOUT_FP;
+						//this->last_cmd_rx = getElapsedTime();
+						this->cmd_timeout = CMD_TIMEOUT_FP;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-						RADIO_TIMEOUT = RADIO_TIMEOUT_FP;
+						this->radio_timeout = RADIO_TIMEOUT_FP;
 #endif
 					} else {
-						CMD_TIMEOUT = CMD_TIMEOUT_STD;
+						this->cmd_timeout = CMD_TIMEOUT_STD;
 #if defined LOW_BANDWIDTH || defined SERIAL_COMMS
-						RADIO_TIMEOUT = RADIO_TIMEOUT_STD;
+						this->radio_timeout = RADIO_TIMEOUT_STD;
 #endif
 					}
 #endif
@@ -332,7 +335,10 @@ uint8_t BSTProtocol::write(uint8_t type, uint8_t action, void * data, uint16_t s
 
 #ifdef IMPLEMENTATION_firmware
 	// Log non-telemetry command responses (ACK/NACK/REQUEST) for protocol debugging.
-	if((type&0xF0) != 0x60 && action != PKT_ACTION_STATUS)
+	// Payload data channels are sent as STATUS and have no other SD-log path, so log them too.
+	if((type&0xF0) != 0x60 &&
+			(action != PKT_ACTION_STATUS ||
+			 (type >= PAYLOAD_DATA_CHANNEL_0 && type <= PAYLOAD_DATA_CHANNEL_7)))
 		writeLogFile(type, (PacketAction_t)action, data, size, parameter);
 #endif
 

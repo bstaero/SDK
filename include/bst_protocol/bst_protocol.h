@@ -56,6 +56,14 @@ class BSTProtocol : public CommunicationsProtocol {
 	private:
 		float last_tx;
 
+#if defined(NO_DUPLEX_COMMS)
+		float last_cmd_rx;
+		float cmd_timeout;
+#endif
+#if defined(LOW_BANDWIDTH) || defined(SERIAL_COMMS)
+		float radio_timeout;
+#endif
+
 		std::queue<Packet> rx_queue;
 		std::queue<Packet> tx_queue;
 		std::queue<Packet> tx_priority_queue;

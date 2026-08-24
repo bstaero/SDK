@@ -291,7 +291,7 @@ typedef struct _VehicleLimits_t {
 	float max_scale_factor;  // scale factor for IAS based gain schedule: default=5
 	Limit_t flightpath_angle;  // [rad] [-1,1]
 	Limit_t flightpath_angle_flap;  // [rad], (-1, 1)
-	float flightpath_angle_fraction;  // [percent] [0,1]
+	float flightpath_angle_fraction;  // [%] [0,1]
 	/* -- */
 	uint8_t unused[10];  // place holder for future parameters
 	/* need to adjust param.h if need more space */

@@ -46,6 +46,9 @@ class CommunicationsInterface {
 
 		virtual bool isConnected();
 
+		void setPaused(bool p) { paused = p; }
+		bool isPaused() { return paused; }
+
 		virtual uint16_t getRxBytes() = 0;
 		virtual uint16_t getTxBytes() = 0;
 
@@ -55,6 +58,7 @@ class CommunicationsInterface {
 
 	protected:
 		bool connected;
+		bool paused;
 		CommType_t comm_type;
 		
 		char param[3][MAX_PARAM_SIZE];

@@ -24,18 +24,35 @@
 #include <string.h>
 #include "bridge.h"
 
+#ifdef _SP_MULTI_ACTUATOR
+#include "main.h"
+#endif
+
+#include "canpackets.h"
+
+#ifdef __cplusplus
+using namespace bst::comms::canpackets;
+#endif
+
 uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size);
 
-#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx
+#if ! defined ARCH_stm32f1 && ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32L431xx && ! defined STM32L496xx
   #include "helper_functions.h"
-  #if ! defined STM32L431xx && ! defined STM32L496xx
-    #include "simulated_can.h"
-  #endif
+  #include "simulated_can.h"
 #endif
 
 #include "debug.h"
 
 #if defined ARCH_stm32f4 || defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32H743xx || defined STM32L431xx || defined STM32L496xx
+#if defined _USE_CAN_TUNNEL
+  #include "can_tunnel.h"
+  #include "fast_fletcher.h"
+
+  uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size)
+  {
+    return CAN_TUNNEL_Write(p, id, data, size);
+  }
+#else
   #if ! defined STM32F413xx && ! defined STM32F405xx && ! defined STM32L432xx && ! defined STM32H743xx && ! defined STM32L431xx && ! defined STM32L496xx
     #include "can.h"
     #include "led.h" // DEBUG
@@ -43,17 +60,24 @@ uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size);
     #include "clock.h"
   #else
     #if defined STM32F405xx || defined STM32L432xx
-uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
-	return 0;
-}
+      #ifndef USE_HAL_DRIVER
+        uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
+          return 0;
+        }
+      #else
+        uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size);
+      #endif
+    #elif defined STM32L496xx || defined STM32L431xx
+      uint8_t CAN_Write(uint8_t p, uint32_t id, void * data, uint8_t size);
     #endif
   #endif
 
-  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
+  #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32L431xx || defined STM32L496xx
     #include <math.h>
     uint8_t checkFletcher16(uint8_t * data, uint8_t size);
     void setFletcher16 (uint8_t * data, uint8_t size);
   #endif
+#endif
 #else
 	uint8_t CAN_Read(uint8_t p) {return simulatedCANRead(p);}
 	uint8_t CAN_Write(uint8_t p, uint32_t id, void *data, uint8_t size) {
@@ -146,6 +170,26 @@ void updateGPSSVIN(
 		float accuracy,
 		float accuracy_minimum,
 		uint8_t flags);
+
+void updateGPSRelPos(
+		uint16_t refStationId,
+		uint32_t iTOW,
+		float relative_north,
+		float relative_east,
+		float relative_down,
+		float relative_length,
+		float relative_heading,
+		uint32_t accN,
+		uint32_t accE,
+		uint32_t accD,
+		uint32_t accLength,
+		uint32_t accHeading,
+		uint32_t flags);
+
+void handleGPSCommand(uint8_t comm_id, 
+		uint32_t param1, 
+		uint32_t param2, 
+		uint32_t param3);
 
 // ---
 // All of the values in the update functions should be referenced to
@@ -390,6 +434,7 @@ void BRIDGE_HandleGyroPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleMagPkt(uint8_t node_id,uint8_t *byte,uint8_t size);
 void BRIDGE_HandleOrientationPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleActuatorPkt(uint8_t *byte,uint8_t size);
+
 void BRIDGE_HandleGNSSPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte,uint8_t size);
@@ -399,12 +444,15 @@ void BRIDGE_HandleGNSSHealthPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSRTCMPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleGNSSSVINPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSOrientationPkt(uint8_t *byte,uint8_t size);
+void BRIDGE_HandleGNSSRELPOSNEDPkt(uint8_t *byte, uint8_t size);
+void BRIDGE_HandleGNSSCommandPkt(uint8_t *byte, uint8_t size);
+
 void BRIDGE_HandleAGLPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleProximityPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleADSBPkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleCalibratePkt(uint8_t *byte,uint8_t size);
 void BRIDGE_HandleBoardOrientationPkt(uint8_t *byte,uint8_t size);
-void BRIDGE_HandleGNSSOrientationPkt(uint8_t *byte,uint8_t size);
 
 void BRIDGE_HandleActuatorPkt(uint8_t *byte,uint8_t size);
 
@@ -475,21 +523,25 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case ((0x0100) | CAN_PKT_MAG):
 #endif
 		case CAN_PKT_MAG:        BRIDGE_HandleMagPkt(node_id,data,size); break;
-		case CAN_PKT_GNSS:       BRIDGE_HandleGNSSPkt(data,size); break;
-		case CAN_PKT_GNSS_UTC:   BRIDGE_HandleGNSSUTCPkt(data,size); break;
-		case CAN_PKT_GNSS_UTC_W: BRIDGE_HandleGNSSUTCWPkt(data,size); break;
-		case CAN_PKT_GNSS_LLA:   BRIDGE_HandleGNSSLLAPkt(data,size); break;
-		case CAN_PKT_GNSS_VEL:   BRIDGE_HandleGNSSVelPkt(data,size); break;
-		case CAN_PKT_GNSS_HEALTH:BRIDGE_HandleGNSSHealthPkt(data,size); break;
-		case CAN_PKT_GNSS_HEALTH_2:BRIDGE_HandleGNSSHealth2Pkt(data,size); break;
-		case CAN_PKT_GNSS_RTCM:  BRIDGE_HandleGNSSRTCMPkt(data,size); break;
-		case CAN_PKT_GNSS_SVIN:  BRIDGE_HandleGNSSSVINPkt(data,size); break;
-		case CAN_PKT_AGL:	       BRIDGE_HandleAGLPkt(data,size); break;
+
+		case CAN_PKT_GNSS:       	BRIDGE_HandleGNSSPkt(data,size); 						break;
+		case CAN_PKT_GNSS_UTC:   	BRIDGE_HandleGNSSUTCPkt(data,size); 				break;
+		case CAN_PKT_GNSS_UTC_W: 	BRIDGE_HandleGNSSUTCWPkt(data,size); 				break;
+		case CAN_PKT_GNSS_LLA:   	BRIDGE_HandleGNSSLLAPkt(data,size); 				break;
+		case CAN_PKT_GNSS_VEL:   	BRIDGE_HandleGNSSVelPkt(data,size); 				break;
+		case CAN_PKT_GNSS_HEALTH:	BRIDGE_HandleGNSSHealthPkt(data,size); 			break;
+		case CAN_PKT_GNSS_HEALTH_2:	BRIDGE_HandleGNSSHealth2Pkt(data,size); 		break;
+		case CAN_PKT_GNSS_RTCM:  	BRIDGE_HandleGNSSRTCMPkt(data,size); 				break;
+		case CAN_PKT_GNSS_SVIN:  	BRIDGE_HandleGNSSSVINPkt(data,size); 				break;
+		case CAN_PKT_GNSS_RELPOSNED:	BRIDGE_HandleGNSSRELPOSNEDPkt(data, size);	break;
+		case CAN_PKT_GNSS_ORIENTATION:  BRIDGE_HandleGNSSOrientationPkt(data,size); break;
+//		case CAN_PKT_GNSS_CMD:		BRIDGE_HandleGNSSCommandPkt(data, size);		break;
+																	
+		case CAN_PKT_AGL:	 BRIDGE_HandleAGLPkt(data,size); break;
 		case CAN_PKT_PROXIMITY:	 BRIDGE_HandleProximityPkt(data,size); break;
 		case CAN_PKT_ADSB:    	 BRIDGE_HandleADSBPkt(data,size); break;
 		case CAN_PKT_CALIBRATE:  BRIDGE_HandleCalibratePkt(data,size); break;
 		case CAN_PKT_BOARD_ORIENTATION:  BRIDGE_HandleBoardOrientationPkt(data,size); break;
-		case CAN_PKT_GNSS_ORIENTATION:  BRIDGE_HandleGNSSOrientationPkt(data,size); break;
 
 		case CAN_PKT_ACTUATOR:   BRIDGE_HandleActuatorPkt(data,size); break;
 
@@ -551,7 +603,7 @@ void BRIDGE_HandleReceiverPkt(uint8_t *byte, uint8_t size)
 	pwm_in_count++;
 #endif
 
-	pmesg(VERBOSE_CAN, "RECEIVER: %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d\r\n",
+	pmesg(VERBOSE_CAN, "RECEIVER @ %lldus: %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d\r\n", (uint64_t)(getElapsedTime()*1e6),
 			data->usec[0],data->usec[1],data->usec[2],data->usec[3],
 			data->usec[4],data->usec[5],data->usec[6],data->usec[7],
 			data->usec[8],data->usec[9],data->usec[10],data->usec[11],
@@ -1070,7 +1122,7 @@ static camera_triggered = 0u;
 #endif
 void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 {
-#if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK || defined _SP_MULTI_ACTUATOR || defined BOARD_PSNS
+#if defined _SP_ACTUATOR || defined IMPLEMENTATION_xplane || defined _SP_RECEIVER || defined _SP_FUTABA || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined SDK || defined _SP_MULTI_ACTUATOR || defined _SP_ACTUATOR_ZEUS || defined BOARD_PSNS || defined _SP_ACTUATOR_DRONECAN
 	static uint8_t pkt_size = sizeof(CAN_Actuator_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleActuatorPkt";
@@ -1107,10 +1159,10 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 #endif
 
 #if defined _SP_ACTUATOR || defined _SP_ACTUATOR_HACKHD || defined _SP_ACTUATOR_A6000 || defined _SP_MULTI_ACTUATOR
-#ifdef _SP_ACTUATOR
+#  ifdef _SP_ACTUATOR
 	LED_Toggle(0);
-#if 1
-#ifdef _SP_ACTUATOR_HITEC
+#    if 1
+#      ifdef _SP_ACTUATOR_HITEC
 	uint16_t usec_u = 0;
 
 	if(data->usec[DIP_GetVal()] != 0) {
@@ -1121,18 +1173,15 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 		if(usec_u > 2100) usec_u = 2100;
 	}
 	PWM_SetPulseWidth(0, usec_u);
-#else
+#      else
+#        ifdef _SP_ACTUATOR_BINARY
+	updateActuator(data->usec[DIP_GetVal()]);
+#        else
 	PWM_SetPulseWidth(0, data->usec[DIP_GetVal()]);
-#endif
-#else
-	uint16_t usec = data->usec[DIP_GetVal()];
-
-	if(usec > 800 && usec < 1400)
-		PWM_SetPulseWidth(0,1000);
-	if(usec > 1600 && usec < 2300)
-		PWM_SetPulseWidth(0,2000);
-#endif
-#endif
+#        endif
+#      endif
+#    endif
+#  endif
 #ifdef _SP_ACTUATOR_HACKHD
 	if(data->usec[DIP_GetVal()] > 1500 && !camera_triggered) {
 		camera_triggered = 1u;
@@ -1183,7 +1232,7 @@ void BRIDGE_HandleActuatorPkt(uint8_t *byte, uint8_t size)
 
 #endif
 
-	pmesg(VERBOSE_CAN, "ACTUATOR: %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d\r\n",
+	pmesg(VERBOSE_CAN, "ACTUATOR @ %lldus: %04d %04d %04d %04d %04d %04d %04d %04d %04d %04d\r\n", (uint64_t)(getElapsedTime()*1e6),
 			data->usec[0],data->usec[1],data->usec[2],data->usec[3],
 			data->usec[4],data->usec[5],data->usec[6],data->usec[7],
 			data->usec[8],data->usec[9]);
@@ -1217,7 +1266,7 @@ void BRIDGE_HandleGNSSPkt(uint8_t *byte, uint8_t size)
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSPkt";
 #endif
-  static uint8_t buffer[sizeof(CAN_GNSS_t)];
+	static uint8_t buffer[sizeof(CAN_GNSS_t)];
 
 	BRIDGE_BUFFER_PREAMBLE
 
@@ -1271,7 +1320,7 @@ void BRIDGE_HandleGNSSPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP
+#if defined BOARD_core || defined BOARD_MHP || defined BOARD_GCS
 	static uint8_t pkt_size = sizeof(CAN_GNSS_UTC_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSUTCPkt";
@@ -1307,7 +1356,7 @@ void BRIDGE_HandleGNSSUTCPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP || defined BOARD_RID
+#if defined BOARD_core || defined BOARD_MHP || defined BOARD_GCS || defined BOARD_RID
 	static uint8_t pkt_size = sizeof(CAN_GNSS_UTC_W_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSUTCWPkt";
@@ -1317,7 +1366,9 @@ void BRIDGE_HandleGNSSUTCWPkt(uint8_t *byte, uint8_t size)
 	BRIDGE_BUFFER_PREAMBLE
 
 	//----- packet specific code -----//
+
 	if(!can_gps_sensor) can_gps_sensor = 1u;
+
 	CAN_GNSS_UTC_W_t *data;
 	data = (CAN_GNSS_UTC_W_t *)buffer;
 
@@ -1381,7 +1432,7 @@ void BRIDGE_HandleGNSSLLAPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSVelPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP || defined BOARD_RID
+#if defined BOARD_core || defined BOARD_MHP || defined BOARD_GCS  || defined BOARD_RID
   static uint8_t pkt_size = sizeof(CAN_GNSS_VEL_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSVelPkt";
@@ -1420,7 +1471,7 @@ void BRIDGE_HandleGNSSVelPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSHealth2Pkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_MHP || defined BOARD_RID
+#if defined BOARD_core || defined BOARD_MHP || defined BOARD_GCS || defined BOARD_RID
   static uint8_t pkt_size = sizeof(CAN_GNSS_HEALTH_2_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSHealth2Pkt";
@@ -1491,7 +1542,7 @@ void BRIDGE_HandleGNSSHealthPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleGNSSRTCMPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_GNSS || defined BOARD_core
+#if defined BOARD_GNSS || defined BOARD_core || defined BOARD_GCS
 	static uint8_t pkt_size = sizeof(CAN_GNSS_RTCM_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleGNSSRTCMPkt";
@@ -1549,10 +1600,86 @@ void BRIDGE_HandleGNSSSVINPkt(uint8_t *byte, uint8_t size)
 			data->accuracy_minimum,
 			data->flags);
 
-	pmesg(VERBOSE_CAN, "GNSS SVIN Data\n\r");
+	pmesg(VERBOSE_CAN, "GNSS SVIN: %03u of %03u sec, %04.01f of %04.01f \n\r", data->time_elapsed, data->time_minimum, data->accuracy, data->accuracy_minimum);
 
 	//----- packet specific code -----//
 
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+
+/**
+ * @brief	Handle Relative Position Packet
+ * @param	byte Pointer to the byte of data
+ * @retval None
+ */
+void BRIDGE_HandleGNSSRELPOSNEDPkt(uint8_t *byte, uint8_t size)
+{
+#if defined GNSS_MOVING_BASE || defined RTK_MOVING_BASE
+	static uint8_t pkt_size = sizeof(CAN_GNSS_RELPOSNED_t);
+	
+#ifdef DEBUG
+	//static char * function_name = "BRIDGE_HandleGNSSRELPOSNEDPkt";
+#endif
+
+	static uint8_t buffer[sizeof(CAN_GNSS_RELPOSNED_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+	//----- packet specific code -----//
+
+	if(!can_gps_sensor) can_gps_sensor = 1u;
+
+	CAN_GNSS_RELPOSNED_t *data;
+	data = (CAN_GNSS_RELPOSNED_t *)buffer;
+
+	updateGPSRelPos(data->refStationId,
+			data->iTOW,
+			data->relative_north,
+			data->relative_east,
+			data->relative_down,
+			data->relative_length,
+			data->relative_heading,
+			data->accN,
+			data->accE,
+			data->accD,
+			data->accLength,
+			data->accHeading,
+			data->flags);
+
+	pmesg(VERBOSE_CAN, "GNSS Relative Position: Station Id 0x%x, north: %lf, east: %lf, down: %lf\n\r", data->refStationId, data->relative_north, data->relative_east, data->relative_down);
+
+	//----- packet specific code -----//
+	BRIDGE_BUFFER_CONCLUSION
+#endif
+}
+
+
+void BRIDGE_HandleGNSSCommandPkt(uint8_t *byte, uint8_t size)
+{
+#if defined GNSS_MOVING_BASE || defined RTK_MOVING_BASE
+	static uint8_t pkt_size = sizeof(CAN_GNSS_Command_t);
+	
+#ifdef DEBUG
+	//static char * function_name = "BRIDGE_HandleGNSSCommandPkt";
+#endif
+
+	static uint8_t buffer[sizeof(CAN_GNSS_Command_t)];
+
+	BRIDGE_BUFFER_PREAMBLE
+	//----- packet specific code -----//
+
+	CAN_GNSS_Command_t *data;
+	data = (CAN_GNSS_Command_t *)buffer;
+
+	handleGPSCommand(data->comm_id,
+			data->param1,
+			data->param2,
+			data->param3);
+
+	pmesg(VERBOSE_CAN, "GNSS Command: Command Id 0x%x, Param 1: 0x%02x, Param 2: 0x%08x, Param 3: 0x%08x\n\r", data->comm_id, data->param1, data->param2, data->param3);
+
+	//----- packet specific code -----//
 	BRIDGE_BUFFER_CONCLUSION
 #endif
 }
@@ -1564,7 +1691,7 @@ void BRIDGE_HandleGNSSSVINPkt(uint8_t *byte, uint8_t size)
  */
 void BRIDGE_HandleSupplyPkt(uint8_t *byte, uint8_t size)
 {
-#if defined BOARD_core || defined STANDALONE_BUILD
+#if defined BOARD_core || defined BOARD_power_dist || defined STANDALONE_BUILD
 	static uint8_t pkt_size = sizeof(CAN_Supply_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleSupplyPkt";
@@ -1776,10 +1903,9 @@ void BRIDGE_HandleProximityPkt(uint8_t *byte, uint8_t size)
 	//updateProximity(getElapsedTime(), data->x, data->y, data->z, data->distance);
 
 	// DEBUG - sanity check
-#ifdef VERBOSE
 	pmesg(VERBOSE_CAN, "PROXIMITY: %0.02f s, %0.02f m, %0.02f m/s\n", 
 			data->timestamp, data->distance, data->velocity);
-#endif
+
 	//----- packet specific code -----//
 
 	BRIDGE_BUFFER_CONCLUSION
@@ -2095,7 +2221,7 @@ void BRIDGE_HandleDeplyTubeCmdPkt(uint8_t *byte,uint8_t size)
 
 void BRIDGE_HandleControlCmd(uint8_t *byte,uint8_t size)
 {
-#if defined BOARD_core || defined BOARD_PSNS
+#if defined BOARD_core || defined BOARD_PSNS || defined BOARD_SUPPLY
 	static uint8_t pkt_size = sizeof(CAN_Command_t);
 #ifdef DEBUG
 	//static char * function_name = "BRIDGE_HandleControlCmd";
@@ -2735,6 +2861,60 @@ uint8_t BRIDGE_SendGNSSSVINPkt(uint8_t p,
 
 
 /**
+ * @brief Send Relative Position packet
+ * @param p CAN Peripheral ID
+ * @param refStationId id of the station
+ * @param iTOW time of week
+ * @param relative_north relative distance north in cm
+ * @param relative_east relative distance east in cm
+ * @param relative_down relative distance down in cm
+ * @param relative_length relative distance in cm
+ * @param relative_heading heading from base to rover in deg
+ * @param accN accuracy of the north distance
+ * @param accE accuracy of the east distance
+ * @param accD accuracy of the down distance
+ * @param accLength accuracy of the length distance
+ * @param accHeading accuracy of the heading 
+ * @param flags relative position flags
+ * @retval bytes written
+ */
+uint8_t BRIDGE_SendGNSSRELPOSNEDPkt(uint8_t p, 
+		uint16_t refStationId, 
+		uint32_t iTOW, 
+		float relative_north, 
+		float relative_east, 
+		float relative_down, 
+		float relative_length, 
+		float relative_heading, 
+		uint32_t accN, uint32_t accE, uint32_t accD, 
+		uint32_t accLength, 
+		uint32_t accHeading, 
+		uint32_t flags)
+{
+	CAN_GNSS_RELPOSNED_t data;
+
+	data.startByte = BRIDGE_START_BYTE;
+	data.refStationId = refStationId;
+	data.iTOW = iTOW;
+	data.relative_north = relative_north;
+	data.relative_east = relative_east;
+	data.relative_down = relative_down;
+	data.relative_length = relative_length;
+	data.relative_heading = relative_heading;
+	data.accN = accN;
+	data.accE = accE;
+	data.accD = accD;
+	data.accLength = accLength;
+	data.accHeading = accHeading;
+	data.flags = flags;
+
+	setFletcher16((uint8_t *) (&data), sizeof(CAN_GNSS_RELPOSNED_t));
+
+	return CAN_Write(p, CAN_PKT_GNSS_RELPOSNED, &data, sizeof(CAN_GNSS_RELPOSNED_t)) == sizeof(CAN_GNSS_RELPOSNED_t);
+}
+
+
+/**
  * @brief	Send supply packet
  * @param	p CAN peripheral ID
  * @param	voltage Battery voltage [mV]
@@ -2941,7 +3121,6 @@ uint8_t BRIDGE_SendDeployTubePkt(uint8_t p,
 	return (uint8_t)(CAN_Write(p, CAN_PKT_DEPLOYMENT_TUBE, &data, sizeof(CAN_DeploymentTube_t)) == sizeof(CAN_DeploymentTube_t));
 }
 
-
 uint8_t BRIDGE_SendDeployTubeCmdPkt(uint8_t p,
 		uint8_t id,
 		float value) {
@@ -3064,7 +3243,8 @@ __inline uint32_t BRIDGE_GetPktDrop(void)
 	return BRIDGE_pktDrops;
 }
 
-#if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx
+#if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32L431xx || defined STM32L496xx
+#ifndef _USE_CAN_TUNNEL
 uint8_t checkFletcher16(uint8_t * data, uint8_t size) {
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;
@@ -3097,7 +3277,7 @@ void setFletcher16 (uint8_t * data, uint8_t size){
 	//return ((checksum2 << 8) | checksum1);
 }
 #endif
-
+#endif
 /**
  * @}
  */ 

@@ -31,6 +31,7 @@ CommunicationsInterface::CommunicationsInterface() {
 	pmesg(VERBOSE_ALLOC, "CommunicationsInterface::CommunicationsInterface()\n");
 
 	connected = false;
+	paused = false;
 	comm_type = CommunicationsInterface::UNKNOWN;
 }
 

@@ -1259,6 +1259,7 @@ typedef enum {
 	PREFLIGHT,
 	FLIGHT,
 	HWIL,
+	DIAGNOSTIC,
 }  __attribute__ ((packed)) SystemMode_t;
 
 typedef enum {

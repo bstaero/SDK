@@ -69,6 +69,9 @@ using namespace bst::comms::canpackets;
 #define CAN_DEVICE_8 8
 #define CAN_DEVICE_9 9
 	  
+#define BRIDGE_START_BYTE '@'	
+#define BRIDGE_PACKET_SIZE 128
+
 /**
 * @}
 */ 
@@ -145,6 +148,22 @@ uint8_t BRIDGE_SendGNSSSVINPkt(uint8_t p,
 		float accuracy,
 		float accuracy_minimum,
 		uint8_t flags);
+
+uint8_t BRIDGE_SendGNSSRELPOSNEDPkt(uint8_t p, 
+		uint16_t refStationId, 
+		uint32_t iTOW, 
+		float relative_north, 
+		float relative_east, 
+		float relative_down, 
+		float relatve_length, 
+		float relative_heading, 
+		uint32_t accN, uint32_t accE, uint32_t accD, 
+		uint32_t accLength, 
+		uint32_t accHeading, 
+		uint32_t flags);
+
+
+uint8_t BRIDGE_SendGNSSCommandPkt(uint8_t p, uint8_t comm_id, uint32_t param1, uint32_t param2, uint32_t param3);
 
 uint8_t BRIDGE_SendSupplyPkt(uint8_t p, float voltage, float current, float coulomb_count, float temperature);
 
