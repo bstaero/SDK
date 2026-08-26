@@ -3245,6 +3245,8 @@ __inline uint32_t BRIDGE_GetPktDrop(void)
 
 #if defined ARCH_stm32f1 || defined STM32F413xx || defined STM32F405xx || defined STM32L432xx || defined STM32L431xx || defined STM32L496xx
 #ifndef _USE_CAN_TUNNEL
+// weak: helper_functions.cpp wins wherever it is linked
+__attribute__((weak))
 uint8_t checkFletcher16(uint8_t * data, uint8_t size) {
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;
@@ -3258,6 +3260,7 @@ uint8_t checkFletcher16(uint8_t * data, uint8_t size) {
 	return ((sum2 << 8) | sum1) == 0;
 }
 
+__attribute__((weak))
 void setFletcher16 (uint8_t * data, uint8_t size){
 	uint16_t sum1 = 0;
 	uint16_t sum2 = 0;
