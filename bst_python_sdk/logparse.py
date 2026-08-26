@@ -89,6 +89,13 @@ class SourceState:
         self.prev_pkt_time = 0
         self.prev_clock_seconds = 0
         self.sys_init_times = {}
+        # Raw system_time of the last packet from this source that reports it
+        # in the Telemetry* unit, and whether one has been seen at all. Packets
+        # carrying no clock of their own are stamped from this rather than from
+        # whatever type came last, so they land on the same timeline - and in
+        # the same unit - as the Telemetry* groups. See stamp_time().
+        self.clock_time = 0
+        self.has_clock = False
 
 
 class Parser:
@@ -152,6 +159,39 @@ class Parser:
             return 1.0 if self.comms_rev >= SYSTEM_TIME_SECONDS_REV else 0.001
         return None
 
+    def drives_stamp_clock(self, pkt) -> bool:
+        """True when pkt's system_time is in the Telemetry* groups' raw unit.
+
+        Same scale means same raw unit, so such a packet can carry the clock
+        that timeless packets are stamped from without mixing seconds into a
+        millisecond timeline or the other way round. From rev 3180 on that is
+        the Telemetry* packets and the S0 payload; before it, only Telemetry*,
+        since the payload was already reporting seconds while they reported
+        milliseconds.
+        """
+        scale = self.system_time_scale(pkt)
+        if scale is None:
+            return False
+        clock_scale = 1.0 if self.comms_rev >= SYSTEM_TIME_SECONDS_REV else 0.001
+        return scale == clock_scale
+
+    def stamp_time(self, state) -> float:
+        """Clock to stamp onto packets that carry no system_time of their own.
+
+        The handler stamps those with whatever time it is handed, so handing it
+        the running clock of the last packet of any type mixes units: several
+        types report milliseconds while the Telemetry* ones report seconds from
+        rev 3180 on, and a single stray millisecond value (TELEMETRY_PAYLOAD is
+        the usual source) sticks through the monotonic clamp below and lands on
+        every timeless packet after it. TELEMETRY_DEPLOYMENT_TUBE is the one
+        that matters downstream - it is how the pipeline finds the moment the
+        aircraft left the drop aircraft - and a tube stamped in milliseconds
+        cannot be lined up against TELEMETRY_POSITION at all. So once this
+        source has produced a packet on that clock, stamp from it alone; before
+        then there is nothing better than the general one.
+        """
+        return state.clock_time if state.has_clock else state.sys_current_time
+
     def is_from_aircraft(self, pkt) -> bool:
         """True when a packet came from an aircraft rather than the ground station."""
         return (pkt.FROM & 0xFF000000) == 0x41000000 or not self.has_addr
@@ -181,11 +221,16 @@ class Parser:
                     state.sys_previous_time = state.sys_current_time
                 parsed_data, state.sys_current_time = standard_handler(
                     pkt,
-                    state.sys_current_time,
+                    self.stamp_time(state),
                     state.vehicle_type)
                 state.sys_current_time = max(
                     state.sys_current_time,
                     state.sys_previous_time)
+                if self.drives_stamp_clock(pkt) and parsed_data is not None:
+                    clock = getattr(parsed_data, 'system_time', 0)
+                    if clock:
+                        state.clock_time = clock
+                        state.has_clock = True
             else:
                 # GCS packet - TODO: ignore tablet request packets for now
                 # Decoded against the aircraft's vehicle type: the ground station
