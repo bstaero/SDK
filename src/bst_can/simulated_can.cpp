@@ -37,6 +37,9 @@ static Packet rx_packet[MAX_CAN_INTERFACES];
 static bool is_interface_open[MAX_CAN_INTERFACES];
 
 void setupSimulatedCAN(CommunicationsInterface * interface) {
+	// without this the 3rd call runs off the end of every MAX_CAN_INTERFACES array
+	if(num_can_interfaces >= MAX_CAN_INTERFACES) return;
+
 	can_interface[num_can_interfaces] = interface;
 	is_interface_open[num_can_interfaces] = can_interface[num_can_interfaces]->open();
 
