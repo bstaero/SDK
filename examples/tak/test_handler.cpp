@@ -25,6 +25,7 @@
 #include "structs.h"
 
 std::map<uint32_t, Aircraft_t> aircraft;
+std::map<uint32_t, SourceStats_t> rx_sources;
 
 // BST source addresses: 0x41xxxxxx aircraft, 0x52xxxxxx / 0x53xxxxxx ground
 // stations. Anything else (e.g. no addressing on the link) is treated as an
@@ -48,6 +49,10 @@ static Aircraft_t & getAircraft(uint32_t address) {
 void receive(uint8_t type, void * data, uint16_t size, const void * parameter)
 {
 	uint32_t address = ((BSTProtocol *)comm_handler)->getLastAddress();
+
+	SourceStats_t & src = rx_sources[address];
+	src.packets++;
+	src.types.insert(type);
 
 	switch(type) {
 		case TELEMETRY_POSITION: {       // TelemetryPosition_t

@@ -21,6 +21,7 @@
 
 #include <inttypes.h>
 #include <map>
+#include <set>
 
 #include "structs.h"
 #include "tak_client.h"
@@ -37,6 +38,14 @@ typedef struct {
 } Aircraft_t;
 
 extern std::map<uint32_t, Aircraft_t> aircraft;
+
+// every packet source seen, reset each display period
+typedef struct {
+	uint32_t          packets;
+	std::set<uint8_t> types;
+} SourceStats_t;
+
+extern std::map<uint32_t, SourceStats_t> rx_sources;
 
 extern TakClient tak;
 extern float     tak_period;  // [s] minimum time between CoT updates per aircraft

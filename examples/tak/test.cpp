@@ -34,7 +34,34 @@ float        tak_period = 1.0;
 float        tak_stale  = 30.0;
 const char * tak_type   = "a-f-A-M-F-Q";  // friendly / air / military / fixed wing / UAV
 
-static float last_display = 0.0;
+static float    last_display = 0.0;
+static uint16_t last_rx_bytes = 0;
+
+static void printLinkStatus(float dt) {
+	uint16_t rx_bytes = comm_interface ? comm_interface->getRxBytes() : 0;
+	uint16_t rx_delta = rx_bytes - last_rx_bytes;
+	last_rx_bytes = rx_bytes;
+
+	printf("waiting for aircraft telemetry ... link %s, rx %.0f B/s, TAK %s\n",
+			comm_interface && comm_interface->isConnected() ? "connected" : "DOWN",
+			dt > 0.0 ? rx_delta / dt : 0.0,
+			tak.isConnected() ? "up" : "down");
+
+	if(rx_sources.empty() && rx_delta > 0)
+		printf("  bytes arriving but no valid packets (baud / comms version mismatch?)\n");
+
+	for(std::map<uint32_t, SourceStats_t>::iterator it = rx_sources.begin(); it != rx_sources.end(); ++it) {
+		uint32_t prefix = it->first & NODE_TYPE_MASK;
+		const char * kind = prefix == UAV_ID ? "aircraft" :
+			(prefix == GCS_ID || prefix == 0x52000000) ? "ground station" :
+			it->first == NO_ID ? "no address" : "other";
+
+		printf("  from 0x%08X (%s): %u pkts, types", it->first, kind, it->second.packets);
+		for(std::set<uint8_t>::iterator t = it->second.types.begin(); t != it->second.types.end(); ++t)
+			printf(" %u", *t);
+		printf("\n");
+	}
+}
 
 void printTestHelp() {
 	printf("Keys:\n");
@@ -133,10 +160,12 @@ void updateTest() {
 	}
 
 	if(show_telemetry && now - last_display >= DISPLAY_PERIOD) {
+		float dt = now - last_display;
 		last_display = now;
 
 		if(aircraft.empty())
-			printf("waiting for aircraft telemetry ...\n");
+			printLinkStatus(dt);
+		rx_sources.clear();
 
 		for(std::map<uint32_t, Aircraft_t>::iterator it = aircraft.begin(); it != aircraft.end(); ++it) {
 			const Aircraft_t & ac = it->second;
