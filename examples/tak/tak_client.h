@@ -24,7 +24,7 @@
 /* Minimal Cursor-on-Target (CoT) sender.
  *
  * TCP : streaming CoT input of a TAK Server (default plain-text port 8087)
- * UDP : unicast to a TAK Server UDP input, or multicast straight to ATAK/WinTAK
+ * UDP : unicast to a TAK Server UDP input, or multicast straight to ATAK
  *       clients on the LAN (SA multicast group 239.2.3.1:6969)
  *
  * TLS (port 8089) is not handled here -- put a TAK Server plain-text input

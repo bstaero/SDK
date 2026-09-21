@@ -1,6 +1,6 @@
 # TAK Example: Aircraft Positions on a TAK Server
 
-This example connects a computer to a Black Swift Technologies (BST) ground station over a network socket. It reads each aircraft's position telemetry and sends it to a TAK server as Cursor-on-Target (CoT) messages. Each aircraft then shows up as a live track in ATAK, WinTAK, iTAK or WebTAK.
+This example connects a computer to a Black Swift Technologies (BST) ground station over a network socket. It reads each aircraft's position telemetry and sends it to a TAK server as Cursor-on-Target (CoT) messages. Each aircraft then shows up as a live track in ATAK, iTAK or WebTAK.
 
 ```
  Aircraft ──radio──► BST Ground Station ──TCP 55555/55556──► this program ──CoT (TCP/UDP)──► TAK Server ──► TAK clients
@@ -14,7 +14,7 @@ The program only listens. It never sends commands to the ground station or to th
 |----------|--------|
 | **Linux** | Recommended. Developed and tested on Ubuntu 24.04. |
 | macOS | Might work. The SDK has some macOS handling, but this example is not tested there. |
-| Windows | Not supported. The code uses POSIX sockets and terminal APIs - plus the os is a security hazard. |
+| Windows | Not supported. The code uses POSIX sockets and terminal APIs - plus this os is a security hazard. |
 
 ## 1. Install build tools (Linux)
 
@@ -111,7 +111,7 @@ Keys: `t` toggles the display, `p` shows help, `q` quits.
 | `-R <s>` | `1.0` | Minimum seconds between updates for each aircraft |
 | `-S <s>` | `30` | CoT stale time: how long TAK keeps a track after its last update |
 
-### Without a TAK server (ATAK/WinTAK on the same LAN)
+### Without a TAK server (ATAK on the same LAN)
 
 TAK clients listen for situational-awareness multicast. You can send straight to them with no server:
 
