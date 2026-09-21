@@ -25,7 +25,7 @@ sudo apt install build-essential git unzip
 
 ## 2. Get the SDK
 
-Clone the BST SDK from GitLab. **You need the `develop` branch.** The `master` branch is older and this example will not build or run correctly against it.
+Clone the BST SDK from GitLab. **You need the `develop` branch.** The `master` branch is older and does not include this example.
 
 ```bash
 git clone -b develop https://gitlab.com/bstaero/sdk.git
@@ -35,19 +35,9 @@ git branch --show-current   # should print: develop
 
 (Or download a zip from https://gitlab.com/bstaero/sdk: select the **develop** branch in the branch dropdown first, then **Code → Download source code → zip**, and unzip it.)
 
-## 3. Add this example to the SDK
+This example is included in the SDK at `examples/tak/`. Its Makefile uses the relative paths `../common` and `../..` to find the rest of the SDK, so build it from that location.
 
-Unzip `tak.zip` into the SDK's `examples/` folder, so the files end up at `sdk/examples/tak/`:
-
-```bash
-unzip tak.zip -d examples/
-ls examples/tak
-# Makefile  README.md  main.cpp  main.h  tak_client.cpp  tak_client.h  test.cpp  test.h  test_handler.cpp  test_handler.h
-```
-
-The example must live directly inside `examples/`. Its Makefile uses the relative paths `../common` and `../..` to find the SDK.
-
-## 4. Build
+## 3. Build
 
 ```bash
 cd examples/tak
@@ -62,7 +52,7 @@ If you update the SDK later, rebuild the library as well, because `make` here on
 (cd ../../lib && make clean && make) && make clean && make
 ```
 
-## 5. Run
+## 4. Run
 
 You need:
 
