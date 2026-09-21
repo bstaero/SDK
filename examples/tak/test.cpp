@@ -44,12 +44,20 @@ void printTestHelp() {
 	printf("\n");
 }
 
+// no GPS fix yet: zeros, or INT64_MAX from the autopilot
+static bool hasFix(const TelemetryPosition_t & pos) {
+	double lat = pos.latitude  / 1e16;
+	double lon = pos.longitude / 1e16;
+	if(lat == 0.0 && lon == 0.0) return false;
+	return fabs(lat) <= 90.0 && fabs(lon) <= 180.0;
+}
+
 static void sendToTak(uint32_t address, Aircraft_t & ac) {
 	const TelemetryPosition_t & pos = ac.position;
+	if(!hasFix(pos)) return;
 
 	double lat = pos.latitude  / 1e16;
 	double lon = pos.longitude / 1e16;
-	if(lat == 0.0 && lon == 0.0) return;  // no GPS fix yet
 
 	// velocity[0..1] are north/east [m/s * 100]
 	double vn = pos.velocity[0] / 100.0;
@@ -132,11 +140,16 @@ void updateTest() {
 
 		for(std::map<uint32_t, Aircraft_t>::iterator it = aircraft.begin(); it != aircraft.end(); ++it) {
 			const Aircraft_t & ac = it->second;
-			printf("0x%08X %-16s lla: %+11.7f %+12.7f %7.1f m | age %4.1f s | TAK %s\n",
-					it->first, ac.name,
-					ac.position.latitude / 1e16,
-					ac.position.longitude / 1e16,
-					ac.position.altitude / 1000.0,
+			char lla[64];
+			if(hasFix(ac.position))
+				snprintf(lla, sizeof(lla), "%+11.7f %+12.7f %7.1f m",
+						ac.position.latitude / 1e16,
+						ac.position.longitude / 1e16,
+						ac.position.altitude / 1000.0);
+			else
+				snprintf(lla, sizeof(lla), "%-34s", "no GPS fix");
+			printf("0x%08X %-16s lla: %s | age %4.1f s | TAK %s\n",
+					it->first, ac.name, lla,
 					now - ac.last_rx,
 					tak.isConnected() ? "up" : "down");
 		}
