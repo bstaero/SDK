@@ -284,7 +284,7 @@ bool BSTSocket::connectHost() {
 
 		struct timeval tv;
 		tv.tv_sec  = 0;
-		tv.tv_usec = 1000;
+		tv.tv_usec = 500000;
 
 		int res = select(local_fd + 1, NULL, &wset, NULL, &tv);
 		if (res <= 0) return false;
