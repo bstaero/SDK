@@ -511,7 +511,8 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 	switch(id) // only last 9 bits are for ID
 	{
 		case CAN_PKT_PRESSURE:   BRIDGE_HandlePressurePkt(data,size); break;
-		case CAN_PKT_AIR_DATA:   BRIDGE_HandleAirDataPkt(data,size); break;
+		case CAN_PKT_AIR_DATA:
+		case CAN_PKT_AIR_DATA_PSNS:   BRIDGE_HandleAirDataPkt(data,size); break;
 		case CAN_PKT_MHP:        BRIDGE_HandleMHPPkt(data,size); break;
 		case CAN_PKT_MHP_RAW:    BRIDGE_HandleMHPRawPkt(data,size); break;
 		case CAN_PKT_MHP_PRODUCTS: BRIDGE_HandleMHPProductsPkt(data,size); break;
@@ -540,7 +541,8 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_AGL:	 BRIDGE_HandleAGLPkt(data,size); break;
 		case CAN_PKT_PROXIMITY:	 BRIDGE_HandleProximityPkt(data,size); break;
 		case CAN_PKT_ADSB:    	 BRIDGE_HandleADSBPkt(data,size); break;
-		case CAN_PKT_CALIBRATE:  BRIDGE_HandleCalibratePkt(data,size); break;
+		case CAN_PKT_CALIBRATE:
+		case CAN_PKT_CALIBRATE_PSNS:  BRIDGE_HandleCalibratePkt(data,size); break;
 		case CAN_PKT_BOARD_ORIENTATION:  BRIDGE_HandleBoardOrientationPkt(data,size); break;
 
 		case CAN_PKT_ACTUATOR:   BRIDGE_HandleActuatorPkt(data,size); break;
@@ -556,13 +558,15 @@ void BRIDGE_Arbiter(uint32_t id, void *data_ptr, uint8_t size)
 		case CAN_PKT_TRIGGER:    BRIDGE_HandleTriggerPkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE:    BRIDGE_HandleDeplyTubePkt(data,size); break;
 		case CAN_PKT_DEPLOYMENT_TUBE_CMD:    BRIDGE_HandleDeplyTubeCmdPkt(data,size); break;
-		case CAN_PKT_COMMAND:    BRIDGE_HandleControlCmd(data,size); break;
+		case CAN_PKT_COMMAND:
+		case CAN_PKT_COMMAND_PSNS:    BRIDGE_HandleControlCmd(data,size); break;
 
 		case CAN_PKT_REMOTE_ID:  BRIDGE_HandleRIDPacket(data, size); break;
 		case CAN_PKT_GCS_LOCATION: BRIDGE_HandleGCSLocation(data, size); break;
 		case CAN_PKT_ARM_RID:		 BRIDGE_HandleArmRemoteID(data, size); break;
 		case CAN_PKT_REMOTE_ID_ERROR_MSG:	BRIDGE_HandleArmRemoteIDErrorMsg(data, size); break;
-		case CAN_PKT_SERIAL_ID:	 BRIDGE_HandleSerialNumber(data, size); break;
+		case CAN_PKT_SERIAL_ID:
+		case CAN_PKT_SERIAL_ID_PSNS:	 BRIDGE_HandleSerialNumber(data, size); break;
 
 		case CAN_PKT_DEBUG:	     BRIDGE_HandleDebug(data, size); break;
 
@@ -2475,7 +2479,11 @@ uint8_t BRIDGE_SendAirDataPkt(uint8_t p,
 
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_AirData_t));
 
+#ifdef BOARD_PSNS
+	return (uint8_t)(CAN_Write(p, CAN_PKT_AIR_DATA_PSNS, &data, sizeof(CAN_AirData_t)) == sizeof(CAN_AirData_t));
+#else
 	return (uint8_t)(CAN_Write(p, CAN_PKT_AIR_DATA, &data, sizeof(CAN_AirData_t)) == sizeof(CAN_AirData_t));
+#endif
 }
 
 /**
@@ -3083,7 +3091,11 @@ uint8_t BRIDGE_SendCalibratePkt(uint8_t p,
 	data.state = state;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_CalibrateSensor_t));
 
+#ifdef BOARD_PSNS
+	return (uint8_t)(CAN_Write(p, CAN_PKT_CALIBRATE_PSNS, &data, sizeof(CAN_CalibrateSensor_t)) == sizeof(CAN_CalibrateSensor_t));
+#else
 	return (uint8_t)(CAN_Write(p, CAN_PKT_CALIBRATE, &data, sizeof(CAN_CalibrateSensor_t)) == sizeof(CAN_CalibrateSensor_t));
+#endif
 }
 
 uint8_t BRIDGE_SendTriggerPkt(uint8_t p, float *ts,
@@ -3148,7 +3160,11 @@ uint8_t BRIDGE_SendCommandPkt(uint8_t p,
 	data.value = value;
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_Command_t));
 
+#ifdef BOARD_PSNS
+	return (uint8_t)(CAN_Write(p, CAN_PKT_COMMAND_PSNS, &data, sizeof(CAN_Command_t)) == sizeof(CAN_Command_t));
+#else
 	return (uint8_t)(CAN_Write(p, CAN_PKT_COMMAND, &data, sizeof(CAN_Command_t)) == sizeof(CAN_Command_t));
+#endif
 }
 
 uint8_t BRIDGE_SendArmRemoteID(uint8_t p,
@@ -3223,7 +3239,11 @@ uint8_t BRIDGE_SendSerialNumber(uint8_t p,
 	memcpy(data.serial_number,serial_number,20);
 	setFletcher16((uint8_t *)(&data), sizeof(CAN_SerialNumber_t));
 
+#ifdef BOARD_PSNS
+	return (uint8_t)(CAN_Write(p, CAN_PKT_SERIAL_ID_PSNS, &data, sizeof(CAN_SerialNumber_t)) == sizeof(CAN_SerialNumber_t));
+#else
 	return (uint8_t)(CAN_Write(p, CAN_PKT_SERIAL_ID, &data, sizeof(CAN_SerialNumber_t)) == sizeof(CAN_SerialNumber_t));
+#endif
 }
 
 uint8_t BRIDGE_SendDebug(uint8_t p,
